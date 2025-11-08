@@ -1,12 +1,14 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import React from "react";
+import { View, Text } from "react-native";
+import Header from "../components/Header";
 
-const explore = () => {
+const Explore = () => {
   return (
-    <View>
-      <Text>Explore</Text>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+      <Header />
+      <Text style={{ padding: 20 }}>Upcoming Events...</Text>
     </View>
-  )
-}
+  );
+};
 
-export default explore
+export default Explore;
