@@ -54,7 +54,7 @@ const login = () => {
                 <TextInput placeholder="Student ID" style={styles.input} placeholderTextColor="#999"/>
                 <TextInput placeholder="Password" secureTextEntry style={styles.input} placeholderTextColor="#999"/>
 
-                <TouchableOpacity style={styles.loginButton} onPress={() => router.push("/components/Header")}>
+                <TouchableOpacity style={styles.loginButton} onPress={() => router.push("/tabs/Events")}>
                 <Text style={styles.loginText}>Login</Text>
                 </TouchableOpacity>
 
