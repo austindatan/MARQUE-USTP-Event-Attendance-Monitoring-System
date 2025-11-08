@@ -57,8 +57,8 @@ const styles = StyleSheet.create({
   filterB: {
     backgroundColor: "#fff",
     borderRadius: moderateScale(30),
-    width: moderateScale(24),
-    height: moderateScale(24),
+    width: moderateScale(26),
+    height: moderateScale(26),
     justifyContent: "center",
     alignItems: "center"
   },
