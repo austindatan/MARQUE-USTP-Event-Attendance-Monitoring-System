@@ -1,32 +1,33 @@
 import { StyleSheet } from "react-native";
+import { scale, verticalScale, moderateScale } from "react-native-size-matters";
 
 const styles = StyleSheet.create({
   header: {
     backgroundColor: "#0A0F51",
-    borderBottomLeftRadius: 33,
-    borderBottomRightRadius: 33,
-    paddingTop: 55,
-    paddingHorizontal: 20,
-    paddingBottom: 25,
+    borderBottomLeftRadius: scale(33),
+    borderBottomRightRadius: scale(33),
+    paddingTop: verticalScale(45),
+    paddingHorizontal: scale(20),
+    paddingBottom: verticalScale(25),
   },
 
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: verticalScale(10),
   },
 
   logo: {
-    width: 100,
-    height: 40,
+    width: scale(100),
+    height: verticalScale(40),
   },
 
   notif: {
     backgroundColor: "#222762",
-    borderRadius: 30,
-    width: 36,
-    height: 36,
+    borderRadius: scale(30),
+    width: scale(36),
+    height: verticalScale(36),
     textAlign: "center",
     textAlignVertical: "center",
   },
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: verticalScale(10),
   },
 
   searchContainer: {
@@ -47,17 +48,17 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     width: "100%",
-    height: 40,
-    fontSize: 16,
+    height: verticalScale(40),
+    fontSize: moderateScale(16),
     color: "#333",
     fontFamily: "DMSans-Regular",
   },
 
   filterB: {
     backgroundColor: "#fff",
-    borderRadius: 30,
-    width: 24,
-    height: 24,
+    borderRadius: scale(30),
+    width: scale(24),
+    height: verticalScale(24),
     textAlign: "center",
     textAlignVertical: "center",
   },
@@ -66,49 +67,49 @@ const styles = StyleSheet.create({
     backgroundColor: "#222762",
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 25,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderRadius: scale(25),
+    paddingHorizontal: scale(10),
+    paddingVertical: verticalScale(8),
   },
   
   filterText: {
     color: "#fff",
-    fontSize: 13,
-    marginLeft: 5,
+    fontSize: moderateScale(13),
+    marginLeft: scale(5),
     fontFamily: "DMSans-Regular",
   },
 
   toggleContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: -20,
+    marginTop: verticalScale(-20),
   },
 
   activeButton: {
     backgroundColor: "#FFD100",
-    borderRadius: 30,
-    paddingHorizontal: 25,
-    paddingVertical: 10,
-    marginHorizontal: 5,
+    borderRadius: scale(30),
+    paddingHorizontal: scale(25),
+    paddingVertical: verticalScale(10),
+    marginHorizontal: scale(5),
   },
 
   inactiveButton: {
     backgroundColor: "#C7C7C7",
-    borderRadius: 30,
-    paddingHorizontal: 25,
-    paddingVertical: 10,
-    marginHorizontal: 5,
+    borderRadius: scale(30),
+    paddingHorizontal: scale(25),
+    paddingVertical: verticalScale(10),
+    marginHorizontal: scale(5),
   },
 
   activeText: {
-    color: "#fff",    
-    fontSize: 14,
+    color: "#fff",
+    fontSize: moderateScale(14),
     fontFamily: "DMSans-Regular",
   },
   
   inactiveText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontFamily: "DMSans-Regular",
   },
 });
