@@ -28,8 +28,8 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(30),
     width: moderateScale(36),
     height: moderateScale(36),
-    textAlign: "center",
-    textAlignVertical: "center",
+    justifyContent: "center",
+    alignItems: "center"
   },
 
   searchRow: {
@@ -59,8 +59,8 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(30),
     width: moderateScale(24),
     height: moderateScale(24),
-    textAlign: "center",
-    textAlignVertical: "center",
+    justifyContent: "center",
+    alignItems: "center"
   },
   
   filterButton: {

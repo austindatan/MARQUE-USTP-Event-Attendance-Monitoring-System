@@ -19,7 +19,9 @@ const Header = () => {
           />
 
           <TouchableOpacity>
-            <Ionicons name="notifications-outline" size={24} color="#fff" style={styles.notif}/>
+            <View style={styles.notif}>
+              <Ionicons name="notifications-outline" size={24} color="#fff" />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -34,7 +36,9 @@ const Header = () => {
           </View>
 
           <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="filter" size={14} color="##222762" style={styles.filterB}/>
+            <View style={styles.filterB}>
+              <Ionicons name="filter" size={14} color="##222762"/>
+            </View>
             <Text style={styles.filterText}>Filters</Text>
           </TouchableOpacity>
         </View>
