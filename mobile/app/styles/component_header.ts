@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: moderateScale(33),
     borderBottomRightRadius: moderateScale(33),
     paddingTop: verticalScale(40),
-    paddingHorizontal: scale(20),
+    paddingHorizontal: moderateScale(20),
     paddingBottom: verticalScale(25),
   },
 
@@ -19,15 +19,15 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: scale(100),
+    width: moderateScale(100),
     height: verticalScale(40),
   },
 
   notif: {
     backgroundColor: "#222762",
     borderRadius: moderateScale(30),
-    width: scale(36),
-    height: scale(36),
+    width: moderateScale(36),
+    height: moderateScale(36),
     textAlign: "center",
     textAlignVertical: "center",
   },
@@ -57,8 +57,8 @@ const styles = StyleSheet.create({
   filterB: {
     backgroundColor: "#fff",
     borderRadius: moderateScale(30),
-    width: scale(24),
-    height: scale(24),
+    width: moderateScale(24),
+    height: moderateScale(24),
     textAlign: "center",
     textAlignVertical: "center",
   },
@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: moderateScale(25),
-    paddingHorizontal: scale(10),
+    paddingHorizontal: moderateScale(10),
     paddingVertical: verticalScale(8),
   },
   
   filterText: {
     color: "#fff",
     fontSize: moderateScale(13),
-    marginLeft: scale(5),
+    marginLeft: moderateScale(5),
     fontFamily: "DMSans-Regular",
   },
 
@@ -88,17 +88,17 @@ const styles = StyleSheet.create({
   activeButton: {
     backgroundColor: "#FFD100",
     borderRadius: moderateScale(30),
-    paddingHorizontal: scale(25),
+    paddingHorizontal: moderateScale(25),
     paddingVertical: verticalScale(10),
-    marginHorizontal: scale(5),
+    marginHorizontal: moderateScale(5),
   },
 
   inactiveButton: {
     backgroundColor: "#C7C7C7",
     borderRadius: moderateScale(30),
-    paddingHorizontal: scale(25),
+    paddingHorizontal: moderateScale(25),
     paddingVertical: verticalScale(10),
-    marginHorizontal: scale(5),
+    marginHorizontal: moderateScale(5),
   },
 
   activeText: {
