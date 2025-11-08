@@ -4,9 +4,9 @@ import { scale, verticalScale, moderateScale } from "react-native-size-matters";
 const styles = StyleSheet.create({
   header: {
     backgroundColor: "#0A0F51",
-    borderBottomLeftRadius: scale(33),
-    borderBottomRightRadius: scale(33),
-    paddingTop: verticalScale(45),
+    borderBottomLeftRadius: moderateScale(33),
+    borderBottomRightRadius: moderateScale(33),
+    paddingTop: verticalScale(40),
     paddingHorizontal: scale(20),
     paddingBottom: verticalScale(25),
   },
@@ -25,9 +25,9 @@ const styles = StyleSheet.create({
 
   notif: {
     backgroundColor: "#222762",
-    borderRadius: scale(30),
+    borderRadius: moderateScale(30),
     width: scale(36),
-    height: verticalScale(36),
+    height: scale(36),
     textAlign: "center",
     textAlignVertical: "center",
   },
@@ -56,9 +56,9 @@ const styles = StyleSheet.create({
 
   filterB: {
     backgroundColor: "#fff",
-    borderRadius: scale(30),
+    borderRadius: moderateScale(30),
     width: scale(24),
-    height: verticalScale(24),
+    height: scale(24),
     textAlign: "center",
     textAlignVertical: "center",
   },
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#222762",
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: scale(25),
+    borderRadius: moderateScale(25),
     paddingHorizontal: scale(10),
     paddingVertical: verticalScale(8),
   },
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
 
   activeButton: {
     backgroundColor: "#FFD100",
-    borderRadius: scale(30),
+    borderRadius: moderateScale(30),
     paddingHorizontal: scale(25),
     paddingVertical: verticalScale(10),
     marginHorizontal: scale(5),
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
 
   inactiveButton: {
     backgroundColor: "#C7C7C7",
-    borderRadius: scale(30),
+    borderRadius: moderateScale(30),
     paddingHorizontal: scale(25),
     paddingVertical: verticalScale(10),
     marginHorizontal: scale(5),
