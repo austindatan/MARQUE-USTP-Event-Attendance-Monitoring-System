@@ -2,8 +2,11 @@ import React, { useEffect } from "react";
 import { StyleSheet, View, Image, Text, TextInput, TouchableOpacity, ImageBackground } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing, } from "react-native-reanimated";
 import styles from "./styles/baseeffects";
+import { useRouter } from "expo-router";
+
 
 const login = () => {
+    const router = useRouter();
   const logoY = useSharedValue(0);
   const formOpacity = useSharedValue(0);
   const formY = useSharedValue(40);
@@ -52,7 +55,7 @@ const login = () => {
                 <TextInput placeholder="Student ID" style={styles.input} placeholderTextColor="#999"/>
                 <TextInput placeholder="Password" secureTextEntry style={styles.input} placeholderTextColor="#999"/>
 
-                <TouchableOpacity style={styles.loginButton}>
+                <TouchableOpacity onPress={() => router.push("../tabs/events")} style={styles.loginButton}>
                 <Text style={styles.loginText}>Login</Text>
                 </TouchableOpacity>
 
