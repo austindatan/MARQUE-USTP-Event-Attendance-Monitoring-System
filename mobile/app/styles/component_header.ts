@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: moderateScale(33),
     paddingTop: verticalScale(40),
     paddingHorizontal: moderateScale(20),
-    paddingBottom: verticalScale(25),
+    paddingBottom: verticalScale(20),
   },
 
   topRow: {

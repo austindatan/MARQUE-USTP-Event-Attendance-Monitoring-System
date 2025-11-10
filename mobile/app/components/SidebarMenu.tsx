@@ -1,8 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, TouchableWithoutFeedback, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import styles from "../styles/sidebar_styles"; 
-
+import styles from "../styles/component_sidebar"; 
 
 const menuItems = [
   { name: "Home", icon: "home-outline" },

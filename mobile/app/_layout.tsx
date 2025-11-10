@@ -17,6 +17,7 @@ export default function RootLayout() {
     'DMSans-Medium': require('../assets/fonts/DMSans_18pt-Medium.ttf'),
     'Manrope-EXBold': require('../assets/fonts/Manrope-ExtraBold.ttf'),
     'Manrope-Bold': require('../assets/fonts/Manrope-Bold.ttf'),
+    'Inter': require('../assets/fonts/Inter_24pt-Bold.ttf'),
   });
 
   useEffect(() => {
