@@ -2,13 +2,20 @@ import React from "react";
 import { View, TextInput, TouchableOpacity, Image, StyleSheet, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
+import { useRouter } from "expo-router";
 
-const Header = () => {
+interface HeaderProps {
+  onMenuPress: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onMenuPress }) => {
+  const router = useRouter();
+  
   return (
     <View>
       <View style={styles.header}>
         <View style={styles.topRow}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={onMenuPress}>
             <Ionicons name="menu" size={30} color="#fff" />
           </TouchableOpacity>
 
