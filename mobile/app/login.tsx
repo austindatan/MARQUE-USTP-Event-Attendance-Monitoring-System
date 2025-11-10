@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Image, Text, TextInput, TouchableOpacity, ImageBackground } from "react-native";
 import { useRouter } from "expo-router";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from "react-native-reanimated";
-import styles from "./styles/baseeffects";
+import styles from "./styles/effects_base";
 import { BASE_URL } from "../config";
 
 const Login = () => {
@@ -46,7 +46,7 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        router.push("/tabs/events");
+        router.push("/tabs/Events");
       } else {
         setErrorMessage(data.message || "Invalid username or password.");
       }
