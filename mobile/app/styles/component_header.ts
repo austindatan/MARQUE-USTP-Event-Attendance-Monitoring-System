@@ -9,6 +9,14 @@ const styles = StyleSheet.create({
     paddingTop: verticalScale(40),
     paddingHorizontal: moderateScale(20),
     paddingBottom: verticalScale(20),
+    zIndex: 8,
+  },
+
+  headerfirst: {
+    backgroundColor: "#0A0F51",
+    paddingTop: verticalScale(40),
+    paddingHorizontal: moderateScale(20),
+    paddingBottom: verticalScale(20),
   },
 
   topRow: {
@@ -16,6 +24,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: verticalScale(10),
+    zIndex: 10,
   },
 
   logo: {
@@ -83,6 +92,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginTop: verticalScale(-20),
+    zIndex: 9,
   },
 
   activeButton: {
