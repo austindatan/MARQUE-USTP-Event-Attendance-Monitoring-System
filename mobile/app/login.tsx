@@ -46,7 +46,7 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        router.push("/tabs/events");
+        router.push("/tabs/Events");
       } else {
         setErrorMessage(data.message || "Invalid username or password.");
       }

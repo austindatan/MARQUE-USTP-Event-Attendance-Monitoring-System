@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { StyleSheet } from "react-native";
 import { event } from "react-native/types_generated/Libraries/Animated/AnimatedExports";
 

@@ -1,51 +1,31 @@
-import React, { useState } from "react";
-import { View, Text, Modal, StyleSheet, Image } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Animated, Modal } from "react-native";
 import Header from "../components/Header";
 import SidebarMenu from "../components/SidebarMenu";
 import appeffects from "../styles/effects_app";
-import EventCard from "../components/EventCard";
+import Departments from "../event_container/Department";
+import Organizations from "../event_container/Organization";
 
 const Events = () => {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("departments");
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-  const toggleMenu = () => {
-    setMenuVisible(prev => !prev);
-  };
+  const toggleMenu = () => setMenuVisible(prev => !prev);
 
   return (
-    <View style={appeffects.container}>
-      <Header onMenuPress={toggleMenu} />
-      
-      <View style={appeffects.pageStarter}>
-        <Text style={appeffects.pageTitle}>Upcoming Events</Text>
-        <Text style={appeffects.pageSubtitle}>Filtered by Dept.</Text>
-      </View>
+    <View style={[appeffects.container, { flex: 1 }]}>
+      <Header
+        onMenuPress={toggleMenu}
+        scrollY={scrollY}
+        onToggleChange={setActiveTab}
+      />
 
-      <View style={appeffects.eventList}>
-
-        <EventCard
-          image={require("../../assets/images/marque/crtcg1.png")}
-          title="Last Cookie Standing!"
-          organization="Cooking Run Kingdom"
-          orgLogo={require("../../assets/images/marque/crk.jpg")}
-          orgDate="November 10"
-          dateDay="17"
-          dateMonth="NOV"
-          description="As kings and queens, they ruled the Cookies, bringing in a golden age of peace and..."
-        />
-
-        <EventCard
-          image={require("../../assets/images/marque/crtcg1.png")}
-          title="Last Cookie Standing!"
-          organization="Cooking Run Kingdom"
-          orgLogo={require("../../assets/images/marque/crk.jpg")}
-          orgDate="November 10"
-          dateDay="17"
-          dateMonth="NOV"
-          description="As kings and queens, they ruled the Cookies, bringing in a golden age of peace and..."
-        />
-
-      </View>
+      {activeTab === "departments" ? (
+        <Departments scrollY={scrollY} />
+      ) : (
+        <Organizations scrollY={scrollY} />
+      )}
 
       <Modal
         animationType="fade"
@@ -58,6 +38,5 @@ const Events = () => {
     </View>
   );
 };
-
 
 export default Events;
