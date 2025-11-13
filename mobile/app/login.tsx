@@ -4,11 +4,12 @@ import { useRouter } from "expo-router";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from "react-native-reanimated";
 import styles from "./styles/effects_base";
 import { BASE_URL } from "../config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = () => {
   const router = useRouter();
 
-  const [studentId, setStudentId] = useState("");
+  const [studentNumber, setStudentNumber] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -29,32 +30,41 @@ const Login = () => {
   }));
 
   const handleLogin = async () => {
-    setErrorMessage("");
+  setErrorMessage("");
 
-    if (!studentId || !password) {
-      setErrorMessage("Please fill in both Student ID and Password.");
+  if (!studentNumber || !password) {
+    setErrorMessage("Please fill in both Student ID and Password.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student_number: studentNumber, password }),
+    });
+
+    let data;
+    const text = await response.text();
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error("Login response not JSON:", text);
+      setErrorMessage("Server returned invalid response.");
       return;
     }
 
-    try {
-      const response = await fetch(`${BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: studentId, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        router.push("/tabs/Events");
-      } else {
-        setErrorMessage(data.message || "Invalid username or password.");
-      }
-    } catch (error) {
-      console.error("Error logging in:", error);
-      setErrorMessage("Could not connect to the server. Please check your connection.");
+    if (response.ok) {
+      await AsyncStorage.setItem("student_number", studentNumber); 
+      router.push("/tabs/Events");
+    } else {
+      setErrorMessage(data.message || "Invalid student ID or password.");
     }
-  };
+  } catch (error) {
+    console.error("Error logging in:", error);
+    setErrorMessage("Could not connect to the server. Please check your connection.");
+  }
+};
 
   return (
     <ImageBackground
@@ -74,8 +84,8 @@ const Login = () => {
             placeholder="Student ID"
             style={styles.input}
             placeholderTextColor="#999"
-            value={studentId}
-            onChangeText={setStudentId}
+            value={studentNumber}
+            onChangeText={setStudentNumber}
           />
           <TextInput
             placeholder="Password"
@@ -86,16 +96,18 @@ const Login = () => {
             onChangeText={setPassword}
           />
 
-          {/*error message */}
-          {errorMessage ? <Text style={{ color: "red", marginTop: -5, marginBottom:10, fontStyle: "italic", fontSize: 12,  }}>{errorMessage}</Text> : null}
+          {errorMessage ? (
+            <Text style={{ color: "red", marginTop: -5, marginBottom: 10, fontStyle: "italic", fontSize: 12 }}>
+              {errorMessage}
+            </Text>
+          ) : null}
 
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
             <Text style={styles.loginText}>Login</Text>
           </TouchableOpacity>
 
           <Text style={styles.footerText}>
-            Problem with your account?{" "}
-            <Text style={{ textDecorationLine: "underline" }}>Contact us</Text>
+            Problem with your account? <Text style={{ textDecorationLine: "underline" }}>Contact us</Text>
           </Text>
         </Animated.View>
       </View>
