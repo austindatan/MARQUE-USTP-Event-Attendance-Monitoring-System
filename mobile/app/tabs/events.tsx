@@ -1,10 +1,10 @@
 import React, { useRef, useState } from "react";
 import { View, Animated, Modal } from "react-native";
-import Header from "../components/Header";
+import Header from "../components/Header_Events";
 import SidebarMenu from "../components/SidebarMenu";
 import appeffects from "../styles/effects_app";
-import Departments from "../event_container/Department";
-import Organizations from "../event_container/Organization";
+import Departments from "../tab_container/Event_Department";
+import Organizations from "../tab_container/Event_Organization";
 
 const Events = () => {
   const [menuVisible, setMenuVisible] = useState(false);

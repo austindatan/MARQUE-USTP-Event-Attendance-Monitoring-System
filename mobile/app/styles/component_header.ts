@@ -111,6 +111,29 @@ const styles = StyleSheet.create({
     marginHorizontal: moderateScale(5),
   },
 
+  toggleContainerEX: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: verticalScale(-20),
+    zIndex: 9,
+  },
+
+  activeButtonEX: {
+    backgroundColor: "#FFD100",
+    borderRadius: moderateScale(30),
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: verticalScale(10),
+    marginHorizontal: moderateScale(5),
+  },
+
+  inactiveButtonEX: {
+    backgroundColor: "#C7C7C7",
+    borderRadius: moderateScale(30),
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: verticalScale(10),
+    marginHorizontal: moderateScale(5),
+  },
+
   activeText: {
     color: "#fff",
     fontSize: moderateScale(14),
@@ -120,6 +143,18 @@ const styles = StyleSheet.create({
   inactiveText: {
     color: "#fff",
     fontSize: moderateScale(14),
+    fontFamily: "DMSans-Regular",
+  },
+
+  activeTextEX: {
+    color: "#fff",
+    fontSize: moderateScale(13),
+    fontFamily: "DMSans-Regular",
+  },
+  
+  inactiveTextEX: {
+    color: "#fff",
+    fontSize: moderateScale(13),
     fontFamily: "DMSans-Regular",
   },
 });

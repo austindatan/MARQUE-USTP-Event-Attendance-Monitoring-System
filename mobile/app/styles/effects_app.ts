@@ -33,6 +33,15 @@ const appeffects = StyleSheet.create({
         paddingLeft: 20,
         bottom: 6,
     },
+
+    eventListEX: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        paddingRight: 20,
+        paddingLeft: 20,
+        bottom: 6,
+    },
 });
 
 export default appeffects;

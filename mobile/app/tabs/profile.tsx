@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Modal, StyleSheet } from "react-native";
-import Header from "../components/Header";
+import Header from "../components/Header_Events";
 import SidebarMenu from "../components/SidebarMenu"; 
 
 const Profile = () => {
