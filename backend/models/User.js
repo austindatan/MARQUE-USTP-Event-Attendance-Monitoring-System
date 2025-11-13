@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   lastname: { type: String, required: true },
   contact_number: { type: String },
   email: { type: String, required: true, unique: true },
-  role: { type: String, enum: ["admin", "user", "president"], required: true },
+  role: { type: String, enum: ["Manager", "Committee",], required: true },
 });
 
 module.exports = mongoose.model("User", userSchema);
