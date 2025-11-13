@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   card: {
     width: 102,
-    height: 135,
+    height: 148,
     backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#505588",
@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
   },
 
   eventTitle: {
-    width: 1000,
-    fontSize: 8,
+    width: 80,
+    fontSize: 10,
     color: "#000",
     fontFamily: "DMSans-SemiBold",
   },
@@ -84,8 +84,8 @@ const styles = StyleSheet.create({
   },
 
   organizationLogo: {
-    width: 10,
-    height: 10,
+    width: 9.5,
+    height: 9.5,
     borderRadius: 65,
   },
 
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
 
   orgText: {
-    fontSize: 6,
+    fontSize: 7,
     color: "#858585",
     fontFamily: "DMSans-Regular",
   },
