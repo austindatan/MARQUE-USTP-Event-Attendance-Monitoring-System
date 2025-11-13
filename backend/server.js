@@ -17,6 +17,10 @@ app.get("/", (req, res) => {
 const authRouter = require("./routes/auth");
 app.use("/api/auth", authRouter);
 
+// Student route
+const studentRoutes = require("./routes/student");
+app.use("/api/student", studentRoutes);
+
 // DB connection
 mongoose
   .connect(process.env.MONGO_URI, {
@@ -29,3 +33,4 @@ mongoose
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
