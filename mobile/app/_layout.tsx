@@ -12,6 +12,7 @@ export default function RootLayout() {
     'Barlow': require('../assets/fonts/Barlow-Regular.ttf'),
     'Gabarito': require('../assets/fonts/Gabarito-Bold.ttf'),
     'DMSans-Bold': require('../assets/fonts/DMSans_24pt-Bold.ttf'),
+    'DMSans-SemiBold': require('../assets/fonts/DMSans-SemiBold.ttf'),
     'DMSans-EXLight': require('../assets/fonts/DMSans_18pt-ExtraLight.ttf'),
     'DMSans-Regular': require('../assets/fonts/DMSans_24pt-Regular.ttf'),
     'DMSans-Medium': require('../assets/fonts/DMSans_18pt-Medium.ttf'),

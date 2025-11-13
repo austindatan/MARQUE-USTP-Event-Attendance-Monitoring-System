@@ -1,9 +1,9 @@
 // @ts-nocheck
 import React from "react";
 import { View, Text, Animated, TouchableOpacity } from "react-native";
-import EventCard from "../components/EventCard";
+import EventCard from "../components/Card_Event";
 import appeffects from "../styles/effects_app";
-import EmptyCard from "../components/EmptyCard";
+import EmptyCard from "../components/Card_Empty";
 
 const Organizations = ({ scrollY }) => {
   return (

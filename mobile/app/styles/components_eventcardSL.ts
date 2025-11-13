@@ -2,10 +2,12 @@ import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   card: {
+    width: 102,
+    height: 135,
     backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 10,
     shadowColor: "#505588",
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 3,
     overflow: "hidden",
@@ -15,27 +17,29 @@ const styles = StyleSheet.create({
 
   imageContainer: {
     position: "relative",
-    width: "100%",
-    height: 160,
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingTop: 10,
+    width: 100,
+    height: 100,
+    paddingLeft: 5,
+    paddingRight: 5,
+    paddingTop: 5,
   },
 
   eventPoster: {
-    width: "100%",
-    height: "100%",
+    width: 92,
+    height: 92,
     borderRadius: 10,
   },
 
   dateTag: {
     position: "absolute",
-    top: 15,
-    left: 15,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    top: 10,
+    left: 10,
+    width: 30,
+    height: 30,
+    backgroundColor: "#ffffffdf",
+    borderRadius: 8,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -45,70 +49,55 @@ const styles = StyleSheet.create({
 
   dateDay: {
     color: "#0C1445",
-    fontSize: 16,
+    fontSize: 11,
     fontWeight: "700",
     fontFamily: "Inter",
+    top: 3,
   },
 
   dateMonth: {
     color: "#0C1445",
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: "600",
     fontFamily: "Inter",
-    bottom: 2,
+    bottom:1,
   },
 
   details: {
-    paddingRight: 15,
-    paddingLeft: 15,
+    paddingRight: 0,
+    paddingLeft: 8,
     paddingBottom: 15,
-    paddingTop: 8,
+    paddingTop: 2,
   },
 
   eventTitle: {
-    fontSize: 18,
+    width: 1000,
+    fontSize: 8,
     color: "#000",
-    fontFamily: "Inter",
+    fontFamily: "DMSans-SemiBold",
   },
 
   orgDetails: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 6,
+    marginTop: 4,
   },
 
   organizationLogo: {
-    width: 25,
-    height: 25,
-    borderRadius: 25,
+    width: 10,
+    height: 10,
+    borderRadius: 65,
   },
 
   orgRow: {
     flexDirection: "column",
-    marginLeft: 8,
+    marginLeft: 3,
   },
 
   orgText: {
-    fontSize: 10,
-    color: "#555",
-    fontFamily: "Inter",
-  },
-
-  subText: {
-    fontSize: 9,
-    color: "#777",
+    fontSize: 6,
+    color: "#858585",
     fontFamily: "DMSans-Regular",
-  },
-
-  desc: {
-    marginTop: 8,
-    fontSize: 13,
-    color: "#555",
-    fontFamily: "DMSans-Regular",
-  },
-
-  bold: {
-    fontWeight: "700",
   },
 });
 
