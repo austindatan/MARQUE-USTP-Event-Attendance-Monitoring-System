@@ -41,6 +41,14 @@ const appeffects = StyleSheet.create({
         paddingRight: 20,
         paddingLeft: 20,
         bottom: 6,
+        zIndex: -10,
+    },
+
+    eventListORG: {
+        paddingTop: 20,
+        paddingRight: 20,
+        paddingLeft: 30,
+        bottom: 6,
     },
 });
 

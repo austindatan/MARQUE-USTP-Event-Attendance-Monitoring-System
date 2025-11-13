@@ -3,7 +3,7 @@ import React from "react";
 import { View, Text, Image } from "react-native";
 import styles from "../styles/components_eventcardSL";
 
-const EventCardSL = ({ image, title, orgLogo, organization, orgDate, dateDay, dateMonth, description, }) => {
+const EventCardSL = ({ image, title, orgLogo, organization, dateDay, dateMonth, }) => {
   return (
     <View style={styles.card}>
       <View style={styles.imageContainer}>

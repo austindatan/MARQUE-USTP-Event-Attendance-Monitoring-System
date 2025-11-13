@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useRef, useState } from "react";
 import { View, Animated, Modal } from "react-native";
 import Header from "../components/Header_Explore";
@@ -10,36 +11,82 @@ import Orgs from "../tab_container/Explore_Orgs";
 const Explore = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("incoming");
-  const scrollY = useRef(new Animated.Value(0)).current;
+  
+  const incomingScrollY = useRef(new Animated.Value(0)).current;
+  const concludedScrollY = useRef(new Animated.Value(0)).current;
+  const orgsScrollY = useRef(new Animated.Value(0)).current;
+  
+  const tabScrollPositions = useRef({
+    incoming: 0,
+    concluded: 0,
+    orgs: 0,
+  }).current; 
 
   const toggleMenu = () => setMenuVisible(prev => !prev);
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "incoming":
-        return <Incoming scrollY={scrollY} />;
-      case "concluded":
-        return <Concluded scrollY={scrollY} />;
-      case "orgs":
-        return <Orgs scrollY={scrollY} />;
-      default:
-        return null;
+  const handleScroll = (tabName, animatedValue) => Animated.event(
+    [{ nativeEvent: { contentOffset: { y: animatedValue } } }],
+    {
+      useNativeDriver: true,
+      listener: (event) => {
+        tabScrollPositions[tabName] = event.nativeEvent.contentOffset.y;
+      },
+    }
+  );
+
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    
+    let newScrollY;
+    let newScrollPosition;
+
+    if (newScrollY) {
+        newScrollY.setValue(newScrollPosition);
     }
   };
 
+  const getActiveScrollState = () => {
+    switch (activeTab) {
+      case "incoming":
+        return { 
+          scrollY: incomingScrollY, 
+          handleScroll: handleScroll('incoming', incomingScrollY),
+          initialScroll: tabScrollPositions.incoming,
+        };
+      case "concluded":
+        return { 
+          scrollY: concludedScrollY, 
+          handleScroll: handleScroll('concluded', concludedScrollY),
+          initialScroll: tabScrollPositions.concluded, 
+        };
+      case "orgs":
+        return { 
+          scrollY: orgsScrollY, 
+          handleScroll: handleScroll('orgs', orgsScrollY),
+          initialScroll: tabScrollPositions.orgs, 
+        };
+      default:
+        return { scrollY: incomingScrollY, handleScroll: () => {}, initialScroll: 0 };
+    }
+  };
+
+  const activeProps = getActiveScrollState();
+  
   return (
     <View style={[appeffects.container, { flex: 1 }]}>
       <Header
         onMenuPress={toggleMenu}
-        scrollY={scrollY}
-        onToggleChange={setActiveTab}
+        scrollY={activeProps.scrollY}
+        onToggleChange={handleTabChange} 
       />
 
-      {renderContent()}
+      {activeTab === "incoming" && <Incoming key="incoming" {...activeProps} />}
+      {activeTab === "concluded" && <Concluded key="concluded" {...activeProps} />}
+      {activeTab === "orgs" && <Orgs key="orgs" {...activeProps} />}
 
       <Modal
         animationType="fade"
-        transparent={true}
+        transparent
         visible={menuVisible}
         onRequestClose={toggleMenu}
       >

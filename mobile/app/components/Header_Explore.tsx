@@ -7,7 +7,7 @@ import { useRouter } from "expo-router";
 
 const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }) => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("concluded");
+  const [activeTab, setActiveTab] = useState("incoming");
 
   const handleToggle = (tab) => {
     setActiveTab(tab);
@@ -33,7 +33,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
   });
 
   return (
-    <View>
+    <View style={{ zIndex: 10 }}>
       <View style={[styles.headerfirst, { paddingBottom: 0 }]}>
         <View style={styles.topRow}>
           <TouchableOpacity onPress={onMenuPress}>
@@ -61,6 +61,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
             paddingTop: 0,
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
+            
             transform: [
               {
                 translateY: scrollY.interpolate({
@@ -103,7 +104,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
       <Animated.View
         style={[
           styles.toggleContainerEX,
-          { transform: [{ translateY: toggleTranslateY }] },
+          { backgroundColor: "transparent", transform: [{ translateY: toggleTranslateY }] },
         ]}
       >
         <TouchableOpacity

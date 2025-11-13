@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: verticalScale(10),
-    zIndex: 10,
+    zIndex: 1000000,
   },
 
   logo: {
@@ -124,6 +124,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(20),
     paddingVertical: verticalScale(10),
     marginHorizontal: moderateScale(5),
+    shadowColor: "#505588",
+    shadowOpacity: 1000,
+    shadowRadius: 6,
+    elevation: 7,
   },
 
   inactiveButtonEX: {
@@ -132,6 +136,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(20),
     paddingVertical: verticalScale(10),
     marginHorizontal: moderateScale(5),
+    shadowColor: "#505588",
+    shadowOpacity: 1000,
+    shadowRadius: 6,
+    elevation: 3,
   },
 
   activeText: {
