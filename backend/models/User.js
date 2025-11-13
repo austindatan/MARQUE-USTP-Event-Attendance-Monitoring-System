@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
   lastname: { type: String, required: true },
   contact_number: { type: String },
   email: { type: String, required: true, unique: true },
-  role: { type: String, enum: ["Manager", "Committee", "user"], required: true },
+  role: { type: String, enum: ["Manager", "Committee", "Student"], required: true },
+  profile_image: { type: String, default: "" }
 });
 
 module.exports = mongoose.model("User", userSchema);
