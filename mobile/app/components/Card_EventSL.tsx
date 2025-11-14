@@ -4,6 +4,10 @@ import { View, Text, Image } from "react-native";
 import styles from "../styles/components_eventcardSL";
 
 const EventCardSL = ({ image, title, orgLogo, organization, dateDay, dateMonth, }) => {
+
+  const short = (s, n = 15) =>
+  s && s.length > n ? `${s.slice(0, n).trim()}...` : s;
+
   return (
     <View style={styles.card}>
       <View style={styles.imageContainer}>
@@ -27,7 +31,7 @@ const EventCardSL = ({ image, title, orgLogo, organization, dateDay, dateMonth, 
             style={styles.organizationLogo}
           />
           <View style={styles.orgRow}>
-            <Text style={styles.orgText}>{organization}</Text>
+            <Text style={styles.orgText}>{short(organization, 18)}</Text>
           </View>
         </View>
 

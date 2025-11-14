@@ -57,7 +57,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
           <EventCardSL
             image={require("../../assets/images/marque/crtcg1.png")}
             title="Last Cookie Standing!"
-            organization="Cooking Run Kingdom"
+            organization="Cookie Run Kingdomadasdwacuwbaucwadbiawda"
             orgLogo={require("../../assets/images/marque/crk.jpg")}
             dateDay="17"
             dateMonth="NOV"

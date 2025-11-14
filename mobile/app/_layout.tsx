@@ -19,6 +19,7 @@ export default function RootLayout() {
     'Manrope-EXBold': require('../assets/fonts/Manrope-ExtraBold.ttf'),
     'Manrope-Bold': require('../assets/fonts/Manrope-Bold.ttf'),
     'Inter': require('../assets/fonts/Inter_24pt-Bold.ttf'),
+    'Din': require('../assets/fonts/DIN.otf'),
   });
 
   useEffect(() => {

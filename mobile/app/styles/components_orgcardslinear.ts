@@ -2,8 +2,6 @@ import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   card: {
-    height: 65,
-    width: 300,
     backgroundColor: "#fff",
     borderRadius: 13,
     shadowColor: "#505588",
@@ -13,13 +11,16 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginBottom: 15,
     position: "relative",
-    padding: 12,
+    paddingTop: 13,
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingBottom: 13,
   },
 
   organizationLogo: {
     width: 40,
     height: 40,
-    borderRadius: 25,
+    borderRadius: 50,
   },
 
   orgCol: {
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
   },
 
   orgDesc: {
-    width: 170,
+    width: 180,
     fontSize: 8,
     color: "#555",
     fontFamily: "DMSans-Regular",
