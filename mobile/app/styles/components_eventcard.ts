@@ -1,15 +1,25 @@
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#fff",
+  shadowWrapper: {
     borderRadius: 16,
-    shadowColor: "#505588",
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+
     elevation: 3,
-    overflow: "hidden",
     marginBottom: 15,
+  },
+
+  card: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: "hidden",
     position: "relative",
   },
 
