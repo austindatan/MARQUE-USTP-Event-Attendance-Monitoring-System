@@ -31,7 +31,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.20,
     shadowRadius: 1.41,
-
     elevation: 2,
     marginBottom: WP(4),
   },
@@ -42,7 +41,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     position: "relative",
   },
-
 
   imageContainer: {
     position: "relative",
