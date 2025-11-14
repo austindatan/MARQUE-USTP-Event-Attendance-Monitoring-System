@@ -1,6 +1,20 @@
 // @ts-nocheck
-import { StyleSheet } from "react-native";
-import { event } from "react-native/types_generated/Libraries/Animated/AnimatedExports";
+import { StyleSheet, Dimensions, PixelRatio, Platform } from "react-native";
+
+const { width, height } = Dimensions.get('window');
+
+const baseWidth = 375; 
+const scale = width / baseWidth;
+
+const scaleSize = (size) => Math.round(size * scale);
+const normalize = (size) => {
+  const newSize = size * scale;
+  if (Platform.OS === 'ios') {
+    return Math.round(PixelRatio.roundToNearestPixel(newSize));
+  } else {
+    return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
+  }
+};
 
 const appeffects = StyleSheet.create({
     container: {
@@ -10,46 +24,46 @@ const appeffects = StyleSheet.create({
     },
 
     pageStarter: {
-        marginTop: -10,
+        marginTop: scaleSize(-10),
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
     },
 
     pageTitle: { 
-        padding: 20,
-        fontSize: 16,
+        padding: scaleSize(20),
+        fontSize: normalize(18), 
         fontFamily: "DMSans-Bold",
     },
 
     pageSubtitle: {
-        padding: 20,
-        fontSize: 11,
+        padding: scaleSize(20),
+        fontSize: normalize(11),
         fontFamily: "DMSans-Regular",
     },
 
     eventList: {
-        paddingRight: 20,
-        paddingLeft: 20,
-        bottom: 6,
+        paddingRight: scaleSize(20),
+        paddingLeft: scaleSize(20),
+        bottom: scaleSize(6),
     },
 
     eventListEX: {
         flexDirection: "row",
         flexWrap: "wrap",
         justifyContent: "space-between",
-        paddingRight: 20,
-        paddingLeft: 20,
-        bottom: 6,
-        zIndex: -10,
+        paddingRight: scaleSize(20),
+        paddingLeft: scaleSize(20),
+        bottom: scaleSize(6),
     },
 
     eventListORG: {
-        paddingTop: 20,
-        paddingRight: 20,
-        paddingLeft: 20,
-        bottom: 6,
+        paddingTop: scaleSize(20),
+        paddingRight: scaleSize(20),
+        paddingLeft: scaleSize(20),
+        bottom: scaleSize(6),
     },
+    
 });
 
 export default appeffects;

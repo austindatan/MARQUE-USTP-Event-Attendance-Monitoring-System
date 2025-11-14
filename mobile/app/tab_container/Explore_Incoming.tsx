@@ -53,7 +53,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
           <Text style={appeffects.pageTitle}>Incoming Events</Text>
         </View>
 
-        <View style={appeffects.eventListEX}>
+        <View style={appeffects.eventList}>
           <EventCard
           image={require("../../assets/images/marque/crtcg1.png")}
           title="Last Cookie Standing!"

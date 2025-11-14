@@ -1,79 +1,112 @@
-import { StyleSheet } from "react-native";
-import { scale, verticalScale, moderateScale } from "react-native-size-matters";
+// @ts-nocheck
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+const WP = (percentage) => {
+  const value = (percentage * SCREEN_WIDTH) / 100;
+  return Math.round(value);
+};
+
+const HP = (percentage) => {
+  const value = (percentage * SCREEN_HEIGHT) / 100;
+  return Math.round(value);
+};
+
+const CARD_WIDTH = WP(28.1); 
+const CARD_HEIGHT = WP(41); 
+const IMAGE_SIZE = WP(25.8);
+const LOGO_SIZE = WP(4);
 
 const styles = StyleSheet.create({
-  card: {
-    width: scale(102),
-    height: verticalScale(145),
+  shadowWrapper: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: WP(2.5),
     backgroundColor: "#fff",
-    borderRadius: moderateScale(10),
-    shadowColor: "#505588",
-    shadowOpacity: 0.03,
-    shadowRadius: moderateScale(6),
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
     elevation: 3,
+    marginBottom: WP(4),
+  },
+
+  card: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: WP(2.5),
     overflow: "hidden",
-    marginBottom: verticalScale(15),
     position: "relative",
   },
+
 
   imageContainer: {
     position: "relative",
-    width: scale(100),
-    height: verticalScale(100),
-    paddingLeft: moderateScale(5),
-    paddingRight: moderateScale(5),
-    paddingTop: moderateScale(5),
+    width: IMAGE_SIZE + WP(1.5),
+    height: IMAGE_SIZE + WP(1.5),
+    paddingLeft: WP(1.2),
+    paddingRight: WP(1.2),
+    paddingTop: WP(1.2),
   },
 
   eventPoster: {
-    width: scale(92),
-    height: verticalScale(92),
-    borderRadius: moderateScale(10),
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
+    borderRadius: WP(2.5),
   },
 
   dateTag: {
     position: "absolute",
-    top: verticalScale(10),
-    left: scale(10),
-    width: scale(30),
-    height: verticalScale(30),
-    backgroundColor: "#ffffffdf",
-    borderRadius: moderateScale(8),
-    paddingVertical: 0,
-    paddingHorizontal: 0,
+    flexDirection: "column",
+    top: WP(2.5),
+    left: WP(2.5),
+    width: WP(8),
+    height: WP(8),
+    backgroundColor: "#ffffffea",
+    borderRadius: WP(2),
     alignItems: "center",
+    rowGap: 0,
+    
+    justifyContent: 'center', 
+    
     shadowColor: "#000",
     shadowOpacity: 0.1,
-    shadowRadius: moderateScale(3),
+    shadowRadius: 3,
     elevation: 2,
   },
 
   dateDay: {
     color: "#0C1445",
-    fontSize: moderateScale(11),
+    fontSize: WP(3), 
     fontWeight: "700",
     fontFamily: "Inter",
-    top: verticalScale(3),
+    marginVertical: 0, 
+    lineHeight: WP(3) * 1.1,
   },
 
   dateMonth: {
     color: "#0C1445",
-    fontSize: moderateScale(8),
+    fontSize: WP(2.5),
     fontWeight: "600",
     fontFamily: "Inter",
-    bottom: verticalScale(1),
+    marginVertical: 0, 
+    lineHeight: WP(2) * 1.1,
   },
 
   details: {
     paddingRight: 0,
-    paddingLeft: moderateScale(8),
-    paddingBottom: verticalScale(15),
-    paddingTop: verticalScale(2),
+    paddingLeft: WP(2),
+    paddingBottom: WP(4),
+    paddingTop: WP(0.5),
   },
 
   eventTitle: {
-    width: scale(80),
-    fontSize: moderateScale(10),
+    width: CARD_WIDTH - WP(4),
+    fontSize: WP(2.9),
     color: "#000",
     fontFamily: "DMSans-SemiBold",
   },
@@ -81,25 +114,24 @@ const styles = StyleSheet.create({
   orgDetails: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: verticalScale(1),
+    marginTop: WP(0.5),
   },
 
   organizationLogo: {
-    width: scale(11),
-    height: scale(11),
-    borderRadius: moderateScale(65),
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+    borderRadius: LOGO_SIZE / 2,
   },
 
   orgRow: {
     flexDirection: "column",
-    marginLeft: moderateScale(3),
+    marginLeft: WP(0.8),
   },
 
   orgText: {
-    fontSize: moderateScale(7),
+    fontSize: WP(1.9),
     color: "#858585",
     fontFamily: "DIN",
-    flexShrink: 1,
   },
 });
 
