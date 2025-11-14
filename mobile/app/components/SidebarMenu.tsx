@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, TouchableWithoutFeedback } from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_sidebar";
 import { BASE_URL } from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BlurView } from "expo-blur";
+import Animated, { useSharedValue, withTiming, useAnimatedStyle, runOnJS, } from "react-native-reanimated";
 
 const menuItems = [
   { name: "Home", icon: "home-outline" },
@@ -28,94 +30,116 @@ interface StudentData {
 }
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
-  if (!isVisible) return null;
-
   const [studentData, setStudentData] = useState<StudentData | null>(null);
+  const [renderSidebar, setRenderSidebar] = useState(isVisible);
+
+ 
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const storedStudentNumber = await AsyncStorage.getItem(
+          "student_number"
+        );
+        if (!storedStudentNumber) return;
+
+        const res = await fetch(
+          `${BASE_URL}/api/student/id/${storedStudentNumber}`
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (data && data.firstname && data.lastname) {
+          setStudentData(data);
+        }
+      } catch (err) {
+        console.error("Error fetching student data:", err);
+      }
+    };
+
+    fetchStudentData();
+  }, []);
+
+  //animation
+  const translateX = useSharedValue(-300);
 
   useEffect(() => {
-  const fetchStudentData = async () => {
-    try {
-      const storedStudentNumber = await AsyncStorage.getItem("student_number");
-      console.log("Stored studentNumber:", storedStudentNumber);
-
-      if (!storedStudentNumber) return;
-
-      const res = await fetch(`${BASE_URL}/api/student/id/${storedStudentNumber}`);
-      console.log("Fetch status:", res.status);
-
-      if (!res.ok) {
-        console.error("Failed to fetch student data:", res.status);
-        return;
-      }
-
-      const data = await res.json();
-      console.log("Fetched student data:", data);
-
-      // validation
-      if (data && data.firstname && data.lastname && data.student_number) {
-        setStudentData(data);
-      } else {
-        console.error("Incomplete student data returned:", data);
-      }
-    } catch (err) {
-      console.error("Error fetching student data:", err);
+    if (isVisible) {
+      setRenderSidebar(true); //opening
+      translateX.value = withTiming(0, { duration: 250 });
+    } else {
+      translateX.value = withTiming(-300, { duration: 250 }, () => {
+        runOnJS(setRenderSidebar)(false); //closing
+      });
     }
-  };
+  }, [isVisible]);
 
-  fetchStudentData();
-}, []);
-
-
-  const handleOverlayPress = (event: any) => {
-    if (event.target === event.currentTarget) onClose();
-  };
+  const animatedSidebarStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   const handleMenuItemPress = (name: string) => {
-    console.log(`Navigating to: ${name}`);
+    console.log("Navigating to:", name);
     onClose();
   };
 
+  if (!renderSidebar) return null;
+
   return (
-    <TouchableWithoutFeedback onPress={handleOverlayPress}>
-      <View style={StyleSheet.absoluteFillObject}>
-        <View style={styles.modalBackground} />
+    <View style={StyleSheet.absoluteFillObject}>
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={onClose}
+        style={[StyleSheet.absoluteFill, { position: "absolute" }]}
+      >
+        <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
+      </TouchableOpacity>
 
-        <View style={styles.sidebarContainer}>
-          <View style={styles.profileContainer}>
-            <Image
-              source={{ uri: studentData?.profile_image || "https://via.placeholder.com/150" }}
-              style={styles.profileImage}
-              resizeMode="cover"
-            />
-            <Text style={styles.profileName}>
-              {studentData?.firstname && studentData?.lastname
-                ? `${studentData.firstname} ${studentData.lastname}`
-                : "Loading..."}
-            </Text>
-            <Text style={styles.profileTitle}>
-              {studentData
-                ? `${studentData.department_code} | STUDENT ID: ${studentData.student_number}`
-                : ""}
-            </Text>
-            <Text style={styles.profileEmail}>{studentData?.email ?? ""}</Text>
-          </View>
-
-          <View>
-            {menuItems.map(item => (
-              <TouchableOpacity key={item.name} style={styles.menuItem} onPress={() => handleMenuItemPress(item.name)}>
-                <Ionicons name={item.icon as any} size={24} color="#222762" />
-                <Text style={styles.menuText}>{item.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <TouchableOpacity style={styles.organizationsButton} onPress={() => handleMenuItemPress("Your Organizations")}>
-            <Ionicons name="people-circle-outline" size={24} color="#222762" />
-            <Text style={styles.organizationsText}>Your Organizations</Text>
-          </TouchableOpacity>
+      <Animated.View style={[styles.sidebarContainer, animatedSidebarStyle]}>
+        <View style={styles.profileContainer}>
+          <Image
+            source={{
+              uri:
+                studentData?.profile_image ||
+                "https://via.placeholder.com/150",
+            }}
+            style={styles.profileImage}
+            resizeMode="cover"
+          />
+          <Text style={styles.profileName}>
+            {studentData
+              ? `${studentData.firstname} ${studentData.lastname}`
+              : "Loading..."}
+          </Text>
+          <Text style={styles.profileTitle}>
+            {studentData
+              ? `${studentData.department_code} | STUDENT ID: ${studentData.student_number}`
+              : ""}
+          </Text>
+          <Text style={styles.profileEmail}>{studentData?.email ?? ""}</Text>
         </View>
-      </View>
-    </TouchableWithoutFeedback>
+
+        <View>
+          {menuItems.map((item) => (
+            <TouchableOpacity
+              key={item.name}
+              style={styles.menuItem}
+              onPress={() => handleMenuItemPress(item.name)}
+            >
+              <Ionicons name={item.icon as any} size={24} color="#222762" />
+              <Text style={styles.menuText}>{item.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          style={styles.organizationsButton}
+          onPress={() => handleMenuItemPress("Your Organizations")}
+        >
+          <Ionicons name="people-circle-outline" size={24} color="#222762" />
+          <Text style={styles.organizationsText}>Your Organizations</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
   );
 };
 
