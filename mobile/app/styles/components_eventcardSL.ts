@@ -27,17 +27,17 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 3,
+    shadowOpacity: 0.20,
+    shadowRadius: 1.41,
+
+    elevation: 2,
     marginBottom: WP(4),
   },
 
   card: {
     flex: 1,
-    backgroundColor: "#fff",
     borderRadius: WP(2.5),
     overflow: "hidden",
     position: "relative",
