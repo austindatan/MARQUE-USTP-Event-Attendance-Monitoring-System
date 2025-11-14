@@ -3,6 +3,7 @@ import React, { useEffect , useRef } from "react";
 import { View, Text, Animated } from "react-native";
 import EventCardSL from "../components/Card_EventSL";
 import appeffects from "../styles/effects_app";
+import Card_Blank from "../components/Card_Blank";
 
 const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const scrollRef = useRef(null);
@@ -57,7 +58,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
           <EventCardSL
             image={require("../../assets/images/marque/crtcg1.png")}
             title="Last Cookie Standing!"
-            organization="Cookie Run Kingdomadasdwacuwbaucwadbiawda"
+            organization="Cookie Run Kingdom"
             orgLogo={require("../../assets/images/marque/crk.jpg")}
             dateDay="17"
             dateMonth="NOV"
@@ -135,14 +136,8 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
             orgLogo={require("../../assets/images/marque/crk.jpg")}
             dateDay="17"
             dateMonth="NOV"
-          /><EventCardSL
-            image={require("../../assets/images/marque/crtcg1.png")}
-            title="Last Cookie Standing!"
-            organization="Cooking Run Kingdom"
-            orgLogo={require("../../assets/images/marque/crk.jpg")}
-            dateDay="17"
-            dateMonth="NOV"
           />
+          <Card_Blank />
         
         </View>
       </Animated.ScrollView>

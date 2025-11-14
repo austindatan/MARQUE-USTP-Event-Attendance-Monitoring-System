@@ -9,32 +9,34 @@ const EventCardSL = ({ image, title, orgLogo, organization, dateDay, dateMonth, 
   s && s.length > n ? `${s.slice(0, n).trim()}...` : s;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.imageContainer}>
-        <Image
-          source={typeof image === "string" ? { uri: image } : image}
-          style={styles.eventPoster}
-        />
-
-        <View style={styles.dateTag}>
-          <Text style={styles.dateDay}>{dateDay}</Text>
-          <Text style={styles.dateMonth}>{dateMonth}</Text>
-        </View>
-      </View>
-
-      <View style={styles.details}>
-        <Text style={styles.eventTitle}>{title}</Text>
-
-        <View style={styles.orgDetails}>
+    <View style={styles.shadowWrapper}>
+      <View style={styles.card}>
+        <View style={styles.imageContainer}>
           <Image
-            source={typeof orgLogo === "string" ? { uri: orgLogo } : orgLogo}
-            style={styles.organizationLogo}
+            source={typeof image === "string" ? { uri: image } : image}
+            style={styles.eventPoster}
           />
-          <View style={styles.orgRow}>
-            <Text style={styles.orgText}>{short(organization, 18)}</Text>
+
+          <View style={styles.dateTag}>
+            <Text style={styles.dateDay}>{dateDay}</Text>
+            <Text style={styles.dateMonth}>{dateMonth}</Text>
           </View>
         </View>
 
+        <View style={styles.details}>
+          <Text style={styles.eventTitle}>{title}</Text>
+
+          <View style={styles.orgDetails}>
+            <Image
+              source={typeof orgLogo === "string" ? { uri: orgLogo } : orgLogo}
+              style={styles.organizationLogo}
+            />
+            <View style={styles.orgRow}>
+              <Text style={styles.orgText}>{short(organization, 17)}</Text>
+            </View>
+          </View>
+
+        </View>
       </View>
     </View>
   );
