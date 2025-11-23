@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
-interface OrgEventDetails {
-  onOpenCamera: () => void;
-}
-
-export default function OrgEventDetails({ onOpenCamera }: OrgEventDetails) {
+export default function OrgEventDetails() {
+  const router = useRouter();
   const [attendanceCount, setAttendanceCount] = useState(0);
 
   useEffect(() => {
@@ -26,25 +24,24 @@ export default function OrgEventDetails({ onOpenCamera }: OrgEventDetails) {
     }
   };
 
+  const handleOpenCamera = () => {
+    router.push("/tab_container_organization/Camera_State");
+  };
+
   return (
     <View style={styles.homeContainer}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.title}>Attendance Scanner</Text>
+          <Text style={styles.title}>PAUGNAT</Text>
           <Text style={styles.subtitle}>Scan QR codes to record attendance</Text>
         </View>
 
         <TouchableOpacity
           style={styles.cameraButton}
-          onPress={() => {
-            console.log('Camera button pressed!');
-            onOpenCamera();
-          }}
+          onPress={handleOpenCamera}
           activeOpacity={0.8}
         >
-
-
           <Ionicons name="camera" size={24} color="#fff" />
           <Text style={styles.cameraButtonText}>Open Camera to Scan QR</Text>
         </TouchableOpacity>
@@ -74,21 +71,9 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
-  cardHeader: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
+  cardHeader: { marginBottom: 32 },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#1f2937', textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 16, color: '#6b7280', textAlign: 'center' },
   cameraButton: {
     backgroundColor: '#6366f1',
     flexDirection: 'row',
@@ -98,17 +83,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 12,
   },
-  cameraButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  statsContainer: {
-    marginTop: 24,
-    alignItems: 'center',
-  },
-  statsText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
+  cameraButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  statsContainer: { marginTop: 24, alignItems: 'center' },
+  statsText: { fontSize: 14, color: '#6b7280' },
 });

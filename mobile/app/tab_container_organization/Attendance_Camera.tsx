@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Alert } from 'react-native';
-// Note: We can remove FlashMode from the import now.
 import { CameraView, useCameraPermissions } from 'expo-camera'; 
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 interface AttendanceCameraProps {
-  onClose: () => void;
   onShowHistory: () => void;
 }
 
-export default function AttendanceCamera({ onClose, onShowHistory }: AttendanceCameraProps) {
+export default function AttendanceCamera({ onShowHistory }: AttendanceCameraProps) {
+  const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  // 1. New state to control the continuous light (torch)
   const [isTorchOn, setIsTorchOn] = useState(false); 
+  const [isFlipped, setIsFlipped] = useState(false);
   const scannedRef = useRef(false);
 
   useEffect(() => {
@@ -23,14 +23,8 @@ export default function AttendanceCamera({ onClose, onShowHistory }: AttendanceC
     }
   }, [permission]);
 
-  /**
-   * Toggles the torch (continuous light) on/off.
-   * This is necessary because 'torch' may not be a valid FlashMode string 
-   * in all versions, requiring the separate 'enableTorch' prop.
-   */
-  const toggleFlash = () => {
-    setIsTorchOn(prev => !prev);
-  };
+  const toggleFlash = () => setIsTorchOn(prev => !prev);
+  const toggleFlip = () => setIsFlipped(prev => !prev);
 
   const handleBarCodeScanned = async ({ type, data }: any) => {
     if (scannedRef.current) return;
@@ -38,27 +32,19 @@ export default function AttendanceCamera({ onClose, onShowHistory }: AttendanceC
     setScanned(true);
 
     try {
-      // parse QR code (split by spaces)
       const parts = data.trim().split(/\s+/);
       if (parts.length < 3) throw new Error('Invalid QR format');
-
       const program = parts.pop(); 
       const studentId = parts.pop(); 
       const name = parts.join(' '); 
       const parsedData = { name, studentId, program };
-
-      // save attendance
       const newRecord = { ...parsedData, timestamp: new Date().toISOString() };
       const saved = await AsyncStorage.getItem('attendanceLog');
       const log = saved ? JSON.parse(saved) : [];
       await AsyncStorage.setItem('attendanceLog', JSON.stringify([newRecord, ...log]));
-
       Alert.alert('Scan Successful', `${parsedData.name} attendance recorded`);
     } catch (error) {
-      Alert.alert(
-        'Invalid QR Code',
-        'The scanned QR code is not in the correct format.\nIt must contain: name, studentId, program.'
-      );
+      Alert.alert('Invalid QR Code', 'The scanned QR code is not in the correct format.');
     } finally {
       setTimeout(() => {
         scannedRef.current = false;
@@ -82,34 +68,37 @@ export default function AttendanceCamera({ onClose, onShowHistory }: AttendanceC
     );
   }
 
-  // Determine the flash icon and color based on the torch state
   const flashIconName = isTorchOn ? 'flash' : 'flash-off';
-  const flashIconColor = isTorchOn ? '#fde047' : '#fff'; 
+  const flashIconColor = isTorchOn ? '#fde047' : '#fff';
 
   return (
     <View style={styles.cameraContainer}>
       <StatusBar barStyle="light-content" />
       <CameraView
         style={styles.camera}
-        facing="back"
-        // 2. Use 'off' for the flash prop to avoid errors
-        flash="off" 
-        // 3. Use the correct prop: enableTorch for continuous light control
-        enableTorch={isTorchOn} 
+        facing={isFlipped ? "front" : "back"}
+        flash="off"
+        enableTorch={isTorchOn}
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
       >
-        {/* ... (rest of the component structure remains the same) */}
+        {/* Close Button */}
         <View style={styles.topBar}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
             <Ionicons name="close" size={32} color="#fff" />
           </TouchableOpacity>
         </View>
 
+        {/* Instruction */}
         <View style={styles.centerOverlay}>
           <Text style={styles.instructionText}>Position QR code within frame</Text>
         </View>
 
+        {/* Scan Frame */}
         <View style={styles.frameContainer}>
           <View style={styles.scanFrame}>
             <View style={[styles.corner, styles.topLeft]} />
@@ -127,10 +116,8 @@ export default function AttendanceCamera({ onClose, onShowHistory }: AttendanceC
           </View>
         )}
 
-        {/* Bottom Menu Bar - Flash Button and Attendance Log Button */}
+        {/* Bottom Menu */}
         <View style={styles.bottomMenu}>
-          
-          {/* 💡 Flash Button (now controls Torch) */}
           <TouchableOpacity
             style={[styles.menuButton, { backgroundColor: isTorchOn ? '#1e40af' : '#6366f1' }]} 
             onPress={toggleFlash}
@@ -140,7 +127,15 @@ export default function AttendanceCamera({ onClose, onShowHistory }: AttendanceC
             <Text style={styles.menuButtonText}>Flash</Text>
           </TouchableOpacity>
 
-          {/* ⏱️ Attendance Log Button */}
+          <TouchableOpacity
+            style={[styles.menuButton, { backgroundColor: isFlipped ? '#1e40af' : '#6366f1' }]} 
+            onPress={toggleFlip}
+            activeOpacity={0.8}
+          >
+            <Ionicons name={isFlipped ? "camera-reverse" : "camera"} size={24} color="#fff" />
+            <Text style={styles.menuButtonText}>Flip</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.menuButton}
             onPress={onShowHistory}
@@ -155,10 +150,7 @@ export default function AttendanceCamera({ onClose, onShowHistory }: AttendanceC
   );
 }
 
-// ---------------------------------------------
-// ## Styles (No Changes Needed)
-// ---------------------------------------------
-
+// Styles remain unchanged
 const styles = StyleSheet.create({
   cameraContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
   camera: { flex: 1, width: '100%' },
@@ -178,31 +170,7 @@ const styles = StyleSheet.create({
   bottomRight: { bottom: -2, right: -2, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 20 },
   successOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(16, 185, 129, 0.5)', justifyContent: 'center', alignItems: 'center' },
   successCircle: { backgroundColor: '#fff', borderRadius: 50, padding: 24 },
-  bottomMenu: { 
-    position: 'absolute', 
-    bottom: 0, 
-    left: 0, 
-    right: 0, 
-    backgroundColor: 'rgba(17, 24, 39, 0.95)', 
-    paddingVertical: 20, 
-    paddingHorizontal: 32, 
-    paddingBottom: 40, 
-    flexDirection: 'row', 
-    justifyContent: 'space-around', 
-    alignItems: 'center' 
-  },
-  menuButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: '#6366f1', 
-    paddingVertical: 16, 
-    paddingHorizontal: 24, 
-    borderRadius: 12, 
-    gap: 8 
-  },
-  menuButtonText: { 
-    color: '#fff', 
-    fontSize: 16, 
-    fontWeight: '600' 
-  },
+  bottomMenu: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(17, 24, 39, 0.95)', paddingVertical: 20, paddingHorizontal: 32, paddingBottom: 40, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  menuButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', paddingVertical: 16, paddingHorizontal: 24, borderRadius: 12, gap: 8 },
+  menuButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
