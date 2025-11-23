@@ -21,6 +21,10 @@ app.use("/api/auth", authRouter);
 const studentRoutes = require("./routes/student");
 app.use("/api/student", studentRoutes);
 
+// Event route  
+const eventRoutes = require("./routes/eventRoutes");
+app.use("/events", eventRoutes);
+
 // DB connection
 mongoose
   .connect(process.env.MONGO_URI, {
