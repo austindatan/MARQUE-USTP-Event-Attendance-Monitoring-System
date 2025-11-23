@@ -1,15 +1,45 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { View, Animated, Modal } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/Header_Events";
 import SidebarMenu from "../components/SidebarMenu";
 import appeffects from "../styles/effects_app";
 import Departments from "../tab_container/Event_Department";
 import Organizations from "../tab_container/Event_Organization";
+import { BASE_URL } from "../../config";
 
 const Events = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("departments");
+  const [studentDept, setStudentDept] = useState(null);
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    console.log("useEffect ran — Events screen mounted");
+    fetchStudentDepartment();
+  }, []);
+
+  const fetchStudentDepartment = async () => {
+    try {
+      const studentNumber = await AsyncStorage.getItem("student_number");
+      console.log("📌 STORED STUDENT NUMBER =", studentNumber);
+
+      if (!studentNumber) {
+        console.log("❌ No student number found in storage.");
+        return;
+      }
+
+      const res = await fetch(`${BASE_URL}/api/student/id/${studentNumber}`);
+      const data = await res.json();
+
+      console.log("📌 STUDENT DATA FROM BACKEND =", data);
+
+      setStudentDept(data.department_id);
+    } catch (error) {
+      console.log("Error fetching student department:", error);
+    }
+  };
+
 
   const toggleMenu = () => setMenuVisible(prev => !prev);
 
@@ -22,7 +52,7 @@ const Events = () => {
       />
 
       {activeTab === "departments" ? (
-        <Departments scrollY={scrollY} />
+        <Departments scrollY={scrollY} studentDept={studentDept} />
       ) : (
         <Organizations scrollY={scrollY} />
       )}
