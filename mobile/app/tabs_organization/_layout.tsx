@@ -1,6 +1,5 @@
 import { Tabs } from "expo-router"; 
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { View } from "react-native";
+import { View, Image } from "react-native";
 
 export default function TabsLayout() {
   return (
@@ -23,10 +22,10 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen 
-        name="YourOrg"
+        name="Teams"
         options={{
-          title: "YourOrg",
-          tabBarIcon: ({ focused, color }) => (
+          title: "Teams",
+          tabBarIcon: ({ focused }) => (
             <View
               style={{
                 borderRadius: 8, 
@@ -36,7 +35,14 @@ export default function TabsLayout() {
                 alignItems: "center",
               }}
             >
-              <Ionicons name="compass-outline" color={focused ? "#0A0F51" : color} size={25} />
+              <Image
+                source={require("../../assets/images/marque/compass.png")} // replace with your image path
+                style={{
+                  width: 25,
+                  height: 25,
+                  tintColor: focused ? "#0A0F51" : "#888", // optional: mimic icon color change
+                }}
+              />
             </View>
           ),
         }}
