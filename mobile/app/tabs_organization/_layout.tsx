@@ -36,7 +36,7 @@ export default function TabsLayout() {
                 alignItems: "center",
               }}
             >
-              <Ionicons name="compass" color={focused ? "#0A0F51" : color} size={25} />
+              <Ionicons name="compass-outline" color={focused ? "#0A0F51" : color} size={25} />
             </View>
           ),
         }}
