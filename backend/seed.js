@@ -119,11 +119,27 @@ async function Seed() {
         "https://github.com/austindatan/MARQUE-USTP-Event-Attendance-Monitoring-System/blob/main/mobile/assets/images/neka_profile.jpg?raw=true",
     });
 
-    await Student.create({
-      users_id: rabi._id,
-      college_id: coll2._id,
-      department_id: dept2._id,
-      student_number: "20233300123",
+      await Student.create({
+        users_id: rabi._id,
+        college_id: coll2._id,
+        department_id: dept2._id,
+        student_number: "2023300151",
+      });
+
+    //Bonsel
+    const hashedPassBonsel = await bcrypt.hash("shrek", 10);
+    const bonsel = await User.create({
+      user_id: nextUserId++,
+      username: "Bons",
+      password: hashedPassBonsel,
+      firstname: "Vonzelle Fiona",
+      middlename: "Aratan",
+      lastname: "Puray",
+      contact_number: "09123456789",
+      email: "bonsel@gmail.com",
+      role: "Committee",
+      profile_image:
+        "https://github.com/austindatan/MARQUE-USTP-Event-Attendance-Monitoring-System/blob/main/mobile/assets/images/neka_profile.jpg?raw=true",
     });
 
     // --- EVENTS (Department + Organization Based) ---
