@@ -1,34 +1,22 @@
 import React, { useState } from 'react';
-import OrgEventDetails from './Org_Event_Details';
+import { View } from 'react-native';
 import AttendanceCamera from './Attendance_Camera';
 import AttendanceHistory from './Attendance_History';
 
 export default function CameraState() {
-  const [currentView, setCurrentView] = useState<'home' | 'camera' | 'history'>('home');
-
-  console.log('Current view:', currentView);
+  const [currentView, setCurrentView] = useState<'camera' | 'history'>('camera');
 
   return (
-    <>
-      {currentView === 'home' && (
-        <OrgEventDetails 
-          onOpenCamera={() => {
-            console.log('Opening camera!');
-            setCurrentView('camera');
-          }} 
-        />
-      )}
-      
+    <View style={{ flex: 1 }}>
       {currentView === 'camera' && (
         <AttendanceCamera
-          onClose={() => setCurrentView('home')}
           onShowHistory={() => setCurrentView('history')}
         />
       )}
-      
+
       {currentView === 'history' && (
         <AttendanceHistory onBack={() => setCurrentView('camera')} />
       )}
-    </>
+    </View>
   );
 }
