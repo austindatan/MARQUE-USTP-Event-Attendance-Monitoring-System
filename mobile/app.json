@@ -46,7 +46,8 @@
         {
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for scanning QR codes."
         }
-      ]
+      ],
+      "expo-barcode-scanner"
     ],
     "experiments": {
       "typedRoutes": true,
