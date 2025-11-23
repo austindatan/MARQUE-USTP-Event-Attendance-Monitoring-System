@@ -1,8 +1,10 @@
 import { StyleSheet, View, ImageBackground, Image } from "react-native";
 import React, { useEffect } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, Redirect } from "expo-router";
 
 const Index = () => {
+  //return <Redirect href="../tab_container/Org_Event_Details" />;
+  //return <Redirect href="../tabs_organization/YourOrg" />;
   const router = useRouter();
 
   useEffect(() => {
