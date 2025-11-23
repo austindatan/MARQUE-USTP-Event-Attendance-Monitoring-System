@@ -12,7 +12,7 @@ const Profile = () => {
 
   return (
     <View style={styles.container}>
-      <Header onMenuPress={toggleMenu} />
+      <Header onMenuPress={toggleMenu} onToggleChange={() => {}} />
       
       <Text style={styles.contentText}>Upcoming Events...</Text>
 

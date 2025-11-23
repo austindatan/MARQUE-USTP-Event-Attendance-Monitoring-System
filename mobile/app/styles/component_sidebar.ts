@@ -4,7 +4,6 @@ const { width, height } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.8; 
 
 const styles = StyleSheet.create({
-  
   sidebarContainer: {
     width: "70%",
     height: height,
@@ -15,7 +14,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
   },
 
-  
   profileContainer: {
     marginBottom: 20,
     paddingBottom: 15,
@@ -48,7 +46,6 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans-Regular",
   },
 
-  
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -62,14 +59,14 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  
   organizationsButton: {
-    marginTop: 30,
-    paddingVertical: 15,
+    marginTop: 10,
+    paddingVertical: 12, // slightly smaller to fit image nicely
+    paddingHorizontal: 15, // add horizontal padding
     borderRadius: 10,
-    backgroundColor: "#FFC844", 
+    backgroundColor: "#FFC844",
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "flex-start", // aligns image and text to the left
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -80,8 +77,8 @@ const styles = StyleSheet.create({
   organizationsText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#222762", 
-    marginLeft: 8,
+    color: "white",
+    marginLeft: 12, // spacing between image and text
   },
 });
 

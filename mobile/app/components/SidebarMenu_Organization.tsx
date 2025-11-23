@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_sidebar";
 import { BASE_URL } from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import Animated, { useSharedValue, withTiming, useAnimatedStyle, runOnJS } from "react-native-reanimated";
-import { router } from "expo-router"; // import router
+import { router } from "expo-router";
 
 const menuItems = [
-  { name: "Home", icon: "home-outline" },
-  { name: "Notifications", icon: "notifications-outline" },
-  { name: "Bookmarks", icon: "bookmark-outline" },
-  { name: "Profile", icon: "person-outline" },
+  { name: "Home", icon: "home-outline" }, // you can remove icon field if not needed
 ];
 
 interface SidebarMenuProps {
@@ -26,11 +22,11 @@ interface StudentData {
   email: string;
   student_number: string;
   department_code: string;
-  college_name: string;
+  college_name: string;          
   profile_image?: string;
 }
 
-const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
+const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [renderSidebar, setRenderSidebar] = useState(isVisible);
 
@@ -60,11 +56,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
 
   useEffect(() => {
     if (isVisible) {
-      setRenderSidebar(true); // opening
+      setRenderSidebar(true);
       translateX.value = withTiming(0, { duration: 250 });
     } else {
       translateX.value = withTiming(-300, { duration: 250 }, () => {
-        runOnJS(setRenderSidebar)(false); // closing
+        runOnJS(setRenderSidebar)(false);
       });
     }
   }, [isVisible]);
@@ -74,29 +70,23 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
   }));
 
   const handleMenuItemPress = async (name: string) => {
-    onClose(); // close the sidebar first
+    onClose();
 
-    if (name === "Your Organizations") {
+    if (name === "Student Side") {
       try {
         const studentNumber = await AsyncStorage.getItem("student_number");
-
         if (!studentNumber) {
           console.log("No student number found in AsyncStorage.");
           return;
         }
 
-        // Optional: make an API call if you want to fetch org data
-        // const res = await fetch(`${BASE_URL}/api/student/${studentNumber}/organizations`);
-        // const data = await res.json();
-
-        // Navigate to Teams page
-        router.push("/tabs_organization/Teams");
+        router.push("/tabs/Events");
       } catch (err) {
-        console.error("Error navigating to Organizations:", err);
+        console.error("Error navigating to Student Side:", err);
       }
     } else {
       console.log("Navigating to:", name);
-      // handle other menu items here if you want
+      // handle other menu items if needed
     }
   };
 
@@ -135,7 +125,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
               style={styles.menuItem}
               onPress={() => handleMenuItemPress(item.name)}
             >
-              <Ionicons name={item.icon as any} size={24} color="#222762" />
+              <Image
+                source={require("../../assets/images/marque/HomeMenuBarButton.png")} // correct local image import
+                style={{ width: 24, height: 23 }}
+              />
               <Text style={styles.menuText}>{item.name}</Text>
             </TouchableOpacity>
           ))}
@@ -143,14 +136,17 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
 
         <TouchableOpacity
           style={styles.organizationsButton}
-          onPress={() => handleMenuItemPress("Your Organizations")}
+          onPress={() => handleMenuItemPress("Student Side")}
         >
-          <Ionicons name="people-circle-outline" size={24} color="#222762" />
-          <Text style={styles.organizationsText}>Your Organizations</Text>
+          <Image
+            source={require("../../assets/images/marque/StudentSideLogo.png")}
+            style={{ width: 24, height: 23 }}
+          />
+          <Text style={styles.organizationsText}>Student Side</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
   );
 };
 
-export default SidebarMenu;
+export default SidebarMenuOrganization;

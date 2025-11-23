@@ -8,7 +8,7 @@ const EmptyCard = ({ image, text, button }) => {
     <View style={styles.card}>
         <Image
           source={typeof image === "string" ? { uri: image } : image}
-          style={styles.logo}
+          style={styles.logo}   
         />
 
         <Text style={styles.text}>{text}</Text>

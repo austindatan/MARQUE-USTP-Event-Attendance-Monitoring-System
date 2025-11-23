@@ -56,7 +56,7 @@ const Login = () => {
 
     if (response.ok) {
       await AsyncStorage.setItem("student_number", studentNumber); 
-      router.push("/tabs/Events");
+      router.push("/tabs/Events");   
     } else {
       setErrorMessage(data.message || "Invalid student ID or password.");
     }
