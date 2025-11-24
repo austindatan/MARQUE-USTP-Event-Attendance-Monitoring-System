@@ -13,7 +13,9 @@ const EmptyCard = ({ image, text, button }) => {
 
         <Text style={styles.text}>{text}</Text>
 
-        <TouchableOpacity style={styles.button}
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={button}
         >
           <Text style={styles.activeText}>Explore.</Text>
         </TouchableOpacity>

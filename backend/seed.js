@@ -16,6 +16,7 @@ async function Seed() {
     await College.deleteMany({});
     await Department.deleteMany({});
     await Organization.deleteMany({});
+    await Event.deleteMany({});
     await User.deleteMany({});
     await Student.deleteMany({});
 
@@ -27,7 +28,7 @@ async function Seed() {
     const dept1 = await Department.create({ college_id: coll1._id, department_code: "BSIT", department_name: "Bachelor of Science in Information Technology" });
     const dept2 = await Department.create({ college_id: coll2._id, department_code: "BSCE", department_name: "Computer Engineering" });
 
-    // --- ORGANIZATIONS ---
+    // Organizations
     const org_jpice = await Organization.create({ 
         department_id: dept2._id, 
         org_name: "JPICE",
@@ -100,7 +101,7 @@ async function Seed() {
       users_id: neka._id,
       college_id: coll2._id,
       department_id: dept2._id,
-      student_number: "20233300888",
+      student_number: "2023300204",
     });
 
     //Rabi
@@ -123,7 +124,7 @@ async function Seed() {
         users_id: rabi._id,
         college_id: coll2._id,
         department_id: dept2._id,
-        student_number: "2023300151",
+        student_number: "20233300123",
       });
 
     //Bonsel
@@ -142,34 +143,54 @@ async function Seed() {
         "https://github.com/austindatan/MARQUE-USTP-Event-Attendance-Monitoring-System/blob/main/mobile/assets/images/neka_profile.jpg?raw=true",
     });
 
-    // --- EVENTS (Department + Organization Based) ---
+    await Student.create({
+        users_id: bonsel._id,
+        college_id: coll2._id,
+        department_id: dept2._id,
+        student_number: "2023300151",
+      });
+
+    // Events
     await Event.insertMany([
       {
         event_name: "Free Coffee & Pastry",
         organization_id: org_site._id,
-        event_image: "https://example.com/coffee.jpg",
+        event_image: "https://github.com/austindatan/MARQUE-USTP-Event-Attendance-Monitoring-System/blob/main/mobile/assets/images/coffee_and_pastry.png?raw=true",
         event_type: "Seminar",
         description: "Start your morning the IT way!",
         event_date: new Date("2025-10-17"),
         start_time: new Date("2025-10-17T08:00:00"),
         end_time: new Date("2025-10-17T10:00:00"),
         venue: "Main Auditorium",
-        status: "Upcoming",
+        status: "Concluded",
         is_mandatory: false,
        
       },
       {
         event_name: "Aleba: The Future of Vrkan",
-        event_image: "https://example.com/future_tech.jpg",
+        event_image: "https://github.com/austindatan/MARQUE-USTP-Event-Attendance-Monitoring-System/blob/main/mobile/assets/images/coffee_and_pastry.png?raw=true",
         event_type: "Training",
         description: "Discover the next wave of innovation.",
-        event_date: new Date("2025-10-22"),
-        start_time: new Date("2025-10-22T09:00:00"),
-        end_time: new Date("2025-10-22T12:00:00"),
+        event_date: new Date("2025-12-30"),
+        start_time: new Date("2025-12-30T09:00:00"),
+        end_time: new Date("2025-12-30T12:00:00"),
         venue: "Engineering Building",
         status: "Upcoming",
         is_mandatory: true,
         organization_id: org_jpice._id
+      },
+      {
+        event_name: "Lycanfest 2025",
+        event_image: "https://github.com/austindatan/MARQUE-USTP-Event-Attendance-Monitoring-System/blob/main/mobile/assets/images/coffee_and_pastry.png?raw=true",
+        event_type: "General Assembly",
+        description: "Howling into the future of tech.",
+        event_date: new Date("2025-12-30"),
+        start_time: new Date("2025-12-30T09:00:00"),
+        end_time: new Date("2025-12-30T12:00:00"),
+        venue: "Campus Grounds",
+        status: "Upcoming",
+        is_mandatory: true,
+        organization_id: org_site._id
       },
     ]);
 
