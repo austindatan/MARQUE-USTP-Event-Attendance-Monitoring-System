@@ -13,12 +13,15 @@ async function Seed() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to MongoDB Atlas");
 
-    await College.deleteMany({});
-    await Department.deleteMany({});
-    await Organization.deleteMany({});
-    await Event.deleteMany({});
-    await User.deleteMany({});
-    await Student.deleteMany({});
+    // Check if data already exists
+    const existingUsers = await User.countDocuments();
+    if (existingUsers > 0) {
+      console.log("✅ Database already seeded. Skipping seed operation.");
+      await mongoose.connection.close();
+      return;
+    }
+
+    console.log("🌱 Database empty. Starting seed...");
 
     // College
     const coll1 = await College.create({ college_code: "CITC", college_name: "College of Information Technology and Computing" });
@@ -194,7 +197,7 @@ async function Seed() {
       },
     ]);
 
-    console.log("Default data + organizations + events seeded successfully!");
+    console.log("✅ Default data + organizations + events seeded successfully!");
   } catch (error) {
     console.error("Error seeding default student:", error);
   } finally {
