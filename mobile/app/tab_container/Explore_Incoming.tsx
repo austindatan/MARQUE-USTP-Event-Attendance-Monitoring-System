@@ -1,12 +1,35 @@
 // @ts-nocheck
-import React, { useEffect , useRef } from "react";
-import { View, Text, Animated } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, Animated, ActivityIndicator } from "react-native";
 import EventCard from "../components/Card_Event";
 import appeffects from "../styles/effects_app";
+import { BASE_URL } from "../../config";
 
 const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const scrollRef = useRef(null);
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch all upcoming events 
+  const fetchAllEvents = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${BASE_URL}/events/all/upcoming`);
+      const data = await res.json();
+      setEvents(data);
+    } catch (err) {
+      console.log("Error fetching all events:", err);
+      setEvents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllEvents();
+  }, []);
+
+  
   useEffect(() => {
     if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
       const t = setTimeout(() => {
@@ -54,50 +77,50 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         </View>
 
         <View style={appeffects.eventList}>
-          <EventCard
-          image={require("../../assets/images/marque/crtcg1.png")}
-          title="Last Cookie Standing!"
-          organization="Cooking Run Kingdom"
-          orgLogo={require("../../assets/images/marque/crk.jpg")}
-          orgDate="November 10"
-          dateDay="17"
-          dateMonth="NOV"
-          description="As kings and queens, they ruled the Cookies, bringing in a golden age of peace and..."
-        />
-
-        <EventCard
-          image={require("../../assets/images/marque/crtcg1.png")}
-          title="Last Cookie Standing!"
-          organization="Cooking Run Kingdom"
-          orgLogo={require("../../assets/images/marque/crk.jpg")}
-          orgDate="November 10"
-          dateDay="17"
-          dateMonth="NOV"
-          description="As kings and queens, they ruled the Cookies, bringing in a golden age of peace and..."
-        />
-
-        <EventCard
-          image={require("../../assets/images/marque/crtcg1.png")}
-          title="Last Cookie Standing!"
-          organization="Cooking Run Kingdom"
-          orgLogo={require("../../assets/images/marque/crk.jpg")}
-          orgDate="November 10"
-          dateDay="17"
-          dateMonth="NOV"
-          description="As kings and queens, they ruled the Cookies, bringing in a golden age of peace and..."
-        />
-
-        <EventCard
-          image={require("../../assets/images/marque/crtcg1.png")}
-          title="Last Cookie Standing!"
-          organization="Cooking Run Kingdom"
-          orgLogo={require("../../assets/images/marque/crk.jpg")}
-          orgDate="November 10"
-          dateDay="17"
-          dateMonth="NOV"
-          description="As kings and queens, they ruled the Cookies, bringing in a golden age of peace and..."
-        />
-        
+          {isLoading ? (
+            <View style={{ flex: 1, paddingTop: 50 }}>
+                <ActivityIndicator size="large" color="#FFD700" />
+            </View>
+          ) : events.length > 0 ? (
+            events.map((event) => {
+              // Date and Time Formatting
+              const date = new Date(event.event_date);
+              const dateDay = date.getDate();
+              const dateMonth = date.toLocaleString('default', { month: 'short' });
+              const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                
+              const startTime = new Date(event.start_time).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              });
+              
+              const endTime = new Date(event.end_time).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              });
+              
+              const timeVenueStr = `⏰ ${startTime} - ${endTime} | 📍 ${event.venue}`;
+                
+              return (
+                <EventCard
+                  key={event._id}
+                  image={{ uri: event.event_image }} 
+                  title={event.event_name}
+                  organization={event.organization_id?.org_name || "Unknown Org"}
+                  orgLogo={{ uri: event.organization_id?.pfp || "" }} 
+                  orgDate={dateStr}
+                  dateDay={dateDay}
+                  dateMonth={dateMonth}
+                  // Combine time/venue with the description
+                  description={`${timeVenueStr}\n${event.description}`}
+                />
+              );
+            })
+          ) : (
+            <Text style={{ textAlign: "center", marginTop: 20 }}>No upcoming events</Text>
+          )}
         </View>
       </Animated.ScrollView>
     </Animated.View>

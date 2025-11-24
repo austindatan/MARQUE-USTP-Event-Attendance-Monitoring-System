@@ -8,6 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 // Base route
 app.get("/", (req, res) => {
   res.json({ message: "API running" });
@@ -24,6 +25,14 @@ app.use("/api/student", studentRoutes);
 // Event route  
 const eventRoutes = require("./routes/eventRoutes");
 app.use("/events", eventRoutes);
+
+// Explore Organizations route
+const exploreorgRoutes = require("./routes/exploreorgRoutes");
+app.use("/exploreorgs", exploreorgRoutes);
+
+// Followed Organizations route
+const followedorgsRoutes = require('./routes/followedorgRoutes');
+app.use('/api/followed-orgs', followedorgsRoutes);
 
 // DB connection
 mongoose
