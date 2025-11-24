@@ -1,15 +1,22 @@
+// AttendanceHistory.tsx
 // @ts-nocheck
+
 import React, { useState, useEffect } from 'react';
 import { 
   View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, 
-  StatusBar, Alert 
+  StatusBar, Alert, ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from "../../config";
 
-export default function AttendanceHistory({ onBack }) {
+// -------------------------------
+// Optional: uncomment for testing without passing eventId
+ const DEFAULT_EVENT_ID = "6923517772c7b61301a4e31f"; 
+// -------------------------------
+
+export default function AttendanceHistory({ eventId, onBack }: { eventId?: string, onBack: () => void }) {
   const [attendanceLog, setAttendanceLog] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchAttendanceHistory();
@@ -17,14 +24,24 @@ export default function AttendanceHistory({ onBack }) {
 
   const fetchAttendanceHistory = async () => {
     try {
-      const studentId = await AsyncStorage.getItem("studentId");
+      setLoading(true);
+      let usedEventId = eventId;
 
-      if (!studentId) {
-        console.log("No studentId found.");
+      // -------------------------------
+      // Optional testing: use default event if none provided
+       if (!usedEventId) {
+         console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
+         usedEventId = DEFAULT_EVENT_ID;
+       }
+      
+
+      if (!usedEventId) {
+        Alert.alert('Error', 'No event ID provided');
+        setLoading(false);
         return;
       }
 
-      const response = await fetch(`${BASE_URL}/api/attendance/${studentId}`, {
+      const response = await fetch(`${BASE_URL}/api/attendance/history/${usedEventId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -32,12 +49,17 @@ export default function AttendanceHistory({ onBack }) {
       const data = await response.json();
 
       if (response.ok) {
-        setAttendanceLog(data.attendance || []);
+        const history = data.history || [];
+        setAttendanceLog(history);
       } else {
         console.log("Fetch error:", data.message);
+        Alert.alert('Error', data.message || 'Unable to fetch attendance history');
       }
     } catch (error) {
       console.log("Error fetching attendance history:", error);
+      Alert.alert('Network Error', 'Unable to fetch attendance history');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,7 +87,6 @@ export default function AttendanceHistory({ onBack }) {
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-
         <View style={styles.historyHeaderText}>
           <Text style={styles.historyTitle}>Attendance History</Text>
           <Text style={styles.historyCount}>
@@ -76,7 +97,12 @@ export default function AttendanceHistory({ onBack }) {
 
       {/* Content */}
       <ScrollView style={styles.historyContent}>
-        {attendanceLog.length === 0 ? (
+        {loading ? (
+          <View style={styles.emptyState}>
+            <ActivityIndicator size="large" color="#6366f1" />
+            <Text style={{ color: '#6366f1', marginTop: 16 }}>Loading attendance...</Text>
+          </View>
+        ) : attendanceLog.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="time-outline" size={48} color="#9ca3af" />
             <Text style={styles.emptyStateText}>No attendance records yet</Text>
@@ -85,23 +111,27 @@ export default function AttendanceHistory({ onBack }) {
           <>
             {attendanceLog.map((record, index) => (
               <View key={index} style={styles.recordCard}>
-                <View style={styles.recordHeader}>
-                  <Text style={styles.recordName}>{record.eventName}</Text>
-                  <Text style={styles.recordDate}>
-                    {new Date(record.timestamp).toLocaleDateString()}
-                  </Text>
-                </View>
+                <Text style={styles.recordName}>{record.name}</Text>
 
-                <View style={styles.recordDetails}>
-                  <Text style={styles.recordText}>
-                    <Text style={styles.recordLabel}>Status: </Text>
-                    {record.status}
-                  </Text>
+                <Text style={styles.recordText}>
+                  <Text style={styles.recordLabel}>Student #: </Text>
+                  {record.student_number}
+                </Text>
 
-                  <Text style={styles.recordTime}>
-                    {new Date(record.timestamp).toLocaleTimeString()}
-                  </Text>
-                </View>
+                <Text style={styles.recordText}>
+                  <Text style={styles.recordLabel}>Program: </Text>
+                  {record.program}
+                </Text>
+
+                <Text style={styles.recordText}>
+                  <Text style={styles.recordLabel}>Date: </Text>
+                  {new Date(record.time_in).toLocaleDateString()}
+                </Text>
+
+                <Text style={styles.recordText}>
+                  <Text style={styles.recordLabel}>Time: </Text>
+                  {new Date(record.time_in).toLocaleTimeString()}
+                </Text>
               </View>
             ))}
 
@@ -129,13 +159,9 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: "center", paddingVertical: 48 },
   emptyStateText: { fontSize: 16, color: "#6b7280", marginTop: 16 },
   recordCard: { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#e5e7eb", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
-  recordHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
-  recordName: { fontSize: 18, fontWeight: "600", color: "#1f2937", flex: 1 },
-  recordDate: { fontSize: 12, color: "#6b7280" },
-  recordDetails: { gap: 4 },
-  recordText: { fontSize: 14, color: "#4b5563" },
+  recordName: { fontSize: 18, fontWeight: "600", color: "#1f2937", flex: 1, marginBottom: 4 },
+  recordText: { fontSize: 14, color: "#4b5563", marginBottom: 2 },
   recordLabel: { fontWeight: "500" },
-  recordTime: { fontSize: 12, color: "#9ca3af", marginTop: 4 },
   clearButton: { backgroundColor: "#ef4444", padding: 16, borderRadius: 12, marginTop: 16, marginBottom: 32 },
   clearButtonText: { color: "#fff", fontSize: 16, fontWeight: "600", textAlign: "center" },
 });
