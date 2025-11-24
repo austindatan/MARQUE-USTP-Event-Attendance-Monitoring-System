@@ -126,7 +126,7 @@ exports.getAttendanceHistory = async (req, res) => {
         return {
           name: `${log.user_id.firstname} ${log.user_id.lastname}`,
           student_number: student?.student_number || "",
-          program: student.department_id?.department_code || "",
+          program: student?.department_id?.department_code || "",
           status: log.status,
           time_in: log.time_in,
         };
