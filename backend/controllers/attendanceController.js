@@ -1,95 +1,145 @@
-const AttendanceLog = require('../models/AttendanceLog');
-const Event = require('../models/Event');
-const User = require('../models/User'); // to query by studentId
+// controllers/attendanceController.js
 
-/**
- * Mark attendance when scanning QR
- * Params: { userId, eventId }
- */
-const markAttendance = async (req, res) => {
+const AttendanceLog = require("../models/Attendance_log");
+const Student = require("../models/Student");
+const User = require("../models/User");
+const Department = require("../models/Department");
+
+/* ============================================================
+    TEMP DEFAULT EVENT ID FOR TESTING (COMMENTED OUT)
+============================================================ */
+ const DEFAULT_EVENT_ID = "6923517772c7b61301a4e31f"; 
+
+/* ============================================================
+    REGISTER ATTENDANCE
+============================================================ */
+exports.registerAttendance = async (req, res) => {
   try {
-    const { userId, eventId } = req.params;
+    let { event_id, student_number } = req.body;
 
-    if (!userId || !eventId) {
-      return res.status(400).json({ message: 'userId and eventId are required' });
+    // Optional testing mode: uncomment the next lines to use default event
+     if (!event_id) {
+       console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
+       event_id = DEFAULT_EVENT_ID;
+     } 
+    
+
+    if (!event_id) {
+      return res.status(400).json({
+        message: "Missing required field: event_id",
+      });
     }
 
-    const event = await Event.findById(eventId);
-    if (!event) return res.status(404).json({ message: 'Event not found' });
-
-    const now = new Date();
-    const eventStart = new Date(event.start_time);
-    const lateThreshold = new Date(eventStart.getTime() + 30 * 60 * 1000);
-
-    let status = 'Present';
-    if (now > lateThreshold) status = 'Late';
-
-    const existingLog = await AttendanceLog.findOne({ user_id: userId, event_id: eventId });
-    if (existingLog) {
-      return res.status(400).json({ message: 'Attendance already recorded' });
+    if (!student_number) {
+      return res.status(400).json({
+        message: "Missing required field: student_number",
+      });
     }
 
-    const newLog = new AttendanceLog({
-      user_id: userId,
-      event_id: eventId,
-      status,
-      time_in: now,
+    // Find student by student_number and populate related fields
+    const student = await Student.findOne({ student_number })
+      .populate("users_id")
+      .populate("department_id");
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const user = student.users_id;
+
+    // Prevent duplicate logs for the same event
+    const existingLog = await AttendanceLog.findOne({
+      event_id,
+      user_id: user._id,
     });
 
-    await newLog.save();
+    if (existingLog) {
+      return res.status(200).json({
+        message: "Student already registered for this event.",
+        alreadyRegistered: true,
+        data: {
+          name: `${user.firstname} ${user.lastname}`,
+          student_number: student.student_number,
+          program: student.department_id?.department_code || "",
+          time_in: existingLog.time_in,
+        },
+      });
+    }
 
-    res.status(201).json({ message: 'Attendance recorded', log: newLog });
+    // Create new attendance log
+    const newLog = await AttendanceLog.create({
+      event_id,
+      user_id: user._id,
+      status: "Present",
+      time_in: new Date(),
+    });
+
+    return res.status(201).json({
+      message: "Attendance registered successfully.",
+      alreadyRegistered: false,
+      data: {
+        name: `${user.firstname} ${user.lastname}`,
+        student_number: student.student_number,
+        program: student.department_id?.department_code || "",
+        time_in: newLog.time_in,
+      },
+    });
+
   } catch (error) {
-    console.error('Error marking attendance:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("REGISTER ATTENDANCE ERROR:", error);
+    return res.status(500).json({ message: "Server Error", error });
   }
 };
 
-/**
- * Get attendance logs for an event
- * Params: { eventId }
- * Query: { studentId } optional
- */
-const getAttendanceLogs = async (req, res) => {
+/* ============================================================
+    GET ATTENDANCE HISTORY
+============================================================ */
+exports.getAttendanceHistory = async (req, res) => {
   try {
-    const { eventId } = req.params;
-    const { studentId } = req.query;
+    let { event_id } = req.params;
 
-    if (!eventId) return res.status(400).json({ message: 'eventId is required' });
+    // Optional testing mode: uncomment the next lines to use default event
+     if (!event_id) {
+       console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
+       event_id = DEFAULT_EVENT_ID;
+     }
+    
 
-    const event = await Event.findById(eventId).populate('participants');
-    if (!event) return res.status(404).json({ message: 'Event not found' });
-
-    let logs = await AttendanceLog.find({ event_id: eventId }).populate('user_id', 'name studentId program');
-
-    // Mark unscanned participants as Absent
-    if (event.participants && event.participants.length > 0) {
-      const scannedIds = logs.map(log => log.user_id._id.toString());
-
-      const absentLogs = event.participants
-        .filter(u => !scannedIds.includes(u.toString()))
-        .map(u => ({
-          user_id: u,
-          event_id: eventId,
-          status: 'Absent',
-        }));
-
-      if (absentLogs.length > 0) {
-        await AttendanceLog.insertMany(absentLogs);
-        logs = await AttendanceLog.find({ event_id: eventId }).populate('user_id', 'name studentId program');
-      }
+    if (!event_id) {
+      return res.status(400).json({
+        message: "Missing required field: event_id",
+      });
     }
 
-    // Filter by studentId if provided
-    if (studentId) {
-      logs = logs.filter(log => log.user_id.studentId === studentId);
-    }
+    // Trim to avoid ObjectId cast errors
+    event_id = event_id.trim();
 
-    res.json(logs);
+    // Find all attendance logs for the event and populate user
+    const logs = await AttendanceLog.find({ event_id }).populate("user_id");
+
+    // Format logs with student info and department
+    const formatted = await Promise.all(
+      logs.map(async (log) => {
+        const student = await Student.findOne({ users_id: log.user_id._id })
+          .populate("department_id");
+
+        return {
+          name: `${log.user_id.firstname} ${log.user_id.lastname}`,
+          student_number: student?.student_number || "",
+          program: student.department_id?.department_code || "",
+          status: log.status,
+          time_in: log.time_in,
+        };
+      })
+    );
+
+    return res.status(200).json({
+      message: "Attendance history retrieved successfully",
+      history: formatted,
+    });
+
   } catch (error) {
-    console.error('Error fetching attendance logs:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("GET HISTORY ERROR:", error);
+    return res.status(500).json({ message: "Server Error", error });
   }
 };
-
-module.exports = { markAttendance, getAttendanceLogs };

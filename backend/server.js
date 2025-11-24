@@ -26,6 +26,10 @@ app.use("/api/student", studentRoutes);
 const eventRoutes = require("./routes/eventRoutes");
 app.use("/events", eventRoutes);
 
+// Attendance route
+const attendanceRoutes = require("./routes/attendanceRoutes");
+app.use("/api/attendance", attendanceRoutes);
+
 // Explore Organizations route
 const exploreorgRoutes = require("./routes/exploreorgRoutes");
 app.use("/exploreorgs", exploreorgRoutes);

@@ -1,21 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Alert, ActivityIndicator } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera'; 
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { BASE_URL } from '../../config';
 
 interface AttendanceCameraProps {
   onShowHistory: () => void;
+  eventId?: string; // Optional: if not provided, can use DEFAULT_EVENT_ID
 }
 
-export default function AttendanceCamera({ onShowHistory }: AttendanceCameraProps) {
+export default function AttendanceCamera({ onShowHistory, eventId }: AttendanceCameraProps) {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [isTorchOn, setIsTorchOn] = useState(false); 
   const [isFlipped, setIsFlipped] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading state for attendance registration
   const scannedRef = useRef(false);
+
+  // -------------------------------
+  // Uncomment this for testing without passing eventId
+   const DEFAULT_EVENT_ID = "6923517772c7b61301a4e31f";
+   if (!eventId) eventId = DEFAULT_EVENT_ID;
+  // -------------------------------
 
   useEffect(() => {
     if (permission && !permission.granted) {
@@ -26,6 +34,35 @@ export default function AttendanceCamera({ onShowHistory }: AttendanceCameraProp
   const toggleFlash = () => setIsTorchOn(prev => !prev);
   const toggleFlip = () => setIsFlipped(prev => !prev);
 
+  const registerAttendance = async (studentNumber: string) => {
+    try {
+      if (!eventId) throw new Error("No eventId provided");
+
+      setLoading(true);
+      const response = await fetch(`${BASE_URL}/attendance/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert(
+          'Attendance Registered',
+          `${data.data.name}\nProgram: ${data.data.program || 'N/A'}\nTime: ${new Date(data.data.time_in).toLocaleTimeString()}`
+        );
+      } else {
+        Alert.alert('Error', data.message || 'Unable to register attendance');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Network Error', 'Unable to reach server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleBarCodeScanned = async ({ type, data }: any) => {
     if (scannedRef.current) return;
     scannedRef.current = true;
@@ -35,14 +72,10 @@ export default function AttendanceCamera({ onShowHistory }: AttendanceCameraProp
       const parts = data.trim().split(/\s+/);
       if (parts.length < 3) throw new Error('Invalid QR format');
       const program = parts.pop(); 
-      const studentId = parts.pop(); 
+      const studentNumber = parts.pop(); 
       const name = parts.join(' '); 
-      const parsedData = { name, studentId, program };
-      const newRecord = { ...parsedData, timestamp: new Date().toISOString() };
-      const saved = await AsyncStorage.getItem('attendanceLog');
-      const log = saved ? JSON.parse(saved) : [];
-      await AsyncStorage.setItem('attendanceLog', JSON.stringify([newRecord, ...log]));
-      Alert.alert('Scan Successful', `${parsedData.name} attendance recorded`);
+
+      await registerAttendance(studentNumber);
     } catch (error) {
       Alert.alert('Invalid QR Code', 'The scanned QR code is not in the correct format.');
     } finally {
@@ -108,11 +141,10 @@ export default function AttendanceCamera({ onShowHistory }: AttendanceCameraProp
           </View>
         </View>
 
-        {scanned && (
+        {/* Loading Overlay */}
+        {loading && (
           <View style={styles.successOverlay}>
-            <View style={styles.successCircle}>
-              <Ionicons name="checkmark-circle" size={64} color="#10b981" />
-            </View>
+            <ActivityIndicator size="large" color="#10b981" />
           </View>
         )}
 
@@ -150,7 +182,6 @@ export default function AttendanceCamera({ onShowHistory }: AttendanceCameraProp
   );
 }
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   cameraContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
   camera: { flex: 1, width: '100%' },
@@ -169,7 +200,6 @@ const styles = StyleSheet.create({
   bottomLeft: { bottom: -2, left: -2, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 20 },
   bottomRight: { bottom: -2, right: -2, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 20 },
   successOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(16, 185, 129, 0.5)', justifyContent: 'center', alignItems: 'center' },
-  successCircle: { backgroundColor: '#fff', borderRadius: 50, padding: 24 },
   bottomMenu: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(17, 24, 39, 0.95)', paddingVertical: 20, paddingHorizontal: 32, paddingBottom: 40, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
   menuButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', paddingVertical: 16, paddingHorizontal: 24, borderRadius: 12, gap: 8 },
   menuButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
