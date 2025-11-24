@@ -39,7 +39,7 @@ export default function AttendanceCamera({ onShowHistory, eventId }: AttendanceC
       if (!eventId) throw new Error("No eventId provided");
 
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/attendance/register`, {
+      const response = await fetch(`${BASE_URL}/api/attendance/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
