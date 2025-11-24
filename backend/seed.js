@@ -35,7 +35,7 @@ async function Seed() {
         org_type: "Department Organization",
         description: "Junior Philippine Institute of Computer Engineers",
         pfp: "https://example.com/jpice_logo.jpg",
-        cover_photo: "https://example.com/jpice_cover.jpg",
+        cover_photo: "",
         fb_link: "https://facebook.com/jpice.ustp",
         ig_link: "https://instagram.com/jpice.ustp",
         x_link: "https://twitter.com/jpice_ustp",
@@ -181,7 +181,7 @@ async function Seed() {
       },
       {
         event_name: "Lycanfest 2025",
-        event_image: "https://github.com/austindatan/MARQUE-USTP-Event-Attendance-Monitoring-System/blob/main/mobile/assets/images/coffee_and_pastry.png?raw=true",
+        event_image: "https://res.cloudinary.com/dhfgfpoav/image/upload/v1763983155/crtcg1_uohxoo.png",
         event_type: "General Assembly",
         description: "Howling into the future of tech.",
         event_date: new Date("2025-12-30"),
