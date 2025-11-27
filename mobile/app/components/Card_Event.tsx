@@ -1,10 +1,11 @@
 // @ts-nocheck
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import styles from "../styles/components_eventcard";
 
-const EventCard = ({ image, title, orgLogo, organization, orgDate, dateDay, dateMonth, description, }) => {
+const EventCard = ({ image, title, orgLogo, organization, orgDate, dateDay, dateMonth, description, onPress}) => {
   return (
+    <TouchableOpacity onPress={onPress}>
     <View style={styles.shadowWrapper}>
       <View style={styles.card}>
         <View style={styles.imageContainer}>
@@ -39,6 +40,7 @@ const EventCard = ({ image, title, orgLogo, organization, orgDate, dateDay, date
         </View>
       </View>
     </View>
+    </TouchableOpacity>
   );
 };
 

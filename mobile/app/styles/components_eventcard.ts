@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "Inter",
     bottom: 2,
+    textTransform: "uppercase"
   },
 
   details: {

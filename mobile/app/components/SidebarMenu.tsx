@@ -90,7 +90,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
         // const data = await res.json();
 
         // Navigate to Teams page
-        router.push("../tab_container_organization/Event");
+        router.push("/tabs_organization/Teams");
       } catch (err) {
         console.error("Error navigating to Organizations:", err);
       }

@@ -4,11 +4,13 @@ import { View, Text, Animated, ActivityIndicator } from "react-native";
 import EventCard from "../components/Card_Event";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
+import { useRouter } from "expo-router"
 
 const Departments = ({ scrollY, studentDept }) => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+  const router = useRouter ();
+
   // Use useCallback to memoize the function
   const fetchEvents = useCallback(async (studentDept) => {
     setIsLoading(true);
@@ -69,14 +71,11 @@ const Departments = ({ scrollY, studentDept }) => {
           
           return (
             <EventCard
+              onPress={() => {router.push("/tab_container/Event_Incoming");}}
               key={ev._id}
-              // ✅ 1. Use schema name: event_image
               image={{ uri: ev.event_image }}
-              // ✅ 2. Use schema name: event_name
               title={ev.event_name}
-              // ✅ 3. Access populated org_name with optional chaining
               organization={ev.organization_id?.org_name || "Unknown Org"}
-              // ✅ 4. Access populated pfp (profile picture) with optional chaining
               orgLogo={{ uri: ev.organization_id?.pfp || "" }}
               dateDay={dateDay}
               dateMonth={dateMonth}

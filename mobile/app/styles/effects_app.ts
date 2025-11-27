@@ -45,7 +45,7 @@ const appeffects = StyleSheet.create({
     eventList: {
         paddingRight: scaleSize(20),
         paddingLeft: scaleSize(20),
-        bottom: scaleSize(6),
+        bottom: scaleSize(4),
     },
 
     eventListEX: {
