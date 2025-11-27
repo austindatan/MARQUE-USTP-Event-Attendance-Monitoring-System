@@ -10,7 +10,7 @@ const eventSchema = new mongoose.Schema(
     event_name: { type: String, required: true },
     event_type: { type: String, enum: ["Seminar", "General Assembly", "Orientation", "Training", "Food Distribution"]},
     description: { type: String, required: true },
-    event_image: { type: String }, // can be URL or file path
+    event_images: [{ type: String }], // can be URL or file path
     event_date: { type: Date, required: true },
     start_time: { type: Date, required: true }, //date daw dari kay kani nga data type sa moongodb ga include ug time, walay sata type for time lang
     end_time: { type: Date, required: true }, //date daw dari kay kani nga data type sa moongodb ga include ug time, walay sata type for time lang
