@@ -1,6 +1,11 @@
-const Event = require("../models/Event");
-const Organization = require("../models/Organization");
-const FollowedOrgs = require("../models/Followed_org");
+//const Event = require("../models/Event");
+//const Organization = require("../models/Organization");
+//const FollowedOrgs = require("../models/Followed_org");
+import Event from "../models/Event.js";
+import Organization from "../models/Organization.js";
+import FollowedOrgs from "../models/Followed_org.js";
+import fs from "fs";
+import path from "path";
 
 const getEventsByDepartment = async (req, res) => {
   try {
@@ -103,8 +108,148 @@ const getFollowedOrgEvents = async (req, res) => {
   }
 };
 
-module.exports = {
-  getFollowedOrgEvents,
+// =========================
+// ADD EVENT
+// =========================
+const addEvent = async (req, res) => {
+  try {
+    const {
+      organization_id,
+      event_name,
+      event_type,
+      description,
+      event_date,
+      start_time,
+      end_time,
+      venue,
+      is_mandatory
+    } = req.body;
+
+    // File upload paths (multiple images)
+    const images = req.files ? req.files.map(f => `/uploads/events/${f.filename}`) : [];
+
+    const newEvent = new Event({
+      organization_id,
+      event_name,
+      event_type,
+      description,
+      event_images: images,
+      event_date,
+      start_time,
+      end_time,
+      venue,
+      is_mandatory
+    });
+
+    await newEvent.save();
+
+    res.status(201).json({
+      message: "Event created successfully",
+      event: newEvent
+    });
+
+  } catch (error) {
+    console.error("Add Event Error:", error);
+    res.status(500).json({ message: "Server error adding event" });
+  }
 };
 
-module.exports = { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents };
+// =========================
+// UPDATE EVENT
+// =========================
+const updateEvent = async (req, res) => {
+  try {
+    const eventId = req.params.id;
+
+    const {
+      organization_id,
+      event_name,
+      event_type,
+      description,
+      event_date,
+      start_time,
+      end_time,
+      venue,
+      is_mandatory,
+      keep_old_images // optional: ["img1.jpg", "img2.png"]
+    } = req.body;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Prepare new uploaded images
+    const newImages = req.files ? req.files.map(f => `/uploads/events/${f.filename}`) : [];
+
+    let finalImages = [];
+
+    // If user wants to keep old images
+    if (keep_old_images && Array.isArray(keep_old_images)) {
+      finalImages = [...keep_old_images];
+    }
+
+    // Add newly uploaded images
+    finalImages = [...finalImages, ...newImages];
+
+    // Delete old images that were removed
+    const removedImages =
+      event.event_images.filter(img => !finalImages.includes(img));
+
+    removedImages.forEach(imgPath => {
+      const fullPath = path.join(process.cwd(), imgPath);
+      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    });
+
+    // Update fields
+    event.organization_id = organization_id ?? event.organization_id;
+    event.event_name = event_name ?? event.event_name;
+    event.event_type = event_type ?? event.event_type;
+    event.description = description ?? event.description;
+    event.event_date = event_date ?? event.event_date;
+    event.start_time = start_time ?? event.start_time;
+    event.end_time = end_time ?? event.end_time;
+    event.venue = venue ?? event.venue;
+    event.is_mandatory = is_mandatory ?? event.is_mandatory;
+    event.event_images = finalImages;
+
+    await event.save();
+
+    res.status(200).json({
+      message: "Event updated successfully",
+      event
+    });
+
+  } catch (error) {
+    console.error("Update Event Error:", error);
+    res.status(500).json({ message: "Server error updating event" });
+  }
+};
+
+// =========================
+// GET ALL EVENTS OF AN ORGANIZATION BY STATUS
+// =========================
+const getOrgEventsByStatus = async (req, res) => {
+  try {
+    const { organizationId } = req.params;
+    const { status } = req.query; // optional: "Upcoming", "Ongoing", "Concluded"
+
+    // Build query
+    let query = { organization_id: organizationId };
+    if (status) {
+      query.status = status;
+    }
+
+    const events = await Event.find(query)
+      .populate("organization_id")
+      .sort({ event_date: 1 }); // earliest first
+
+    res.status(200).json(events);
+  } catch (error) {
+    console.error("Get Org Events by Status Error:", error);
+    res.status(500).json({ message: "Server error fetching organization's events" });
+  }
+};
+
+
+export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus };
