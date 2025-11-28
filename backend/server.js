@@ -25,6 +25,7 @@ app.use("/api/student", studentRoutes);
 // Event route  
 const eventRoutes = require("./routes/eventRoutes");
 app.use("/events", eventRoutes);
+app.use('/api', eventRoutes);
 
 // Attendance route
 const attendanceRoutes = require("./routes/attendanceRoutes");
@@ -37,6 +38,8 @@ app.use("/exploreorgs", exploreorgRoutes);
 // Followed Organizations route
 const followedorgsRoutes = require('./routes/followedorgRoutes');
 app.use('/api/followed-orgs', followedorgsRoutes);
+
+
 
 // DB connection
 mongoose

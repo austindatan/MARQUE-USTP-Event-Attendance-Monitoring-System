@@ -1,32 +1,33 @@
 // @ts-nocheck
 import React, { useState } from "react";
-import { View, TextInput, TouchableOpacity, Image, Text, Animated } from "react-native";
+import { View, TouchableOpacity, Image, Text, Animated,} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
 
-const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }) => {
+const Header = ({ onMenuPress, scrollY, onToggleChange }) => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("departments");
+  const animatedScrollY = scrollY || new Animated.Value(0);
 
   const handleToggle = (tab) => {
     setActiveTab(tab);
     if (onToggleChange) onToggleChange(tab);
   };
 
-  const searchOpacity = scrollY.interpolate({
+  const searchOpacity = animatedScrollY.interpolate({
     inputRange: [0, 80],
     outputRange: [1, 0],
     extrapolate: "clamp",
   });
 
-  const searchTranslateY = scrollY.interpolate({
+  const searchTranslateY = animatedScrollY.interpolate({
     inputRange: [0, 80],
     outputRange: [0, -30],
     extrapolate: "clamp",
   });
 
-  const toggleTranslateY = scrollY.interpolate({
+  const toggleTranslateY = animatedScrollY.interpolate({
     inputRange: [0, 80],
     outputRange: [0, -40],
     extrapolate: "clamp",
@@ -63,7 +64,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
             borderTopRightRadius: 0,
             transform: [
               {
-                translateY: scrollY.interpolate({
+                translateY: animatedScrollY.interpolate({
                   inputRange: [0, 80],
                   outputRange: [0, -40],
                   extrapolate: "clamp",
@@ -82,14 +83,14 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
             },
           ]}
         >
-          <View style={styles.searchContainer}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.searchContainer}
+            onPress={() => router.push("/tab_container/Search_Page")}
+          >
             <Ionicons name="search" size={24} color="#fff" style={{ marginRight: 8 }} />
-            <TextInput
-              placeholder="Search..."
-              placeholderTextColor="#8c8c8c"
-              style={styles.searchInput}
-            />
-          </View>
+            <Text style={{ color: "#8c8c8c", fontSize: 16 }}>Search...</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity style={styles.filterButton}>
             <View style={styles.filterB}>
