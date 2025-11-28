@@ -19,9 +19,27 @@ const styles = StyleSheet.create({
     paddingBottom: verticalScale(20),
   },
 
+  headerfirstPRO: {
+    backgroundColor: "#0A0F51",
+    paddingTop: verticalScale(40),
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: 30,
+    paddingBottom: verticalScale(30),
+    borderBottomRightRadius: 35,
+    borderBottomLeftRadius: 35,
+  },
+
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: verticalScale(10),
+    zIndex: 1000000,
+  },
+
+  middle: {
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
     marginBottom: verticalScale(10),
     zIndex: 1000000,

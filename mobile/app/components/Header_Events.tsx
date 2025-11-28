@@ -33,7 +33,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
   });
 
   return (
-    <View>
+    <View style={{ zIndex: 10 }}>
       <View style={[styles.headerfirst, { paddingBottom: 0 }]}>
         <View style={styles.topRow}>
           <TouchableOpacity onPress={onMenuPress}>
