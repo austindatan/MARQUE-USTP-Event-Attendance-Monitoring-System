@@ -49,7 +49,7 @@ async function Seed() {
         department_id: dept1._id, 
         org_name: "SITE",
         org_type: "Department Organization",
-        description: "Society of Information Technology Enthusiasts",
+        description: "SITE empowers future IT professionals through innovation, leadership, and collaboration. We are the official student organization of BSIT students at USTP, driven by passion for tech, committed to building a vibrant, skill-driven, inclusive IT community.",
         pfp: "https://example.com/jpice_logo.jpg",
         cover_photo: "https://example.com/jpice_cover.jpg",
         fb_link: "https://facebook.com/jpice.ustp",

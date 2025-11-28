@@ -3,46 +3,55 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import styles from "../styles/components_orgcardslinear";
 
-
-const OrgLinear = ({ orgLogo, organization, text, isFollowed, onToggleFollow }) => {
-
-  // Dynamically set the text for the button
-  const buttonText = isFollowed ? "Following" : "Follow";
-  
-  // 2. Define dynamic styles based on follow status
-  const dynamicButtonStyle = isFollowed 
-    ? { ...styles.button, backgroundColor: '#DDDDDD' } // Light gray/subtle background when followed
-    : styles.button; // Use original style when not followed
-  
-  const dynamicTextStyle = isFollowed
-    ? { ...styles.followText, color: '#444444' } // Darker text for 'Following'
-    : styles.followText; // Use original style for 'Follow'
-
+const OrgLinear = ({ 
+  orgLogo, 
+  organization = "", 
+  text = "", 
+  isFollowed = false, 
+  onToggleFollow 
+}) => {
   return (
-    <View style={styles.card}>
-        <View style={{ flexDirection: "row" }} >
-            <Image
-                // Added a check for object type for consistency with URL sources
-                source={typeof orgLogo === "object" ? orgLogo : { uri: orgLogo }} 
-                style={styles.organizationLogo}
-            />
-                <View style={styles.orgCol}>
+    <TouchableOpacity activeOpacity={0.6} style={styles.card}>
 
-                    <View style={styles.orgCol2}>
-                        <Text style={styles.orgName}>{organization}</Text>
-                        <Text style={styles.orgDesc}>{text}</Text>
-                    </View>
+      <View style={styles.row}>
+        <Image
+          source={
+            typeof orgLogo === "object"
+              ? orgLogo
+              : { uri: orgLogo || "https://via.placeholder.com/40" }
+          }
+          style={styles.organizationLogo}
+        />
 
-                   
-                    <TouchableOpacity 
-                        style={dynamicButtonStyle} 
-                        onPress={onToggleFollow}
-                    >
-                        <Text style={dynamicTextStyle}>{buttonText}</Text>
-                    </TouchableOpacity>
-                </View>
+        <View style={styles.orgRow}>
+
+          <View style={styles.orgInfoCol}>
+            <Text style={styles.orgName} numberOfLines={1}>{organization}</Text>
+            <Text style={styles.orgDesc} numberOfLines={2} ellipsizeMode="tail">
+              {text}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              isFollowed && styles.buttonFollowing
+            ]}
+            onPress={onToggleFollow}
+          >
+            <Text
+              style={[
+                styles.followText,
+                isFollowed && styles.followingText
+              ]}
+            >
+              {isFollowed ? "Following" : "Follow"}
+            </Text>
+          </TouchableOpacity>
         </View>
-    </View>
+
+      </View>
+    </TouchableOpacity>
   );
 };
 

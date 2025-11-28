@@ -166,10 +166,6 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <View style={appeffects.pageStarter}>
-          <Text style={appeffects.pageTitle}>All Organizations</Text>
-        </View>
-
         <View style={appeffects.eventListORG}>{renderOrganizations()}</View>
       </Animated.ScrollView>
     </Animated.View>
