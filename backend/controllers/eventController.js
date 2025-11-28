@@ -251,5 +251,60 @@ const getOrgEventsByStatus = async (req, res) => {
   }
 };
 
+const getOngoingFilter = () => {
+    const now = new Date();
+    
+    return {
+        start_time: { $lte: now },
+        end_time: { $gt: now } 
+    }; 
+};
 
-export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus };
+
+const getOngoingEvents = async (req, res) => { 
+    try {
+        const ongoingEvents = await Event.find(getOngoingFilter())
+            .populate('organization_id', 'org_name pfp') 
+            .sort({ event_date: 1 });
+        
+        return res.status(200).json(ongoingEvents);
+    } catch (error) {
+        console.error("Error fetching ongoing events:", error);
+        return res.status(500).json({ message: "Server error fetching ongoing events." });
+    }
+};
+
+
+const searchEvents = async (req, res) => {
+    const { query } = req.query; 
+
+    if (!query || query.trim() === "") {
+        return getOngoingEvents(req, res); 
+    }
+
+    try {
+        const searchRegex = new RegExp(query, 'i');
+        
+        const searchConditions = {
+            $or: [
+                { event_name: searchRegex },
+                { description: searchRegex },
+            ],
+            ...getOngoingFilter() 
+        };
+
+        const searchResults = await Event.find(searchConditions)
+            .populate('organization_id', 'org_name pfp')
+            .sort({ event_date: 1 });
+
+        return res.status(200).json(searchResults);
+
+    } catch (error) {
+        console.error("Error searching events:", error);
+        return res.status(500).json({ message: "Server error during search." });
+    }
+};
+
+
+
+export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents };
