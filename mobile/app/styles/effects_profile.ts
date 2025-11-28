@@ -1,4 +1,14 @@
-import { StyleSheet } from "react-native";
+//@ts-nocheck
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width, height } = Dimensions.get("window");
+
+// Base guideline sizes (for scaling)
+const guidelineBaseWidth = 375;   // iPhone 11 width
+const guidelineBaseHeight = 812;
+
+const scale = size => (width / guidelineBaseWidth) * size;
+const vScale = size => (height / guidelineBaseHeight) * size;
 
 const styles = StyleSheet.create({
   container: {
@@ -7,101 +17,101 @@ const styles = StyleSheet.create({
   },
 
   navBar: {
-    height: 90,
+    height: vScale(90),
     backgroundColor: "#0A0F51",
-    paddingHorizontal: 20,
+    paddingHorizontal: scale(20),
     flexDirection: "row",
     alignItems: "flex-end",
-    paddingBottom: 15,
+    paddingBottom: vScale(15),
     zIndex: 10,
   },
 
   navTitle: {
     color: "#fff",
-    marginLeft: 10,
-    fontSize: 16,
+    marginLeft: scale(10),
+    fontSize: scale(16),
     fontFamily: "DMSans-Bold",
   },
 
   profileHeader: {
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: vScale(20),
     backgroundColor: "#f4f6ff",
   },
 
   profileImage: {
-    width: 95,
-    height: 95,
-    borderRadius: 50,
+    width: scale(95),
+    height: scale(95),
+    borderRadius: scale(50),
     backgroundColor: "#ddd",
-    marginBottom: 10,
+    marginBottom: vScale(10),
   },
 
   name: {
-    fontSize: 18,
+    fontSize: scale(18),
     fontFamily: "DMSans-Bold",
     color: "#111",
   },
 
   department: {
-    fontSize: 13,
+    fontSize: scale(13),
     color: "#666",
     fontFamily: "DMSans-Medium",
   },
 
   course: {
-    fontSize: 13,
+    fontSize: scale(13),
     color: "#666",
     fontFamily: "DMSans-Medium",
-    marginTop: 2,
+    marginTop: vScale(2),
   },
 
   infoBlock: {
-    paddingHorizontal: 20,
-    marginTop: 20,
+    paddingHorizontal: scale(20),
+    marginTop: vScale(20),
   },
 
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    paddingVertical: vScale(12),
     borderBottomColor: "#eee",
     borderBottomWidth: 1,
   },
 
   label: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: "#666",
     fontFamily: "DMSans-Medium",
   },
 
   value: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: "#111",
     fontFamily: "DMSans-Bold",
   },
 
   sectionTitle: {
-    fontSize: 16,
+    fontSize: scale(16),
     fontFamily: "DMSans-Bold",
-    paddingHorizontal: 20,
-    marginTop: 28,
-    marginBottom: 8,
+    paddingHorizontal: scale(20),
+    marginTop: vScale(28),
+    marginBottom: vScale(8),
   },
 
   attendanceCard: {
-    marginHorizontal: 20,
+    marginHorizontal: scale(20),
     backgroundColor: "#0A0F51",
-    borderRadius: 18,
-    paddingVertical: 18,
+    borderRadius: scale(18),
+    paddingVertical: vScale(18),
   },
 
   cardContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: scale(20),
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    rowGap: 10,
+    rowGap: vScale(10),
   },
 
   attItem: {
@@ -110,43 +120,39 @@ const styles = StyleSheet.create({
 
   attValue: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: scale(20),
     fontFamily: "DMSans-Bold",
   },
 
   attLabel: {
     color: "#dfe6ff",
-    fontSize: 12,
+    fontSize: scale(12),
     fontFamily: "DMSans-Medium",
   },
 
   settingsBlock: {
-    marginTop: 10,
-    paddingHorizontal: 20,
+    marginTop: vScale(10),
+    paddingHorizontal: scale(20),
   },
 
   settingItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
+    paddingVertical: vScale(14),
     borderBottomColor: "#eee",
     borderBottomWidth: 1,
   },
 
   settingLabel: {
-    fontSize: 14,
-    marginLeft: 10,
+    fontSize: scale(14),
+    marginLeft: scale(10),
     fontFamily: "DMSans-Medium",
     color: "#111",
   },
 
-
-
-
-
-
-
-
+  // ------------------------------------------
+  // CHANGE PASSWORD SECTION
+  // ------------------------------------------
 
   containerCh: {
     flex: 1,
@@ -154,46 +160,45 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 18,
+    fontSize: scale(18),
     fontFamily: "DMSans-Bold",
-    paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 12,
+    paddingHorizontal: scale(20),
+    marginTop: vScale(20),
+    marginBottom: vScale(12),
     color: "#111",
   },
 
   formCard: {
-    marginHorizontal: 20,
+    marginHorizontal: scale(20),
     backgroundColor: "#f4f6ff",
-    borderRadius: 16,
-    padding: 18,
+    borderRadius: scale(16),
+    padding: scale(18),
   },
 
   inputGroup: {
-    marginBottom: 18,
+    marginBottom: vScale(18),
   },
 
   labelCh: {
-    fontSize: 14,
+    fontSize: scale(14),
     fontFamily: "DMSans-Medium",
     color: "#444",
-    marginBottom: 6,
+    marginBottom: vScale(6),
   },
 
-  inputGroup2: {
-  },
+  inputGroup2: {},
 
   label2: {
-    fontSize: 14,
+    fontSize: scale(14),
     fontFamily: "DMSans-Medium",
     color: "#444",
-    marginBottom: 6,
+    marginBottom: vScale(6),
   },
 
   input: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: scale(10),
+    padding: scale(12),
     borderWidth: 1,
     borderColor: "#ddd",
     fontFamily: "DMSans-Regular",
@@ -202,31 +207,31 @@ const styles = StyleSheet.create({
 
   saveBtn: {
     backgroundColor: "#0A0F51",
-    marginHorizontal: 20,
-    borderRadius: 14,
-    paddingVertical: 14,
+    marginHorizontal: scale(20),
+    borderRadius: scale(14),
+    paddingVertical: vScale(14),
     alignItems: "center",
-    marginTop: 25,
+    marginTop: vScale(25),
   },
 
   saveBtnText: {
     color: "#fff",
     fontFamily: "DMSans-Bold",
-    fontSize: 15,
+    fontSize: scale(15),
   },
 
   backBtn: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 20,
-    paddingHorizontal: 20,
+    marginTop: vScale(20),
+    paddingHorizontal: scale(20),
   },
 
   backText: {
-    marginLeft: 6,
+    marginLeft: scale(6),
     color: "#0A0F51",
     fontFamily: "DMSans-Medium",
-    fontSize: 14,
+    fontSize: scale(14),
   },
 });
 

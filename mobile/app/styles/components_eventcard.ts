@@ -1,51 +1,51 @@
-import { StyleSheet } from "react-native";
+// styles_eventcard_C.js  (OPTION C)
+import { StyleSheet, Dimensions } from "react-native";
 
-const styles = StyleSheet.create({
+const { width } = Dimensions.get("window");
+const isSmall = width < 360;
+const scale = width / 390; // but use it only for spacing + container sizes
+
+export default StyleSheet.create({
   shadowWrapper: {
-    borderRadius: 16,
+    borderRadius: 10 * scale,
     backgroundColor: "#fff",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
-
     elevation: 3,
-    marginBottom: 15,
+    marginBottom: isSmall ? 12 : 15,
   },
 
   card: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: 10 * scale,
     overflow: "hidden",
     position: "relative",
   },
 
   imageContainer: {
-    position: "relative",
     width: "100%",
-    height: 160,
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingTop: 10,
+    height: 160 * scale, // ONLY this scales
+    paddingLeft: isSmall ? 8 : 10,
+    paddingRight: isSmall ? 8 : 10,
+    paddingTop: isSmall ? 8 : 10,
   },
 
   eventPoster: {
     width: "100%",
     height: "100%",
-    borderRadius: 10,
+    borderRadius: 10 * scale,
   },
 
   dateTag: {
     position: "absolute",
-    top: 15,
-    left: 15,
+    top: isSmall ? 10 : 15,
+    left: isSmall ? 10 : 15,
     backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    borderRadius: 10 * scale,
+    paddingVertical: isSmall ? 5 : 6,
+    paddingHorizontal: isSmall ? 6 : 8,
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -55,29 +55,29 @@ const styles = StyleSheet.create({
 
   dateDay: {
     color: "#0C1445",
-    fontSize: 16,
+    fontSize: isSmall ? 14 : 16,
     fontWeight: "700",
     fontFamily: "Inter",
   },
 
   dateMonth: {
     color: "#0C1445",
-    fontSize: 10,
+    fontSize: isSmall ? 9 : 10,
     fontWeight: "600",
-    fontFamily: "Inter",
     bottom: 2,
-    textTransform: "uppercase"
+    textTransform: "uppercase",
+    fontFamily: "Inter",
   },
 
   details: {
-    paddingRight: 15,
-    paddingLeft: 15,
-    paddingBottom: 15,
-    paddingTop: 8,
+    paddingRight: isSmall ? 12 : 15,
+    paddingLeft: isSmall ? 12 : 15,
+    paddingBottom: isSmall ? 12 : 15,
+    paddingTop: isSmall ? 6 : 8,
   },
 
   eventTitle: {
-    fontSize: 18,
+    fontSize: isSmall ? 16 : 18, // TEXT ONLY SLIGHTLY SCALES
     color: "#000",
     fontFamily: "Inter",
   },
@@ -85,42 +85,35 @@ const styles = StyleSheet.create({
   orgDetails: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 6,
+    marginTop: isSmall ? 4 : 6,
   },
 
   organizationLogo: {
-    width: 25,
-    height: 25,
-    borderRadius: 25,
+    width: isSmall ? 22 : 25,
+    height: isSmall ? 22 : 25,
+    borderRadius: isSmall ? 22 : 25,
   },
 
   orgRow: {
-    flexDirection: "column",
-    marginLeft: 8,
+    marginLeft: isSmall ? 6 : 8,
   },
 
   orgText: {
-    fontSize: 10,
+    fontSize: isSmall ? 9 : 10,
     color: "#555",
     fontFamily: "Inter",
   },
 
   subText: {
-    fontSize: 9,
+    fontSize: isSmall ? 8 : 9,
     color: "#777",
     fontFamily: "DMSans-Regular",
   },
 
   desc: {
-    marginTop: 8,
-    fontSize: 13,
+    marginTop: isSmall ? 6 : 8,
+    fontSize: isSmall ? 12 : 13,
     color: "#555",
     fontFamily: "DMSans-Regular",
   },
-
-  bold: {
-    fontWeight: "700",
-  },
 });
-
-export default styles;

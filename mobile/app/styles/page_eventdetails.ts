@@ -1,7 +1,19 @@
-import { StyleSheet } from "react-native";
+//@ts-nocheck
+import { StyleSheet, Dimensions } from "react-native";
 
-const AVATAR_SIZE = 24;
-const OVERLAP_AMOUNT = 8;
+const { width } = Dimensions.get("window");
+
+const isSmall = width < 360;
+const isLarge = width > 420;
+
+const rs = (size) => {
+  if (isSmall) return size * 0.85;
+  if (isLarge) return size * 1.1;
+  return size;
+};
+
+const AVATAR_SIZE = rs(24);
+const OVERLAP_AMOUNT = rs(8);
 
 const styles = StyleSheet.create({
   container: {
@@ -12,7 +24,7 @@ const styles = StyleSheet.create({
   avatarStackContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 6,
+    marginRight: rs(6),
   },
 
   avatarContainer: {
@@ -58,39 +70,39 @@ const styles = StyleSheet.create({
   },
 
   navRowContent: {
-    paddingTop: 40,
+    paddingTop: rs(40),
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: rs(20),
     zIndex: 2,
   },
 
   bookmarkBtn: {
-    padding: 4,
-    borderRadius: 10,
+    padding: rs(4),
+    borderRadius: rs(10),
     backgroundColor: "rgba(255, 255, 255, 0.39)",
   },
 
   headerImageBackground: {
-    height: 200,
+    height: rs(200),
     flex: 1,
-    marginBottom: 10,
-    paddingTop: 90,
+    marginBottom: rs(10),
+    paddingTop: rs(90),
   },
 
   headerImageBackgroundCon: {
-    height: 200,
+    height: rs(200),
     flex: 1,
     marginBottom: 0,
-    paddingTop: 90,
+    paddingTop: rs(90),
   },
 
   inviteRow: {
     position: "absolute",
-    bottom: -20,
-    left: 20,
-    right: 20,
+    bottom: rs(-20),
+    left: rs(20),
+    right: rs(20),
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -103,22 +115,22 @@ const styles = StyleSheet.create({
   },
 
   navText: {
-    fontSize: 16,
+    fontSize: rs(16),
     fontWeight: "500",
-    marginLeft: 10,
+    marginLeft: rs(10),
     color: "#111",
     fontFamily: "DMSans-Medium",
   },
 
   goingContainer: {
     flexDirection: "row",
-    width: 280,
+    width: isSmall ? 240 : 280,
     alignItems: "center",
     backgroundColor: "#fff",
     justifyContent: "space-between",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 20,
+    paddingVertical: rs(6),
+    paddingHorizontal: rs(10),
+    borderRadius: rs(20),
     elevation: 3,
     shadowColor: "#000",
     shadowOpacity: 0.15,
@@ -126,120 +138,120 @@ const styles = StyleSheet.create({
   },
 
   goingText: {
-    fontSize: 13,
+    fontSize: rs(13),
     fontWeight: "600",
     fontFamily: "DMSans-Bold",
   },
 
   inviteButton: {
     backgroundColor: "#0A0F51",
-    paddingHorizontal: 20,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: rs(20),
+    paddingVertical: rs(6),
+    borderRadius: rs(20),
   },
 
   inviteText: {
     color: "#fff",
     fontFamily: "DMSans-Medium",
-    fontSize: 13,
+    fontSize: rs(13),
   },
 
   eventTitle: {
-    fontSize: 20,
+    fontSize: rs(20),
     color: "#111",
-    marginTop: 20,
-    paddingHorizontal: 20,
+    marginTop: rs(20),
+    paddingHorizontal: rs(20),
     fontFamily: "DMSans-Bold",
   },
 
   infoRow: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    marginTop: 14,
+    paddingHorizontal: rs(20),
+    marginTop: rs(14),
   },
 
   infoColumn: {
     flexDirection: "column",
-    paddingHorizontal: 20,
-    marginTop: 14,
-    columnGap: 15,
+    paddingHorizontal: rs(20),
+    marginTop: rs(14),
+    columnGap: rs(15),
   },
 
   iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: rs(42),
+    height: rs(42),
+    borderRadius: rs(12),
     backgroundColor: "#d9ddffff",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: rs(12),
   },
 
   infoBox: {
     backgroundColor: "#0A0F51",
     flexDirection: "row",
-    paddingHorizontal: 20,
+    paddingHorizontal: rs(20),
     alignItems: "center",
-    paddingVertical: 14,
-    borderRadius: 15,
+    paddingVertical: rs(14),
+    borderRadius: rs(15),
   },
 
   infoBoxAttendance: {
     backgroundColor: "#0A0F51",
     flexDirection: "row",
-    paddingHorizontal: 20,
+    paddingHorizontal: rs(20),
     alignItems: "center",
-    paddingVertical: 14,
+    paddingVertical: rs(14),
     justifyContent: "space-between",
-    borderRadius: 15,
+    borderRadius: rs(15),
   },
 
   infoText: {
     color: "#fff",
-    marginRight: 8,
-    fontSize: 11,
+    marginRight: rs(8),
+    fontSize: rs(11),
     fontFamily: "DMSans-Medium",
   },
 
   infoTextAtt: {
     color: "#fff",
-    marginRight: 8,
-    fontSize: 11,
+    marginRight: rs(8),
+    fontSize: rs(11),
     fontFamily: "DMSans-Medium",
-    width: 200,
+    width: isSmall ? 160 : 200,
   },
 
   infoPrimary: {
-    fontSize: 15,
+    fontSize: rs(15),
     color: "#111",
     fontFamily: "DMSans-Bold",
   },
 
   infoSecondary: {
-    fontSize: 13,
+    fontSize: rs(13),
     color: "#777",
     fontFamily: "DMSans-Medium",
   },
 
   sectionTitle: {
-    fontSize: 16,
-    paddingHorizontal: 20,
-    marginTop: 22,
-    marginBottom: 8,
+    fontSize: rs(16),
+    paddingHorizontal: rs(20),
+    marginTop: rs(22),
+    marginBottom: rs(8),
     fontFamily: "DMSans-Bold",
   },
 
   aboutText: {
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: rs(13),
+    lineHeight: rs(20),
     color: "#444",
-    paddingHorizontal: 20,
+    paddingHorizontal: rs(20),
     fontFamily: "DMSans-Medium",
   },
 
   organizerCard: {
-    marginTop: 24,
-    paddingHorizontal: 20,
+    marginTop: rs(24),
+    paddingHorizontal: rs(20),
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -251,50 +263,50 @@ const styles = StyleSheet.create({
   },
 
   organizerLogo: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
-    marginRight: 12,
+    width: rs(50),
+    height: rs(50),
+    borderRadius: rs(12),
+    marginRight: rs(12),
   },
 
   organizerName: {
-    fontSize: 14,
+    fontSize: rs(14),
     fontFamily: "DMSans-Medium",
   },
 
   organizerLabel: {
-    fontSize: 12,
+    fontSize: rs(12),
     color: "#666",
     fontFamily: "DMSans-Medium",
   },
 
   followButton: {
     backgroundColor: "#d9ddffff",
-    paddingHorizontal: 18,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: rs(18),
+    paddingVertical: rs(6),
+    borderRadius: rs(16),
   },
 
   followText: {
     color: "#4A58E1",
-    fontSize: 13,
+    fontSize: rs(13),
     fontFamily: "DMSans-Medium",
   },
 
   organizerDesc: {
-    paddingHorizontal: 20,
-    marginTop: 10,
-    fontSize: 13,
+    paddingHorizontal: rs(20),
+    marginTop: rs(10),
+    fontSize: rs(13),
     color: "#444",
-    lineHeight: 20,
+    lineHeight: rs(20),
     fontFamily: "DMSans-Medium",
   },
 
   bottomButtonContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: rs(20),
     width: "100%",
-    paddingHorizontal: 20,
+    paddingHorizontal: rs(20),
   },
 
   registerButton: {
@@ -302,17 +314,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 14,
-    borderRadius: 30,
+    paddingVertical: rs(14),
+    borderRadius: rs(30),
   },
 
   registerText: {
     color: "#fff",
-    marginRight: 8,
-    fontSize: 14,
+    marginRight: rs(8),
+    fontSize: rs(14),
     fontFamily: "DMSans-Medium",
   },
 });
 
 export default styles;
-
