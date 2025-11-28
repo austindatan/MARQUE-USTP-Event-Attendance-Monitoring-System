@@ -4,6 +4,7 @@ import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, ImageBackg
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../styles/page_eventdetails"
+import { useRouter } from "expo-router";
 
 const GoingAvatarStack = () => {
   const avatars = [
@@ -34,6 +35,7 @@ const GoingAvatarStack = () => {
 };
 
 const Event_Concluded = ({ navigation }) => {
+  const router = useRouter ();
   const STICKY_HEADER_HEIGHT = 90;
 
   const handleBack = () => {
@@ -67,24 +69,21 @@ const Event_Concluded = ({ navigation }) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         <ImageBackground
           source={require("../../assets/images/marque/crtcg1.png")}
-          style={[styles.headerImageBackground, { paddingTop: STICKY_HEADER_HEIGHT }]}
+          style={[styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]}
           imageStyle={{ opacity: 1 }}
         >
-          <View style={styles.inviteRow}>
-            <View style={styles.goingContainer}>
-              <View style={styles.tabRow}>
-                <GoingAvatarStack />
-                <Text style={styles.goingText}>+20 Going</Text>
-              </View>
-
-              <TouchableOpacity style={styles.inviteButton}>
-                <Text style={styles.inviteText}>Invite</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
         </ImageBackground>
 
         <Text style={styles.eventTitle}>ISDA Pagsugpong 2.0</Text>
+
+        <View style={styles.infoColumn}>
+          <TouchableOpacity style={[styles.infoBox, { marginBottom: 10,}]}>
+            <Text style={styles.infoText}>Your attendance have been recorded. Thank you!</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.infoBox} onPress={() => {router.push("/tab_container/EventDetails_ZFeedback");}}>
+            <Text style={styles.infoText}>Please answer the feedback survey.</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
@@ -140,15 +139,8 @@ const Event_Concluded = ({ navigation }) => {
           sa Dakbayan across the USTP System.
         </Text>
 
-        <View style={{ height: 80 }} />
+        <View style={{ height: 20 }} />
       </ScrollView>
-
-      <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity style={styles.registerButton}>
-          <Text style={styles.registerText}>REGISTER NOW</Text>
-          <Ionicons name="arrow-forward" size={18} color="#fff" />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };

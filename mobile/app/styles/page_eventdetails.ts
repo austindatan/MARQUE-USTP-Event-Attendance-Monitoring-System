@@ -79,6 +79,13 @@ const styles = StyleSheet.create({
     paddingTop: 90,
   },
 
+  headerImageBackgroundCon: {
+    height: 200,
+    flex: 1,
+    marginBottom: 0,
+    paddingTop: 90,
+  },
+
   inviteRow: {
     position: "absolute",
     bottom: -20,
@@ -99,7 +106,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     marginLeft: 10,
-    color: "#111", // Changed to dark
+    color: "#111",
     fontFamily: "DMSans-Medium",
   },
 
@@ -151,6 +158,13 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
 
+  infoColumn: {
+    flexDirection: "column",
+    paddingHorizontal: 20,
+    marginTop: 14,
+    columnGap: 15,
+  },
+
   iconBox: {
     width: 42,
     height: 42,
@@ -159,6 +173,40 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+  },
+
+  infoBox: {
+    backgroundColor: "#0A0F51",
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    alignItems: "center",
+    paddingVertical: 14,
+    borderRadius: 15,
+  },
+
+  infoBoxAttendance: {
+    backgroundColor: "#0A0F51",
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    alignItems: "center",
+    paddingVertical: 14,
+    justifyContent: "space-between",
+    borderRadius: 15,
+  },
+
+  infoText: {
+    color: "#fff",
+    marginRight: 8,
+    fontSize: 11,
+    fontFamily: "DMSans-Medium",
+  },
+
+  infoTextAtt: {
+    color: "#fff",
+    marginRight: 8,
+    fontSize: 11,
+    fontFamily: "DMSans-Medium",
+    width: 200,
   },
 
   infoPrimary: {

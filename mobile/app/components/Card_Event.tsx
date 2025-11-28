@@ -5,7 +5,7 @@ import styles from "../styles/components_eventcard";
 
 const EventCard = ({ image, title, orgLogo, organization, orgDate, dateDay, dateMonth, description, onPress}) => {
   return (
-    <TouchableOpacity onPress={onPress}>
+    <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
     <View style={styles.shadowWrapper}>
       <View style={styles.card}>
         <View style={styles.imageContainer}>

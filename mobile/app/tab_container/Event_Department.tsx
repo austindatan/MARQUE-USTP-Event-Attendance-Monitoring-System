@@ -71,7 +71,7 @@ const Departments = ({ scrollY, studentDept }) => {
           
           return (
             <EventCard
-              onPress={() => {router.push("/tab_container/Event_Incoming");}}
+              onPress={() => {router.push("/tab_container/EventDetails_Concluded");}}
               key={ev._id}
               image={{ uri: ev.event_image }}
               title={ev.event_name}
@@ -105,6 +105,8 @@ const Departments = ({ scrollY, studentDept }) => {
       </View>
       
       {renderEvents()}
+
+      <View style={{ height: 40 }} />
 
     </Animated.ScrollView>
   );

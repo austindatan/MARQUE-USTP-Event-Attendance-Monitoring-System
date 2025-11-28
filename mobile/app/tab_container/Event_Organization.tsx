@@ -115,7 +115,7 @@ const Organizations = ({ scrollY }) => {
 
   return (
     <Animated.ScrollView
-      style={{ flex: 1, marginTop: -120 }}
+      style={{ flex: 1, marginTop: -110 }}
       contentContainerStyle={{ 
         paddingTop: 125,
         paddingBottom: 40 
@@ -128,6 +128,7 @@ const Organizations = ({ scrollY }) => {
       scrollEventThrottle={16}
     >
         {renderContent()}
+        <View style={{ height: 40 }} />
     </Animated.ScrollView>
   );
 };
