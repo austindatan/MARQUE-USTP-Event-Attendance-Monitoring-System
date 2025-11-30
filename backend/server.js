@@ -39,6 +39,10 @@ app.use("/exploreorgs", exploreorgRoutes);
 const followedorgsRoutes = require('./routes/followedorgRoutes');
 app.use('/api/followed-orgs', followedorgsRoutes);
 
+// Followed Organizations route
+const bookmarksRoutes = require('./routes/bookmarksRoutes');
+app.use('/api/bookmarks', bookmarksRoutes);
+
 
 
 // DB connection
