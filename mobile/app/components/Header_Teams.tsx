@@ -1,4 +1,3 @@
-// Header_Organization.tsx
 // @ts-nocheck
 import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, Image, Text, Animated } from "react-native";

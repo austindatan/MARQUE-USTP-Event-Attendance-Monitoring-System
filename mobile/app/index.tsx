@@ -4,7 +4,7 @@ import { useRouter, Redirect } from "expo-router";
 
 const Index = () => {
   //return <Redirect href="../tab_container/Org_Event_Details" />;
-  //return <Redirect href="../tabs_organization/YourOrg" />;
+  //return <Redirect href="../tab_container_organization/Event" />;
   const router = useRouter();
 
   useEffect(() => {

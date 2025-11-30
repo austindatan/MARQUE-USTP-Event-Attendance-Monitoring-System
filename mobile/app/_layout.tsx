@@ -39,6 +39,8 @@ export default function RootLayout() {
       <Stack.Screen name="tabs" options={{ headerShown: false }} /> 
       <Stack.Screen name="tabs_organization" options={{ headerShown: false }} /> 
       <Stack.Screen name="tabs_container_organization" options={{ headerShown: false }} /> 
+      <Stack.Screen name="tab_container_organization/Activities" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/Profile" options={{ headerShown: false }} />
 
       
       <Stack.Screen 
