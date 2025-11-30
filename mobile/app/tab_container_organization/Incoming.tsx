@@ -47,7 +47,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
 
   // Navigate to Event Profile.tsx
   const handleEventPress = () => {
-    router.push("../tab_container_event/EventProfile");
+    router.push("../tab_container_organization/Events");
   };
 
   return (
