@@ -41,8 +41,11 @@ export default function RootLayout() {
       <Stack.Screen name="tabs_container_organization" options={{ headerShown: false }} /> 
       <Stack.Screen name="tab_container_organization/Activities" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/Profile" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/EditProfile" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container/EventDetails_Concluded" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/Events" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/EditEvents" options={{ headerShown: false }} />
 
-      
       <Stack.Screen 
         name="tab_container/Search_Page" 
         options={{

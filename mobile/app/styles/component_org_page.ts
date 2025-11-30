@@ -23,7 +23,7 @@ export const STYLES = StyleSheet.create({
   
   // Header
   headerContainer: {
-    height: 220,
+    height: 200,
     width: '100%',
     position: 'relative',
   },
@@ -256,6 +256,14 @@ export const STYLES = StyleSheet.create({
   inactiveTabText: {
     color: COLORS.textDark,
   },
+  bannerGradient: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  height: '50%',
+  zIndex: 5,
+},
 
   /* -------------------------------------------------
    * NEW: Placeholder Content Block

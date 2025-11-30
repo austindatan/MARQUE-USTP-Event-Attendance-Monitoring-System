@@ -8,11 +8,12 @@ import {
   ScrollView, 
   TouchableOpacity, 
   StatusBar,
-  StyleSheet 
+  StyleSheet
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Styles
 import { STYLES, COLORS } from '../styles/component_org_page';
@@ -39,6 +40,13 @@ const ProfilePage = () => {
             style={STYLES.headerImageBackground}
             imageStyle={{ opacity: 1 }}
           >
+            {/* Gradient Overlay */}
+            <LinearGradient
+              colors={['rgba(0,0,0,0.6)', 'transparent']}
+              style={STYLES.bannerGradient}
+            />
+
+            {/* Navigation Row */}
             <View style={STYLES.navRow}>
               <TouchableOpacity 
                 style={{ flexDirection: 'row', alignItems: 'center' }}
@@ -65,17 +73,17 @@ const ProfilePage = () => {
               />
             </View>
 
-            {/* ⭐ UPDATED EDIT BUTTON */}
+            {/* Edit Button */}
             <TouchableOpacity 
               style={STYLES.editButton}
-              onPress={() => router.push("../tab_container_organization/EditProfile")}   // 👈 Navigate to EditProfile.tsx
+              onPress={() => router.push("../tab_container_organization/EditProfile")}
               activeOpacity={0.7}
             >
               <Icon name="pencil" size={20} color={COLORS.primaryNavy} />
             </TouchableOpacity>
           </View>
 
-          {/* Org Name */}
+          {/* Organization Name */}
           <Text style={STYLES.orgTitle}>
             Society of Information Technology Enthusiasts
           </Text>
@@ -85,11 +93,9 @@ const ProfilePage = () => {
             <TouchableOpacity style={STYLES.socialIcon}>
               <Icon name="logo-facebook" size={22} color={COLORS.primaryNavy} />
             </TouchableOpacity>
-
             <TouchableOpacity style={STYLES.socialIcon}>
               <Icon name="logo-instagram" size={22} color={COLORS.primaryNavy} />
             </TouchableOpacity>
-
             <TouchableOpacity style={STYLES.socialIcon}>
               <Icon name="close" size={22} color={COLORS.primaryNavy} />
             </TouchableOpacity>
@@ -144,11 +150,9 @@ const ProfilePage = () => {
             </TouchableOpacity>
           </View>
 
-          {/* ——————————————— EVENTS LIST ——————————————— */}
-
+          {/* Events List */}
           {activeTab === 'Incoming' && (
             <View>
-
               <EventCard
                 image="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"
                 title="Tech Summit 2025"
@@ -160,7 +164,6 @@ const ProfilePage = () => {
                 description="A gathering of innovators, developers, and tech-driven students."
                 onPress={() => console.log("Open Incoming Event 1")}
               />
-
               <EventCard
                 image="https://images.unsplash.com/photo-1525182008055-f88b95ff7980"
                 title="Coding Bootcamp"
@@ -172,13 +175,11 @@ const ProfilePage = () => {
                 description="Hands-on workshop focusing on React, Java, and UX design."
                 onPress={() => console.log("Open Incoming Event 2")}
               />
-
             </View>
           )}
 
           {activeTab === 'Concluded' && (
             <View>
-
               <EventCard
                 image="https://images.unsplash.com/photo-1529101091764-c3526daf38fe"
                 title="USTP Welcome Orientation"
@@ -190,7 +191,6 @@ const ProfilePage = () => {
                 description="Orientation event that welcomed IT students to USTP."
                 onPress={() => console.log("Open Concluded Event 1")}
               />
-
               <EventCard
                 image="https://images.unsplash.com/photo-1506784983877-45594efa4cbe"
                 title="Hackathon 2024"
@@ -202,7 +202,6 @@ const ProfilePage = () => {
                 description="24-hour coding challenge focused on solving real-life problems."
                 onPress={() => console.log("Open Concluded Event 2")}
               />
-
             </View>
           )}
 
@@ -214,8 +213,7 @@ const ProfilePage = () => {
 
 export default ProfilePage;
 
-/* ---------------- LOCAL STYLES ---------------- */
-
+/* ---------------- LOCAL TAB STYLES ---------------- */
 const tabStyles = StyleSheet.create({
   tabWrapper: {
     flexDirection: 'row',
