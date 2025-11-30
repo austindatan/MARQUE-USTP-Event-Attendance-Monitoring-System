@@ -11,7 +11,9 @@ const {
     addEvent, 
     updateEvent, 
     getOrgEventsByStatus, 
-    getOngoingEvents 
+    getOngoingEvents,
+    getEventsByOrgType,
+    getFilteredEvents
 } = eventController;
 
 
@@ -31,6 +33,11 @@ router.post("/add", uploadEventImages.array("event_images", 10), addEvent);
 router.put("/update/:id", uploadEventImages.array("event_images", 10), updateEvent);
 
 router.get("/details/:organizationId", getOrgEventsByStatus);
+
+router.get("/by-org-type/:orgType", getEventsByOrgType);
+
+router.get('/filter', getFilteredEvents);
+
 
 
 router.get("/:departmentId", getEventsByDepartment); 

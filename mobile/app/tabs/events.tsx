@@ -13,26 +13,21 @@ const Events = () => {
   const [activeTab, setActiveTab] = useState("departments");
   const [studentDept, setStudentDept] = useState(null);
   const scrollY = useRef(new Animated.Value(0)).current;
-
+  
   useEffect(() => {
-    console.log("useEffect ran — Events screen mounted");
     fetchStudentDepartment();
   }, []);
 
   const fetchStudentDepartment = async () => {
     try {
       const studentNumber = await AsyncStorage.getItem("student_number");
-      console.log("📌 STORED STUDENT NUMBER =", studentNumber);
 
       if (!studentNumber) {
-        console.log("❌ No student number found in storage.");
         return;
       }
 
       const res = await fetch(`${BASE_URL}/api/student/id/${studentNumber}`);
       const data = await res.json();
-
-      console.log("📌 STUDENT DATA FROM BACKEND =", data);
 
       setStudentDept(data.department_id);
     } catch (error) {
@@ -54,7 +49,7 @@ const Events = () => {
       {activeTab === "departments" ? (
         <Departments scrollY={scrollY} studentDept={studentDept} />
       ) : (
-        <Organizations scrollY={scrollY} />
+        <Organizations scrollY={scrollY} /> 
       )}
 
       <Modal

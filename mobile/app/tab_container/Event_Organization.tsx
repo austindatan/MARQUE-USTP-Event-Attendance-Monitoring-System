@@ -19,11 +19,9 @@ const Organizations = ({ scrollY }) => {
     setIsLoading(true);
 
     try {
-      // 1. Get followed org IDs
       const orgsRes = await fetch(`${BASE_URL}/api/followed-orgs/${MOCK_STUDENT_ID}/ids`);
       const followedOrgIds = await orgsRes.json();
 
-      console.log("Followed org IDs:", followedOrgIds);
 
       if (!followedOrgIds.length) {
         setEvents([]);
@@ -32,13 +30,11 @@ const Organizations = ({ scrollY }) => {
 
       const query = followedOrgIds.join(",");
 
-      // 2. Get events for those orgs
       const eventsRes = await fetch(
         `${BASE_URL}/events/followed?orgs=${query}`
       );
 
       const eventsData = await eventsRes.json();
-      console.log("Fetched events:", eventsData);
 
       setEvents(eventsData);
 
@@ -52,7 +48,6 @@ const Organizations = ({ scrollY }) => {
 
 
   useEffect(() => {
-    // Only fetch if the student ID is available
     if (MOCK_STUDENT_ID) { 
       fetchFollowedEvents();
     } else {
@@ -80,7 +75,6 @@ const Organizations = ({ scrollY }) => {
       );
     }
     
-    // Logic to render EventCard 
     return (
       <View style={appeffects.eventList}>
         {events.map((ev) => {

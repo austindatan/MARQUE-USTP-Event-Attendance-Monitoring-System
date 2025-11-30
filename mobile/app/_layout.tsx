@@ -39,6 +39,9 @@ export default function RootLayout() {
       <Stack.Screen name="tabs" options={{ headerShown: false }} /> 
       <Stack.Screen name="tabs_organization" options={{ headerShown: false }} /> 
       <Stack.Screen name="tabs_container_organization" options={{ headerShown: false }} /> 
+      <Stack.Screen name="tab_container/Filter_Page" options={{ headerShown: false }} /> 
+      <Stack.Screen name="tab_container/EventDetails_ZFeedback" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container/Profile_ChangePassword" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/Activities" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/Profile" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/EditProfile" options={{ headerShown: false }} />
@@ -50,9 +53,6 @@ export default function RootLayout() {
         name="tab_container/Search_Page" 
         options={{
           headerShown: false,
-          
-          presentation: 'modal', 
-          animation: 'slide_from_bottom', 
         }} 
       />
     </Stack>
