@@ -1,7 +1,7 @@
 // Teams.tsx
 import React, { useRef, useState } from "react";
 import { View, Animated, Modal, ImageBackground } from "react-native";
-import Header from "../components/Header_Organization";
+import Header from "../components/Header_Teams";
 import SidebarMenu from "../components/SidebarMenu_Organization";
 import YourOrg from "../tab_container_organization/YourOrg";
 import JoinOrgs from "../tab_container_organization/JoinOrgs";
