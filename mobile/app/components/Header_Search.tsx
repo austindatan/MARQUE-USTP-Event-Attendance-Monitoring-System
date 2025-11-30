@@ -95,7 +95,7 @@ const Header = ({ query = "", setQuery, onBack, onMenuPress, scrollY = new Anima
             )}
           </View>
 
-          <TouchableOpacity style={styles.filterButton}>
+          <TouchableOpacity style={styles.filterButton} onPress={() => router.push("/tab_container/Filter_Page")}>
             <View style={styles.filterB}>
               <Ionicons name="filter" size={14} color="#222762" />
             </View>

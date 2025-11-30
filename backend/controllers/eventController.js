@@ -6,6 +6,8 @@ import Organization from "../models/Organization.js";
 import FollowedOrgs from "../models/Followed_org.js";
 import fs from "fs";
 import path from "path";
+import mongoose from "mongoose";
+
 
 const getEventsByDepartment = async (req, res) => {
   try {
@@ -31,6 +33,106 @@ const getEventsByDepartment = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+const getEventsByOrgType = async (req, res) => {
+  const { orgType } = req.params;
+
+  let mappedType;
+  if (orgType === "units") mappedType = "Unit Organization";
+  else if (orgType === "mothers") mappedType = "Mother Organization";
+  else return res.status(400).json({ message: "Invalid organization type" });
+
+  try {
+    const orgs = await Organization.find({ org_type: mappedType }).select("_id");
+    const orgIds = orgs.map((o) => o._id);
+
+    const events = await Event.find({
+      organization_id: { $in: orgIds },
+      end_time: { $gte: new Date() }
+    })
+      .populate("organization_id")
+      .sort({ event_date: 1 });
+
+    res.status(200).json({ events }); 
+  } catch (err) {
+    console.error("Error fetching events:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+const getFilteredEvents = async (req, res) => {
+  try {
+    let { orgs } = req.query;
+
+    console.log("Received orgs query:", orgs);
+
+    if (!orgs) return res.status(200).json([]);
+
+    if (typeof orgs === "string") {
+      try {
+        orgs = JSON.parse(orgs);
+      } catch (err) {
+        orgs = orgs.split(',');
+      }
+    }
+
+    const orgObjectIds = orgs
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+      .map((id) => new mongoose.Types.ObjectId(id));
+
+    if (orgObjectIds.length === 0) return res.status(200).json([]);
+
+    const now = new Date();
+
+    const filteredEvents = await Event.find({
+      organization_id: { $in: orgObjectIds },
+      end_time: { $gte: now } 
+    })
+      .sort({ event_date: 1 })
+      .populate('organization_id', 'org_name pfp description');
+
+    return res.status(200).json(filteredEvents);
+  } catch (err) {
+    console.error("Error fetching filtered events:", err);
+    return res.status(500).json({ message: "Server error fetching filtered events" });
+  }
+};
+
+
+
+const getFollowedEvents = async (req, res) => {
+    try {
+        const { orgs } = req.query;
+
+        if (!orgs) {
+            return res.status(200).json([]); 
+        }
+
+        const orgIdStrings = orgs.split(',');
+        const orgObjectIds = orgIdStrings
+            .filter(id => mongoose.Types.ObjectId.isValid(id.trim()))
+            .map(id => new mongoose.Types.ObjectId(id.trim()));
+
+        if (orgObjectIds.length === 0) {
+            return res.status(200).json([]); 
+        }
+
+        const events = await Event.find({
+            organization_id: { $in: orgObjectIds }
+        })
+        .sort({ event_date: 1 })
+        .populate('organization_id');
+
+        res.status(200).json(events);
+
+    } catch (err) {
+        console.error("Error fetching followed events:", err);
+        res.status(500).json({ message: "Server error fetching followed events" });
+    }
+};
+
+
 
 
 const getAllUpcomingEvents = async (req, res) => {
@@ -70,11 +172,10 @@ const getEventsByFollowedOrgs = async (req, res) => {
 
     try {
         const events = await Event.find({ 
-            organization_id: { $in: orgIds }, // Filter by the list of organization IDs
-            // event_date: { $gte: new Date() }   // Filter for upcoming events only
+            organization_id: { $in: orgIds }, 
         })
         .populate('organization_id')
-        .sort({ event_date: 1 }); // Sort by date ascending
+        .sort({ event_date: 1 }); 
 
         res.status(200).json(events);
     } catch (err) {
@@ -307,4 +408,4 @@ const searchEvents = async (req, res) => {
 
 
 
-export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents };
+export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents, getEventsByOrgType, getFilteredEvents, getFollowedEvents };
