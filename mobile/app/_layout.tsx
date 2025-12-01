@@ -48,6 +48,7 @@ export default function RootLayout() {
       <Stack.Screen name="tab_container/EventDetails_Concluded" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/Events" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/EditEvents" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/Incoming" options={{ headerShown: false }} />
 
       <Stack.Screen 
         name="tab_container/Search_Page" 

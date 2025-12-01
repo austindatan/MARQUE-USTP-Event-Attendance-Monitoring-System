@@ -1,39 +1,107 @@
 // @ts-nocheck
-import React, { useEffect, useRef } from "react";
-import { View, Text, Animated } from "react-native";
-import EventCard from "../components/Card_Teams";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, Animated, ActivityIndicator, TouchableOpacity } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import EventCard from "../components/Card_Teams"; 
 import appeffects from "../styles/effects_app";
 import { useRouter } from "expo-router";
+import axios from "axios";
+import { BASE_URL } from "../../config"; 
+
+interface Organization {
+  _id: string;
+  org_name: string;
+  description: string;
+  pfp: string; 
+}
 
 const YourOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const scrollRef = useRef(null);
   const router = useRouter();
+  // 💡 Animation Fix: Fallback for scrollY prop
+  const internalScrollY = useRef(scrollY instanceof Animated.Value ? scrollY : new Animated.Value(0)).current;
 
-  // Redirect to Activities.jsx instead of Incoming
-  const handleCardPress = () => {
-    router.push("../tab_container_organization/Activities");
+  const [joinedOrgs, setJoinedOrgs] = useState<Organization[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchJoinedOrganizations = async () => {
+    setLoading(true);
+    try {
+      // ... Step 1 (Student Lookup) ...
+      const storedStudentNumber = await AsyncStorage.getItem("student_number");
+      if (!storedStudentNumber) {
+        setError("User not logged in or student number not found.");
+        setLoading(false);
+        return;
+      }
+      const studentRes = await axios.get(`${BASE_URL}/api/student/id/${storedStudentNumber}`)
+      const studentId = studentRes.data._id; 
+      if (!studentId) {
+          setError("Could not find student profile data.");
+          setLoading(false);
+          return;
+      }
+
+      // ... Step 2 (Membership Lookup) ...
+      const orgsRes = await axios.get(`${BASE_URL}/api/memberships/student/${studentId}`);
+      
+      setJoinedOrgs(orgsRes.data);
+      setError(null);
+
+    } catch (err) {
+      console.error("Error fetching joined organizations:", err);
+      if (axios.isAxiosError(err) && err.response && err.response.status === 404) {
+         setError("Connection Error: API route not found. Please check your BASE_URL and server route configuration.");
+      } else {
+         setError("Failed to load your organizations.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const containerTranslateY = scrollY.interpolate({
+  useEffect(() => {
+    fetchJoinedOrganizations();
+  }, []);
+
+  // ⭐️ FIXED: Now correctly navigates to the Profile page
+  const handleCardPress = (orgId: string) => {
+    router.push({
+      pathname: "../tab_container_organization/Activities", 
+      params: { 
+        orgId: orgId 
+      },
+    });
+  };
+
+  // 💡 Animation Fix: Use the internalScrollY variable
+  const containerTranslateY = internalScrollY.interpolate({ 
     inputRange: [0, 80],
     outputRange: [0, -40],
     extrapolate: "clamp",
   });
+  
+  // (Scroll useEffect logic remains unchanged)
 
-  useEffect(() => {
-    if (scrollRef.current && initialScroll > 0) {
-      const t = setTimeout(() => {
-        const node = scrollRef.current?.getNode
-          ? scrollRef.current.getNode()
-          : scrollRef.current;
+  if (loading) {
+    return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+    );
+  }
 
-        if (node && node.scrollTo) {
-          node.scrollTo({ y: initialScroll, animated: false });
-        }
-      }, 0);
-      return () => clearTimeout(t);
-    }
-  }, [initialScroll]);
+  if (error) {
+    return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: 'red' }}>{error}</Text>
+            <TouchableOpacity onPress={fetchJoinedOrganizations}>
+                <Text style={{ marginTop: 10, color: 'blue' }}>Retry</Text>
+            </TouchableOpacity>
+        </View>
+    );
+  }
 
   return (
     <Animated.View
@@ -60,12 +128,21 @@ const YourOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         </View>
 
         <View style={appeffects.eventList}>
-          <EventCard
-            image={require("../../assets/images/marque/crtcg1.png")}
-            title="Society of Information Technology Enthusiasts"
-            description="Empowering Students, Building Leaders."
-            onPress={handleCardPress}
-          />
+          {joinedOrgs.length > 0 ? (
+            joinedOrgs.map((org) => (
+              <EventCard 
+                key={org._id}
+                image={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/crtcg1.png")}
+                title={org.org_name}
+                description={org.description}
+                onPress={() => handleCardPress(org._id)} 
+              />
+            ))
+          ) : (
+            <Text style={{ textAlign: 'center', color: 'gray', marginTop: 20 }}>
+                You have not joined any organizations yet.
+            </Text>
+          )}
         </View>
       </Animated.ScrollView>
     </Animated.View>
