@@ -58,29 +58,43 @@ const Departments = ({ scrollY, studentDept }) => {
     return (
       <View style={appeffects.eventList}>
         {events.map((ev) => {
-        const date = new Date(ev.event_date);
-        const dateDay = date.getDate();
-        const dateMonth = date.toLocaleString('default', { month: 'short' });
-        const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          const date = new Date(ev.event_date);
+          const dateDay = date.getDate();
+          const dateMonth = date.toLocaleString('default', { month: 'short' });
+          const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-        return (
-          <EventCard
-            onPress={() =>
-              router.push(`/tab_container/EventDetails_Concluded?eventId=${ev._id}`)
+          // Determine which EventDetails page to navigate to based on status
+          const handleEventPress = () => {
+            switch (ev.status) {
+              case "Ongoing":
+                router.push(`/tab_container/EventDetails_Ongoing?eventId=${ev._id}`);
+                break;
+              case "NoAttendance":
+                router.push(`/tab_container/EventDetails_NoAttendance?eventId=${ev._id}`);
+                break;
+              case "Concluded":
+                router.push(`/tab_container/EventDetails_Concluded?eventId=${ev._id}`);
+                break;
+              default:
+                router.push(`/tab_container/EventDetails_Incoming?eventId=${ev._id}`);
             }
-            key={ev._id}
-            image={{ uri: ev.event_image }}
-            title={ev.event_name}
-            organization={ev.organization_id?.org_name || "Unknown Org"}
-            orgLogo={{ uri: ev.organization_id?.pfp || "" }}
-            dateDay={dateDay}
-            dateMonth={dateMonth}
-            orgDate={dateStr}
-            description={ev.description}
-          />
-        );
-      })}
+          };
 
+          return (
+            <EventCard
+              key={ev._id}
+              onPress={handleEventPress}
+              image={{ uri: ev.event_image }}
+              title={ev.event_name}
+              organization={ev.organization_id?.org_name || "Unknown Org"}
+              orgLogo={{ uri: ev.organization_id?.pfp || "" }}
+              dateDay={dateDay}
+              dateMonth={dateMonth}
+              orgDate={dateStr}
+              description={ev.description}
+            />
+          );
+        })}
       </View>
     );
   };

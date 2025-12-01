@@ -55,8 +55,8 @@ const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 
 // Feedback route
-// const feedbackRoutes = require("./routes/feedbackRoutes");
-// app.use("/api/feedback", feedbackRoutes); 
+const feedbackRoutes = require("./routes/feedbackRoutes");
+app.use("/api/feedback", feedbackRoutes);
 
 // Org Officer route
 const orgOfficerRoutes = require('./routes/orgOfficerRoutes');

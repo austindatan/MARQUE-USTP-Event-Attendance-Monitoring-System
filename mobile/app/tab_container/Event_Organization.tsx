@@ -83,15 +83,33 @@ const Organizations = ({ scrollY }) => {
           const dateDay = date.getDate();
           const dateMonth = date.toLocaleString('default', { month: 'short' });
           const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-          
+
           // Time formatting logic
           const startTime = new Date(ev.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
           const endTime = new Date(ev.end_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
           const timeVenueStr = `⏰ ${startTime} - ${endTime} | 📍 ${ev.venue}`;
-            
+
+          // Determine navigation based on event status
+          const handleEventPress = () => {
+            switch (ev.status) {
+              case "Ongoing":
+                router.push(`/tab_container/EventDetails_Ongoing?eventId=${ev._id}`);
+                break;
+              case "NoAttendance":
+                router.push(`/tab_container/EventDetails_NoAttendance?eventId=${ev._id}`);
+                break;
+              case "Concluded":
+                router.push(`/tab_container/EventDetails_Concluded?eventId=${ev._id}`);
+                break;
+              default:
+                router.push(`/tab_container/EventDetails_NoAttendance?eventId=${ev._id}`);
+            }
+          };
+
           return (
             <EventCard
               key={ev._id}
+              onPress={handleEventPress}
               image={{ uri: ev.event_image }}
               title={ev.event_name}
               organization={ev.organization_id?.org_name || "Unknown Org"}
