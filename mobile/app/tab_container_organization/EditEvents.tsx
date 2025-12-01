@@ -1,223 +1,311 @@
 // @ts-nocheck
-import React, { useState } from "react";
+import React from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
   StyleSheet,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+  Dimensions,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-// --- Image Placeholder Component ---
-const ImagePlaceholder = () => (
-  <View style={styles.imagePlaceholder}>
-    <Ionicons name="add" size={32} color="#FFD700" />
-  </View>
-);
+const { width } = Dimensions.get('window');
 
-// --- Form Input Component ---
-const FormInput = ({ label, value, setValue, multiline = false, icon }) => (
-  <View style={styles.formGroup}>
-    <View style={styles.formLabelContainer}>
-      <Text style={styles.formLabel}>{label}</Text>
-      {icon && <Ionicons name={icon} size={20} color="#888" />}
+/* ---------------------------------------------
+   Small Component: Dashed Placeholder Box
+--------------------------------------------- */
+const DashedPlaceholder = ({ style, onPress }: { style?: any; onPress?: () => void }) => (
+  <TouchableOpacity onPress={onPress}>
+    <View style={[styles.dashedBox, style]}>
+      <MaterialCommunityIcons name="plus" size={24} color="#7F5AF0" />
     </View>
-    <TextInput
-      style={[styles.input, multiline && { height: 100, textAlignVertical: "top" }]}
-      value={value}
-      onChangeText={setValue}
-      placeholder={`Enter ${label}`}
-      multiline={multiline}
-    />
-  </View>
+  </TouchableOpacity>
 );
 
-// --- Main Edit Event Screen ---
-const EditEvents = () => {
-  const router = useRouter();
+/* ---------------------------------------------
+   Main Component
+--------------------------------------------- */
+const EditEvents: React.FC = () => {
+  const handleMainImagePress = () => {
+    console.log('Main image placeholder pressed');
+  };
 
-  // Form state
-  const [eventName, setEventName] = useState("Appetite: Free Meals for BSIT...");
-  const [eventType, setEventType] = useState("Food Distribution Event");
-  const [dateTime, setDateTime] = useState("October 17, 2025, 11:00 AM – 1:00 PM");
-  const [description, setDescription] = useState(
-    "APPETITE | Heads up BSIT students! Get ready to start your morning the IT way! Join us today for AppetiTE— our way of promoting student well-being through shared meals and meaningful connections."
-  );
-
-  const handleBack = () => router.back();
-
-  const handlePublish = () => {
-    console.log("Event saved:", { eventName, eventType, dateTime, description });
-    alert("Event saved successfully!");
-    router.back();
+  const handleSmallImagePress = (index: number) => {
+    console.log(`Small placeholder ${index + 1} pressed`);
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={{ flexDirection: "row", alignItems: "center" }}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-          <Text style={styles.headerText}>Edit Event</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Scrollable Content */}
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header Image */}
-        <View style={styles.headerImage}>
-          <Text style={styles.headerImageText}>FREE COFFEE & PASTRY</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.container}>
+        
+        {/* -------- Header -------- */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Add Event</Text>
         </View>
 
-        {/* Image Placeholders */}
-        <View style={styles.imagePlaceholdersContainer}>
-          <ImagePlaceholder />
-          <ImagePlaceholder />
-          <ImagePlaceholder />
-          <ImagePlaceholder />
+        {/* -------- Image Upload Section -------- */}
+        <View style={styles.imageUploadArea}>
+          <TouchableOpacity style={styles.mainImagePlaceholder} onPress={handleMainImagePress}>
+            <MaterialCommunityIcons name="plus" size={30} color="#7F5AF0" />
+          </TouchableOpacity>
+
+          <View style={styles.smallImageRow}>
+            {[...Array(4)].map((_, index) => (
+              <DashedPlaceholder
+                key={index}
+                style={styles.smallPlaceholder}
+                onPress={() => handleSmallImagePress(index)}
+              />
+            ))}
+          </View>
         </View>
 
-        {/* Form Inputs */}
-        <FormInput label="Event Name" value={eventName} setValue={setEventName} />
-        <FormInput label="Event Type" value={eventType} setValue={setEventType} />
-        <FormInput
-          label="Date & Time"
-          value={dateTime}
-          setValue={setDateTime}
-          icon="calendar"
-        />
-        <FormInput
-          label="Event Description"
-          value={description}
-          setValue={setDescription}
-          multiline
-        />
+        {/* -------- Form Title -------- */}
+        <Text style={styles.formSectionTitle}>Event Details</Text>
 
-        <View style={{ height: 80 }} /> {/* Spacer for scroll */}
+        {/* Event Name */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>
+            Event Name<Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Type your event name"
+            placeholderTextColor="#C1C1C1"
+          />
+        </View>
+
+        {/* Event Type */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>
+            Event Type<Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Choose event type"
+            placeholderTextColor="#C1C1C1"
+            editable={false}
+          />
+        </View>
+
+        {/* Date / Time Picker */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>
+            Select Date and Time<Text style={styles.required}>*</Text>
+          </Text>
+
+          <View style={styles.dateInputContainer}>
+            <TextInput
+              style={[styles.textInput, styles.dateInput]}
+              placeholder="Choose event date"
+              placeholderTextColor="#C1C1C1"
+              editable={false}
+            />
+            <MaterialCommunityIcons
+              name="calendar-month"
+              size={24}
+              color="#7F5AF0"
+              style={styles.calendarIcon}
+            />
+          </View>
+        </View>
+
+        {/* Description */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>
+            Event Description<Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.textInput, styles.descriptionInput]}
+            placeholder="Type your event description..."
+            placeholderTextColor="#C1C1C1"
+            multiline
+            textAlignVertical="top"
+          />
+        </View>
+
       </ScrollView>
 
-      {/* Floating Save Button */}
-      <View style={styles.floatingButtonContainer}>
-        <TouchableOpacity style={styles.floatingButton} onPress={handlePublish}>
-          <Text style={styles.floatingButtonText}>Save Event</Text>
-          <Ionicons
-            name="send"
-            size={20}
-            color="#000"
-            style={{ marginLeft: 10, transform: [{ rotate: "45deg" }] }}
-          />
-        </TouchableOpacity>
-      </View>
-    </View>
+      {/* -------- Floating Submit Button -------- */}
+      <TouchableOpacity style={styles.publishButton}>
+        <Text style={styles.publishButtonText}>Publish Event</Text>
+        <MaterialCommunityIcons
+          name="send-outline"
+          size={20}
+          color="#000"
+          style={styles.sendIcon}
+        />
+      </TouchableOpacity>
+    </SafeAreaView>
   );
 };
 
 export default EditEvents;
 
-// --- Styles ---
+/* ---------------------------------------------
+   Styles (Merged)
+--------------------------------------------- */
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#F2F2F2",
+    backgroundColor: '#fff',
   },
+
+  container: {
+    paddingHorizontal: 20,
+    paddingBottom: 100,
+  },
+
+  /* ------ Header ------ */
   header: {
-    backgroundColor: "#0A0F51",
-    paddingTop: 50,
-    paddingHorizontal: 15,
-    paddingBottom: 15,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    marginBottom: 10,
   },
-  headerText: {
-    color: "#fff",
+
+  backButton: {},
+
+  headerTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    marginLeft: 10,
+    fontWeight: '600',
+    color: '#000',
+    marginLeft: 15,
   },
-  content: {
-    padding: 15,
+
+  /* ------ Image Upload ------ */
+  imageUploadArea: {
+    marginBottom: 30,
   },
-  headerImage: {
-    width: "100%",
-    height: 200,
-    borderRadius: 20,
-    backgroundColor: "#6f4e37",
-    marginBottom: 16,
-    justifyContent: "center",
-    alignItems: "center",
+
+  mainImagePlaceholder: {
+    height: width * 0.45,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: '#F0E5FF',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F7F4FD',
+    overflow: 'hidden',
+    marginBottom: 10,
   },
-  headerImageText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+
+  smallImageRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  imagePlaceholdersContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  imagePlaceholder: {
-    width: "22%",
+
+  dashedBox: {
     aspectRatio: 1,
-    borderWidth: 2,
-    borderColor: "#FFD700",
-    borderStyle: "dashed",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  formGroup: {
-    marginBottom: 16,
-  },
-  formLabelContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  formLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
-  input: {
-    backgroundColor: "#fff",
     borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F7F4FD',
+    borderColor: '#FFD180',
   },
-  floatingButtonContainer: {
-    position: "absolute",
+
+  smallPlaceholder: {
+    width: (width - 40 - 15 * 3) / 4,
+    borderColor: '#F0E5FF',
+  },
+
+  /* ------ Form ------ */
+  formSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 20,
+  },
+
+  inputGroup: {
+    marginBottom: 20,
+  },
+
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#555',
+    marginBottom: 8,
+  },
+
+  required: {
+    color: 'red',
+  },
+
+  textInput: {
+    backgroundColor: '#F7F7F7',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#333',
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+  },
+
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  dateInput: {
+    flex: 1,
+    paddingRight: 50,
+  },
+
+  calendarIcon: {
+    position: 'absolute',
+    right: 15,
+    padding: 5,
+    backgroundColor: '#FFEBEE',
+    borderRadius: 5,
+    borderColor: '#FFD180',
+    borderWidth: 1,
+  },
+
+  descriptionInput: {
+    height: 120,
+    paddingTop: 14,
+  },
+
+  /* ------ Floating Button ------ */
+  publishButton: {
+    position: 'absolute',
     bottom: 20,
     left: 20,
     right: 20,
+    backgroundColor: '#FFD700',
+    borderRadius: 15,
+    paddingVertical: 18,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5.46,
+    elevation: 9,
   },
-  floatingButton: {
-    flexDirection: "row",
-    backgroundColor: "#FFD700",
-    paddingVertical: 16,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#FFD700",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+
+  publishButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000',
+    marginRight: 10,
   },
-  floatingButtonText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#000",
+
+  sendIcon: {
+    transform: [{ rotate: '45deg' }],
   },
 });
