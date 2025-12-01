@@ -1,5 +1,5 @@
-// @ts-nocheck  
-import React, { useState } from 'react';
+// @ts-nocheck
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,13 @@ import {
   StyleSheet,
   TextInput,
   Alert,
+  aspectRatio
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import axios from "axios";
+import { BASE_URL } from "../../config";
+import * as ImagePicker from 'expo-image-picker';
 
 // --- COLORS DEFINITION ---
 const COLORS = {
@@ -178,153 +182,150 @@ const STYLES = StyleSheet.create({
 // --- COMPONENT ---
 const EditProfile = () => {
   const router = useRouter();
+  const { orgId } = useLocalSearchParams();
 
-  // Form State
-  const [orgName, setOrgName] = useState('Society of Information Technology Enthusiasts');
-  const [description, setDescription] = useState(
-    'SITE empowers future IT professionals through innovation, leadership, and collaboration. We are the official student organization of BSIT students at USTP, driven by passion for tech, committed to building a vibrant, skill-driven, inclusive IT community.'
-  );
-  const [facebookLink, setFacebookLink] = useState('https://www.facebook.com/username');
-  const [instagramLink, setInstagramLink] = useState('https://www.instagram.com/username');
-
-  // Image State
+  const [orgName, setOrgName] = useState('');
+  const [description, setDescription] = useState('');
+  const [facebookLink, setFacebookLink] = useState('');
+  const [instagramLink, setInstagramLink] = useState('');
   const [bannerUri, setBannerUri] = useState(PLACEHOLDER_ASSETS.bannerUri);
   const [logoUri, setLogoUri] = useState(PLACEHOLDER_ASSETS.logoUri);
 
-  const handleImagePick = async (setImageFunction: Function) => {
-    Alert.alert("Image Upload", "Prompted to select an image. Implement 'expo-image-picker' for full functionality.");
-  };
+  // Load existing organization data
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/api/organizations/profile/${orgId}`);
+        const org = res.data.organization;
 
-  const handleSave = () => {
+        setOrgName(org.org_name);
+        setDescription(org.description);
+        setFacebookLink(org.fb_link || "");
+        setInstagramLink(org.ig_link || "");
+        setBannerUri(org.cover_photo ? { uri: org.cover_photo } : PLACEHOLDER_ASSETS.bannerUri);
+        setLogoUri(org.pfp ? { uri: org.pfp } : PLACEHOLDER_ASSETS.logoUri);
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+      }
+    };
+    if (orgId) loadProfile();
+  }, [orgId]);
+
+  // Pick image from gallery
+  const handleImagePick = async (setImageFunction: Function, aspectRatio = [4, 3]) => {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: aspectRatio as [number, number],
+    quality: 0.7,
+  });
+
+  if (!result.canceled) {
+    setImageFunction({ uri: result.assets[0].uri, local: true });
+  }
+};
+
+  // Save and upload images
+  const handleSave = async () => {
     if (!orgName || !description) {
       Alert.alert('Error', 'Organization Name and Description are required.');
       return;
     }
 
-    console.log('Profile Data Saved:', { orgName, description, facebookLink, instagramLink, bannerUri, logoUri });
+    try {
+      const formData = new FormData();
+      formData.append("org_name", orgName);
+      formData.append("description", description);
+      formData.append("fb_link", facebookLink);
+      formData.append("ig_link", instagramLink);
 
-    Alert.alert('Success', 'Organization profile updated successfully!', [
-      { text: 'OK', onPress: () => router.replace("/ProfilePage") }
-    ]);
+      if (logoUri.local) {
+        formData.append("pfp", {
+          uri: logoUri.uri,
+          name: `logo_${Date.now()}.png`,
+          type: "image/png",
+        });
+      }
+
+      if (bannerUri.local) {
+        formData.append("cover_photo", {
+          uri: bannerUri.uri,
+          name: `banner_${Date.now()}.png`,
+          type: "image/png",
+        });
+      }
+
+      await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      Alert.alert("Success", "Organization profile updated successfully!", [
+        {
+          text: "OK",
+          onPress: () => router.push({
+            pathname: "../tab_container_organization/Profile",
+            params: { orgId, refresh: Date.now().toString() }
+          }),
+        }
+      ]);
+    } catch (err) {
+      console.error("Error updating org:", err);
+      Alert.alert("Error", "Failed to update organization.");
+    }
   };
 
   return (
     <View style={STYLES.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-
       <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* Banner Section */}
+        {/* Banner */}
         <View style={STYLES.headerContainer}>
-          <ImageBackground
-            source={bannerUri}
-            style={STYLES.headerImageBackground}
-            imageStyle={{ opacity: 1 }}
-          >
+          <ImageBackground source={bannerUri} style={STYLES.headerImageBackground}>
             <View style={STYLES.bannerOverlay}>
               <View style={STYLES.bannerContent}>
                 <View style={STYLES.navRow}>
-                  <TouchableOpacity
-                    style={{ flexDirection: 'row', alignItems: 'center' }}
-                    onPress={() => router.back()}
-                  >
+                  <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Icon name="arrow-back" size={24} color={COLORS.white} />
                   </TouchableOpacity>
                   <View style={{ width: 60 }} />
                 </View>
               </View>
             </View>
-
-            {/* Banner Upload Icon */}
-            <TouchableOpacity
-              style={STYLES.bannerCameraIcon}
-              onPress={() => handleImagePick(setBannerUri)}
-            >
-              <Image
-                source={require("../../assets/images/marque/Camera1.png")}
-                style={{ width: 24, height: 24, resizeMode: 'contain' }}
-              />
+            <TouchableOpacity style={STYLES.bannerCameraIcon} onPress={() => handleImagePick(setBannerUri)}>
+              <Image source={require("../../assets/images/marque/Camera1.png")} style={{ width: 24, height: 24, resizeMode: 'contain' }} />
             </TouchableOpacity>
           </ImageBackground>
         </View>
 
-        {/* Form Section */}
+        {/* Form */}
         <View style={STYLES.contentContainer}>
-
           {/* Logo */}
           <View style={STYLES.logoWrapper}>
-            <TouchableOpacity
-                style={STYLES.logoContainer}
-                onPress={() => handleImagePick(setLogoUri)}
-            >
+            <TouchableOpacity style={STYLES.logoContainer} onPress={() => handleImagePick(setLogoUri, [1, 1])}>
               <Image source={logoUri} style={STYLES.logoImage} />
               <View style={STYLES.logoCameraOverlay}>
-                <Image
-                  source={require("../../assets/images/marque/Camera1.png")}
-                  style={{ width: 30, height: 30, resizeMode: 'contain' }}
-                />
+                <Image source={require("../../assets/images/marque/Camera1.png")} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
               </View>
             </TouchableOpacity>
           </View>
 
-          {/* Organization Info */}
           <Text style={STYLES.sectionHeader}>Organization Information</Text>
-
-          {/* Save Button */}
-          <TouchableOpacity
-            style={STYLES.saveButton}
-            onPress={handleSave}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={STYLES.saveButton} onPress={handleSave} activeOpacity={0.8}>
             <Text style={STYLES.saveButtonText}>SAVE</Text>
           </TouchableOpacity>
 
-          <Text style={STYLES.label}>
-            Organization Name
-            <Text style={STYLES.requiredAsterisk}>*</Text>
-          </Text>
-          <TextInput
-            style={STYLES.textInput}
-            value={orgName}
-            onChangeText={setOrgName}
-            placeholder="Enter Organization Name"
-            placeholderTextColor={COLORS.placeholderText}
-          />
+          <Text style={STYLES.label}>Organization Name<Text style={STYLES.requiredAsterisk}>*</Text></Text>
+          <TextInput style={STYLES.textInput} value={orgName} onChangeText={setOrgName} placeholder="Enter Organization Name" placeholderTextColor={COLORS.placeholderText} />
 
-          <Text style={STYLES.label}>
-            Description
-            <Text style={STYLES.requiredAsterisk}>*</Text>
-          </Text>
-          <TextInput
-            style={[STYLES.textInput, STYLES.textArea]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Enter a description for your organization"
-            placeholderTextColor={COLORS.placeholderText}
-            multiline
-          />
+          <Text style={STYLES.label}>Description<Text style={STYLES.requiredAsterisk}>*</Text></Text>
+          <TextInput style={[STYLES.textInput, STYLES.textArea]} value={description} onChangeText={setDescription} placeholder="Enter a description for your organization" placeholderTextColor={COLORS.placeholderText} multiline />
 
           <Text style={STYLES.sectionHeader}>Social Media Links</Text>
-
           <Text style={STYLES.label}>Facebook</Text>
-          <TextInput
-            style={STYLES.textInput}
-            value={facebookLink}
-            onChangeText={setFacebookLink}
-            placeholder="https://www.facebook.com/username"
-            placeholderTextColor={COLORS.placeholderText}
-          />
+          <TextInput style={STYLES.textInput} value={facebookLink} onChangeText={setFacebookLink} placeholder="https://www.facebook.com/username" placeholderTextColor={COLORS.placeholderText} />
 
           <Text style={STYLES.label}>Instagram</Text>
-          <TextInput
-            style={STYLES.textInput}
-            value={instagramLink}
-            onChangeText={setInstagramLink}
-            placeholder="https://www.instagram.com/username"
-            placeholderTextColor={COLORS.placeholderText}
-            marginBottom={30}
-          />
-
+          <TextInput style={STYLES.textInput} value={instagramLink} onChangeText={setInstagramLink} placeholder="https://www.instagram.com/username" placeholderTextColor={COLORS.placeholderText} marginBottom={30} />
         </View>
       </ScrollView>
     </View>

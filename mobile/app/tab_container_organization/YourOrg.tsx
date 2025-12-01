@@ -4,9 +4,10 @@ import { View, Text, Animated, ActivityIndicator, TouchableOpacity } from "react
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
 import EventCard from "../components/Card_Teams"; 
 import appeffects from "../styles/effects_app";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import axios from "axios";
 import { BASE_URL } from "../../config"; 
+import { useCallback } from "react";
 
 interface Organization {
   _id: string;
@@ -18,7 +19,6 @@ interface Organization {
 const YourOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const scrollRef = useRef(null);
   const router = useRouter();
-  // 💡 Animation Fix: Fallback for scrollY prop
   const internalScrollY = useRef(scrollY instanceof Animated.Value ? scrollY : new Animated.Value(0)).current;
 
   const [joinedOrgs, setJoinedOrgs] = useState<Organization[]>([]);
@@ -61,11 +61,12 @@ const YourOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     }
   };
 
-  useEffect(() => {
-    fetchJoinedOrganizations();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchJoinedOrganizations();
+    }, [])
+  );
 
-  // ⭐️ FIXED: Now correctly navigates to the Profile page
   const handleCardPress = (orgId: string) => {
     router.push({
       pathname: "../tab_container_organization/Activities", 
@@ -75,14 +76,11 @@ const YourOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     });
   };
 
-  // 💡 Animation Fix: Use the internalScrollY variable
   const containerTranslateY = internalScrollY.interpolate({ 
     inputRange: [0, 80],
     outputRange: [0, -40],
     extrapolate: "clamp",
   });
-  
-  // (Scroll useEffect logic remains unchanged)
 
   if (loading) {
     return (

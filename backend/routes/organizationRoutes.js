@@ -5,21 +5,18 @@ const organizationController = require('../controllers/organizationController');
 const Organization = require("../models/Organization");
 const Event = require("../models/Event");
 
-// ===========================================================
-// ✔ FIXED: No more route conflict
-// Full path: GET /api/organizations/profile/:orgId
-// ===========================================================
+// multer Cloudinary
+const { uploadOrgImages } = require('./cloudinaryConfig');
+
+// GET /api/organizations/profile/:orgId
 router.get('/profile/:orgId', async (req, res) => {
   try {
     const orgId = req.params.orgId;
 
     const organization = await Organization.findById(orgId);
-    if (!organization) {
-      return res.status(404).json({ message: "Organization not found" });
-    }
+    if (!organization) return res.status(404).json({ message: "Organization not found" });
 
     const events = await Event.find({ organization_id: orgId });
-
     const incomingEvents = events.filter(e => e.status === "Upcoming");
     const concludedEvents = events.filter(e => e.status === "Concluded");
 
@@ -36,12 +33,20 @@ router.get('/profile/:orgId', async (req, res) => {
   }
 });
 
-// ===========================================================
-// Other routes (no change needed)
-// ===========================================================
+// Org routes
 router.get('/', organizationController.getOrganizations);
 router.get('/by-type/:type', organizationController.getOrganizationsByType);
 router.get('/:id', organizationController.getOrganizationById);
 router.post('/', organizationController.addOrganization);
+
+// UPDATE organization profile
+router.put(
+  '/:orgId',
+  uploadOrgImages.fields([
+    { name: 'pfp', maxCount: 1 },
+    { name: 'cover_photo', maxCount: 1 },
+  ]),
+  organizationController.updateOrganizationProfile
+);
 
 module.exports = router;
