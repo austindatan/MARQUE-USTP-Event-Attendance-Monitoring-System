@@ -47,7 +47,16 @@ app.use('/api/bookmarks', bookmarksRoutes);
 const organizationRoutes = require('./routes/organizationRoutes');
 app.use('/api/organizations', organizationRoutes);
 
+// User route
+const userRoutes = require("./routes/userRoutes"); 
+app.use("/api/users", userRoutes); 
 
+const authRoutes = require("./routes/auth");
+app.use("/api/auth", authRoutes);
+
+// Feedback route
+// const feedbackRoutes = require("./routes/feedbackRoutes");
+// app.use("/api/feedback", feedbackRoutes); 
 
 // DB connection
 mongoose

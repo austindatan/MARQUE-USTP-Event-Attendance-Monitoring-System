@@ -227,7 +227,7 @@ const addEvent = async (req, res) => {
     } = req.body;
 
     // File upload paths (multiple images)
-    const images = req.files ? req.files.map(f => `/uploads/events/${f.filename}`) : [];
+    const images = req.body.event_images || [];
 
     const newEvent = new Event({
       organization_id,
@@ -281,9 +281,9 @@ const updateEvent = async (req, res) => {
     }
 
     // Prepare new uploaded images
-    const newImages = req.files ? req.files.map(f => `/uploads/events/${f.filename}`) : [];
+    const newImages = req.body.event_images || []; 
 
-    let finalImages = [];
+    let finalImages = req.body.keep_old_images || [];
 
     // If user wants to keep old images
     if (keep_old_images && Array.isArray(keep_old_images)) {
@@ -406,6 +406,23 @@ const searchEvents = async (req, res) => {
     }
 };
 
+const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate("organization_id", "org_name pfp description");
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.status(200).json(event);
+  } catch (err) {
+    console.error("Error fetching event details:", err);
+    res.status(500).json({ message: "Server error fetching event details" });
+  }
+};
 
 
-export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents, getEventsByOrgType, getFilteredEvents, getFollowedEvents };
+
+
+export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents, getEventsByOrgType, getFilteredEvents, getFollowedEvents, getEventById  };
