@@ -13,7 +13,9 @@ const {
     getOrgEventsByStatus, 
     getOngoingEvents,
     getEventsByOrgType,
-    getFilteredEvents
+    getFilteredEvents,
+    getUpcomingEventsByOrganization,
+    getConcludedEventsByOrganization
 } = eventController;
 
 
@@ -25,6 +27,11 @@ router.get('/ongoing', getOngoingEvents);
 
 router.get("/all/upcoming", getAllUpcomingEvents);
 router.get("/all/concluded", getAllConcludedEvents);
+
+// GET upcoming events for a given organization
+router.get('/organization/:orgId/upcoming', eventController.getUpcomingEventsByOrganization);
+router.get('/organization/:orgId/concluded', eventController.getConcludedEventsByOrganization);
+
 
 // NEW ROUTE – MUST BE ABOVE departmentId
 router.get("/event/:id", eventController.getEventById);

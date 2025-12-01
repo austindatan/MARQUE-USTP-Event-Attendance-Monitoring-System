@@ -161,6 +161,48 @@ const getAllConcludedEvents = async (req, res) => {
   }
 };
 
+// get upcoming events for a specific organization
+const getUpcomingEventsByOrganization = async (req, res) => {
+  try {
+    const { orgId } = req.params;
+    if (!orgId) return res.status(400).json({ message: "Organization ID required" });
+
+    // Filter: event_date >= now AND organization_id == orgId
+    const now = new Date();
+
+    const events = await Event.find({
+      organization_id: orgId,
+      event_date: { $gte: now },
+    })
+      .populate("organization_id")
+      .sort({ event_date: 1 });
+
+    return res.status(200).json(events);
+  } catch (err) {
+    console.error("Error fetching organization upcoming events:", err);
+    return res.status(500).json({ message: "Server error fetching organization's upcoming events" });
+  }
+};
+
+const getConcludedEventsByOrganization = async (req, res) => {
+  try {
+    const { orgId } = req.params;
+
+    const events = await Event.find({
+      organization_id: orgId,
+      end_time: { $lt: new Date() }, // already ended
+    })
+    .populate("organization_id")
+    .sort({ end_time: -1 }); // recent first
+
+    res.status(200).json(events);
+  } catch (err) {
+    console.error("Error fetching concluded events:", err);
+    res.status(500).json({ message: "Server error fetching concluded events" });
+  }
+};
+
+
 const getEventsByFollowedOrgs = async (req, res) => {
     const orgsString = req.query.orgs; 
     
@@ -425,4 +467,4 @@ const getEventById = async (req, res) => {
 
 
 
-export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents, getEventsByOrgType, getFilteredEvents, getFollowedEvents, getEventById  };
+export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents, getEventsByOrgType, getFilteredEvents, getFollowedEvents, getEventById, getUpcomingEventsByOrganization, getConcludedEventsByOrganization,  };
