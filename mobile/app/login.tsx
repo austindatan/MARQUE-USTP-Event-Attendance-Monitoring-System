@@ -55,6 +55,10 @@ const Login = () => {
     }
 
     if (response.ok) {
+      if (data.token) {
+        await AsyncStorage.setItem("token", data.token); // <--- ADD THIS LINE
+      }
+      
       await AsyncStorage.setItem("student_number", studentNumber); 
       router.push("/tabs/Events");   
     } else {

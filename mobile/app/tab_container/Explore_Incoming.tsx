@@ -4,8 +4,10 @@ import { View, Text, Animated, ActivityIndicator } from "react-native";
 import EventCard from "../components/Card_Event";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
+import { useRouter } from "expo-router"
 
 const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
+  const router = useRouter ();
   const scrollRef = useRef(null);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,7 +81,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         <View style={appeffects.eventList}>
           {isLoading ? (
             <View style={{ flex: 1, paddingTop: 50 }}>
-                <ActivityIndicator size="large" color="#FFD700" />
+              <ActivityIndicator size="large" color="#FFD700" />
             </View>
           ) : events.length > 0 ? (
             events.map((event) => {
@@ -88,32 +90,38 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
               const dateDay = date.getDate();
               const dateMonth = date.toLocaleString('default', { month: 'short' });
               const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                
+
               const startTime = new Date(event.start_time).toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true,
               });
-              
+
               const endTime = new Date(event.end_time).toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true,
               });
-              
+
               const timeVenueStr = `⏰ ${startTime} - ${endTime} | 📍 ${event.venue}`;
-                
+
+              // --- Add onPress for each EventCard ---
+              const handleEventPress = () => {
+                // Since all are upcoming, go to NoAttendance
+                router.push(`/tab_container/EventDetails_Incoming?eventId=${event._id}`);
+              };
+
               return (
                 <EventCard
                   key={event._id}
-                  image={{ uri: event.event_image }} 
+                  onPress={handleEventPress}
+                  image={{ uri: event.event_image }}
                   title={event.event_name}
                   organization={event.organization_id?.org_name || "Unknown Org"}
-                  orgLogo={{ uri: event.organization_id?.pfp || "" }} 
+                  orgLogo={{ uri: event.organization_id?.pfp || "" }}
                   orgDate={dateStr}
                   dateDay={dateDay}
                   dateMonth={dateMonth}
-                  // Combine time/venue with the description
                   description={`${timeVenueStr}\n${event.description}`}
                 />
               );
