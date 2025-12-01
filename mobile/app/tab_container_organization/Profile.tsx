@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -8,12 +8,15 @@ import {
   ScrollView, 
   TouchableOpacity, 
   StatusBar,
-  StyleSheet
+  StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import axios from 'axios';
+import { BASE_URL } from "../../config";
 
 // Styles
 import { STYLES, COLORS } from '../styles/component_org_page';
@@ -23,20 +26,118 @@ import EventCard from "../components/Card_Event";
 
 type EventTabType = 'Incoming' | 'Concluded';
 
+// Interface definitions (for reference)
+interface Organization {
+  _id: string;
+  org_name: string;
+  org_type: string;
+  description: string;
+  pfp?: string;
+  cover_photo?: string;
+  fb_link?: string;
+  ig_link?: string;
+  x_link?: string;
+}
+
+interface Event {
+    _id: string;
+    title: string;
+    description: string;
+    date: string; // Event date (e.g., ISO string)
+    image_url?: string;
+}
+
+interface OrgProfileData {
+    organization: Organization;
+    events: {
+        incoming: Event[];
+        concluded: Event[];
+    };
+}
+
+
 const ProfilePage = () => {
+  const { orgId } = useLocalSearchParams(); 
   const [activeTab, setActiveTab] = useState<EventTabType>('Incoming');
+  const [profileData, setProfileData] = useState<OrgProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter(); 
+
+  // Helper function to format the date
+  const formatDateForCard = (dateString: string) => {
+    const date = new Date(dateString);
+    // Fallback for invalid dates
+    if (isNaN(date.getTime())) {
+        return { dateDay: '-', dateMonth: '---', orgDate: 'Invalid Date' };
+    }
+    return {
+        dateDay: date.getDate().toString(),
+        dateMonth: date.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+        orgDate: date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    };
+  };
+
+  useEffect(() => {
+    // Ensure orgId is present before fetching
+    if (!orgId || typeof orgId !== 'string') {
+      setError("No valid organization ID provided.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchOrgProfile = async () => {
+      setLoading(true);
+      try {
+        // Calls the backend route: GET /api/organizations/profile/:orgId
+        const response = await axios.get(`${BASE_URL}/api/organizations/profile/${orgId}`);
+        setProfileData(response.data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching organization profile:", err);
+        setError("Failed to load organization profile. Ensure API and ID are valid.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrgProfile();
+  }, [orgId]);
+
+  if (loading) {
+    return (
+        <View style={[STYLES.container, { justifyContent: 'center', alignItems: 'center' }]}>
+            <ActivityIndicator size="large" color={COLORS.primaryNavy} />
+        </View>
+    );
+  }
+
+  if (error || !profileData) {
+    return (
+        <View style={[STYLES.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+            <Text style={{ color: 'red', fontSize: 18, marginBottom: 10, textAlign: 'center' }}>{error || "Organization data not available."}</Text>
+            <TouchableOpacity onPress={() => router.back()}>
+                <Text style={{ color: COLORS.primaryNavy, textDecorationLine: 'underline' }}>Go Back</Text>
+            </TouchableOpacity>
+        </View>
+    );
+  }
+  
+  const org = profileData.organization;
+  const incomingEvents = profileData.events.incoming;
+  const concludedEvents = profileData.events.concluded;
+
 
   return (
     <View style={STYLES.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      
+      {/* ⭐️ FIXED: The stray space/character was removed here. */}
       <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
 
         {/* Header */}
         <View style={STYLES.headerContainer}>
           <ImageBackground 
-            source={require("../../assets/images/marque/CoverPage.png")}
+            source={org.cover_photo ? { uri: org.cover_photo } : require("../../assets/images/marque/CoverPage.png")}
             style={STYLES.headerImageBackground}
             imageStyle={{ opacity: 1 }}
           >
@@ -53,7 +154,7 @@ const ProfilePage = () => {
                 onPress={() => router.back()}
               >
                 <Icon name="arrow-back" size={24} color={COLORS.white} />
-                <Text style={STYLES.navText}>Your Organization</Text>
+                <Text style={STYLES.navText}>{org.org_name}</Text>
               </TouchableOpacity>
               
               <MaterialCommunityIcons name="molecule" size={30} color="rgba(255,255,255,0.5)" />
@@ -68,7 +169,7 @@ const ProfilePage = () => {
           <View style={STYLES.logoRow}>
             <View style={STYLES.logoContainer}>
               <Image 
-                source={require("../../assets/images/marque/LogoImage.jpg")}
+                source={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")}
                 style={STYLES.logoImage}
               />
             </View>
@@ -85,28 +186,32 @@ const ProfilePage = () => {
 
           {/* Organization Name */}
           <Text style={STYLES.orgTitle}>
-            Society of Information Technology Enthusiasts
+            {org.org_name}
           </Text>
 
-          {/* Social Row */}
+          {/* Social Row (Dynamic) */}
           <View style={STYLES.socialRow}>
-            <TouchableOpacity style={STYLES.socialIcon}>
-              <Icon name="logo-facebook" size={22} color={COLORS.primaryNavy} />
-            </TouchableOpacity>
-            <TouchableOpacity style={STYLES.socialIcon}>
-              <Icon name="logo-instagram" size={22} color={COLORS.primaryNavy} />
-            </TouchableOpacity>
-            <TouchableOpacity style={STYLES.socialIcon}>
-              <Icon name="close" size={22} color={COLORS.primaryNavy} />
-            </TouchableOpacity>
+            {org.fb_link && (
+                <TouchableOpacity style={STYLES.socialIcon} onPress={() => {/* Open URL logic */}}>
+                    <Icon name="logo-facebook" size={22} color={COLORS.primaryNavy} />
+                </TouchableOpacity>
+            )}
+            {org.ig_link && (
+                <TouchableOpacity style={STYLES.socialIcon} onPress={() => {/* Open URL logic */}}>
+                    <Icon name="logo-instagram" size={22} color={COLORS.primaryNavy} />
+                </TouchableOpacity>
+            )}
+            {org.x_link && (
+                <TouchableOpacity style={STYLES.socialIcon} onPress={() => {/* Open URL logic */}}>
+                    <Icon name="close" size={22} color={COLORS.primaryNavy} />
+                </TouchableOpacity>
+            )}
           </View>
 
           {/* About */}
           <Text style={STYLES.sectionHeader}>About Organization</Text>
           <Text style={STYLES.aboutText}>
-            SITE empowers future IT professionals through innovation, leadership, and collaboration. 
-            We are the official student organization of BSIT students at USTP, driven by passion for tech, 
-            committed to building a vibrant, skill-driven, inclusive IT community.
+            {org.description}
           </Text>
 
           {/* Events Header */}
@@ -128,7 +233,7 @@ const ProfilePage = () => {
                   activeTab === 'Incoming' ? tabStyles.activeTabText : tabStyles.inactiveTabText
                 ]}
               >
-                Incoming
+                Incoming ({incomingEvents.length})
               </Text>
             </TouchableOpacity>
 
@@ -145,7 +250,7 @@ const ProfilePage = () => {
                   activeTab === 'Concluded' ? tabStyles.activeTabText : tabStyles.inactiveTabText
                 ]}
               >
-                Concluded
+                Concluded ({concludedEvents.length})
               </Text>
             </TouchableOpacity>
           </View>
@@ -153,55 +258,53 @@ const ProfilePage = () => {
           {/* Events List */}
           {activeTab === 'Incoming' && (
             <View>
-              <EventCard
-                image="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"
-                title="Tech Summit 2025"
-                orgLogo={require("../../assets/images/marque/LogoImage.jpg")}
-                organization="SITE Organization"
-                orgDate="January 2025"
-                dateDay="17"
-                dateMonth="OCT"
-                description="A gathering of innovators, developers, and tech-driven students."
-                onPress={() => console.log("Open Incoming Event 1")}
-              />
-              <EventCard
-                image="https://images.unsplash.com/photo-1525182008055-f88b95ff7980"
-                title="Coding Bootcamp"
-                orgLogo={require("../../assets/images/marque/LogoImage.jpg")}
-                organization="SITE Organization"
-                orgDate="February 2025"
-                dateDay="22"
-                dateMonth="NOV"
-                description="Hands-on workshop focusing on React, Java, and UX design."
-                onPress={() => console.log("Open Incoming Event 2")}
-              />
+                {incomingEvents.length > 0 ? (
+                    incomingEvents.map((event) => {
+                        const { dateDay, dateMonth, orgDate } = formatDateForCard(event.date);
+                        return (
+                            <EventCard
+                                key={event._id}
+                                image={event.image_url ? { uri: event.image_url } : "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"} 
+                                title={event.title}
+                                orgLogo={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")}
+                                organization={org.org_name}
+                                orgDate={orgDate}
+                                dateDay={dateDay}
+                                dateMonth={dateMonth}
+                                description={event.description}
+                                onPress={() => console.log("Open Incoming Event", event._id)}
+                            />
+                        );
+                    })
+                ) : (
+                    <Text style={tabStyles.noEventsText}>No upcoming events found.</Text>
+                )}
             </View>
           )}
 
           {activeTab === 'Concluded' && (
             <View>
-              <EventCard
-                image="https://images.unsplash.com/photo-1529101091764-c3526daf38fe"
-                title="USTP Welcome Orientation"
-                orgLogo={require("../../assets/images/marque/LogoImage.jpg")}
-                organization="SITE Organization"
-                orgDate="August 2024"
-                dateDay="01"
-                dateMonth="SEP"
-                description="Orientation event that welcomed IT students to USTP."
-                onPress={() => console.log("Open Concluded Event 1")}
-              />
-              <EventCard
-                image="https://images.unsplash.com/photo-1506784983877-45594efa4cbe"
-                title="Hackathon 2024"
-                orgLogo={require("../../assets/images/marque/LogoImage.jpg")}
-                organization="SITE Organization"
-                orgDate="August 2024"
-                dateDay="09"
-                dateMonth="AUG"
-                description="24-hour coding challenge focused on solving real-life problems."
-                onPress={() => console.log("Open Concluded Event 2")}
-              />
+                {concludedEvents.length > 0 ? (
+                    concludedEvents.map((event) => {
+                        const { dateDay, dateMonth, orgDate } = formatDateForCard(event.date);
+                        return (
+                            <EventCard
+                                key={event._id}
+                                image={event.image_url ? { uri: event.image_url } : "https://images.unsplash.com/photo-1529101091764-c3526daf38fe"} 
+                                title={event.title}
+                                orgLogo={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")}
+                                organization={org.org_name}
+                                orgDate={orgDate}
+                                dateDay={dateDay}
+                                dateMonth={dateMonth}
+                                description={event.description}
+                                onPress={() => console.log("Open Concluded Event", event._id)}
+                            />
+                        );
+                    })
+                ) : (
+                    <Text style={tabStyles.noEventsText}>No concluded events found.</Text>
+                )}
             </View>
           )}
 
@@ -212,6 +315,7 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
 
 /* ---------------- LOCAL TAB STYLES ---------------- */
 const tabStyles = StyleSheet.create({

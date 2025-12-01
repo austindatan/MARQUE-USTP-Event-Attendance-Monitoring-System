@@ -80,7 +80,12 @@ exports.addOrganization = async (req, res) => {
         await newOrg.save();
         res.status(201).json({ message: "Organization created successfully", organization: newOrg });
     } catch (err) {
-        console.error("Error creating organization:", err);
-        res.status(500).json({ message: "Server error creating organization" });
-    }
+    console.error("🔥 REAL ERROR IN GET ORGANIZATIONS:", err.message);
+    console.error("🔥 FULL ERROR OBJECT:", err);
+    res.status(500).json({
+        message: "Server error fetching organizations",
+        error: err.message,
+        stack: err.stack
+    });
+}
 };

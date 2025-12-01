@@ -58,6 +58,11 @@ app.use("/api/auth", authRoutes);
 // const feedbackRoutes = require("./routes/feedbackRoutes");
 // app.use("/api/feedback", feedbackRoutes); 
 
+// Org Officer route
+const orgOfficerRoutes = require('./routes/orgOfficerRoutes');
+app.use('/api/memberships', orgOfficerRoutes);
+
+
 // DB connection
 mongoose
   .connect(process.env.MONGO_URI, {
