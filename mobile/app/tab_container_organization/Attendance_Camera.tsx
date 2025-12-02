@@ -76,57 +76,106 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   const toggleFlip = () => setIsFlipped(prev => !prev);
 
   const registerAttendance = async (studentNumber: string) => {
-    if (!eventId) return; // safeguard
+  if (!eventId) return; // safeguard
 
+  try {
+    setLoading(true);
+
+    const response = await fetch(`${BASE_URL}/api/attendance/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
+    });
+
+    // Attempt to parse JSON safely
+    let data: any = null;
     try {
-      setLoading(true);
-      const response = await fetch(`${BASE_URL}/api/attendance/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
-      });
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert(
-          'Attendance Registered',
-          `${data.data.name}\nProgram: ${data.data.program || 'N/A'}\nTime: ${new Date(
-            data.data.time_in
-          ).toLocaleTimeString()}`
-        );
-      } else {
-        Alert.alert('Error', data.message || 'Unable to register attendance');
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Network Error', 'Unable to reach server');
-    } finally {
-      setLoading(false);
+      data = await response.json();
+    } catch (jsonError) {
+      console.warn('Response is not JSON:', jsonError);
+      const text = await response.text();
+      console.log('Server returned:', text);
+      Alert.alert('Server Error', 'Invalid server response.');
+      return;
     }
-  };
+
+    // Handle success or error from API
+    if (response.ok) {
+      Alert.alert(
+        'Attendance Registered',
+        `${data.data.name}\nProgram: ${data.data.program || 'N/A'}\nTime: ${new Date(
+          data.data.time_in
+        ).toLocaleTimeString()}`
+      );
+    } else {
+      Alert.alert('Error', data.message || 'Unable to register attendance');
+    }
+  } catch (error) {
+    console.error('Network or Fetch Error:', error);
+    Alert.alert('Network Error', 'Unable to reach server.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleBarCodeScanned = async ({ data }: any) => {
-    if (scannedRef.current) return;
-    scannedRef.current = true;
-    setScanned(true);
+  if (scannedRef.current) return;
+  scannedRef.current = true;
+  setScanned(true);
 
+  try {
+    // Parse QR code
+    const parts = data.trim().split(/\s+/);
+    if (parts.length < 3) throw new Error('Invalid QR format');
+    const program = parts.pop();
+    const studentNumber = parts.pop();
+    const name = parts.join(' ');
+
+    setLoading(true);
+
+    const response = await fetch(`${BASE_URL}/api/attendance/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
+    });
+
+    // Safe JSON parsing
+    let result: any = null;
     try {
-      const parts = data.trim().split(/\s+/);
-      if (parts.length < 3) throw new Error('Invalid QR format');
-      const program = parts.pop();
-      const studentNumber = parts.pop();
-      const name = parts.join(' ');
-
-      await registerAttendance(studentNumber);
-    } catch (error) {
-      Alert.alert('Invalid QR Code', 'The scanned QR code is not in the correct format.');
-    } finally {
-      setTimeout(() => {
-        scannedRef.current = false;
-        setScanned(false);
-      }, 2000);
+      result = await response.json();
+    } catch (jsonError) {
+      console.warn('Response is not JSON:', jsonError);
+      const text = await response.text();
+      console.log('Server returned:', text);
+      Alert.alert('Server Error', 'Invalid server response.');
+      return;
     }
-  };
+
+    // Handle API success or error
+    if (response.ok) {
+      Alert.alert(
+        'Attendance Registered',
+        `${result.data.name}\nProgram: ${result.data.program || 'N/A'}\nTime: ${new Date(
+          result.data.time_in
+        ).toLocaleTimeString()}`
+      );
+    } else {
+      // Show server error message (like 30-minute restriction)
+      Alert.alert('Error', result.message || 'Unable to register attendance');
+    }
+  } catch (error) {
+    console.error('QR Scan Error:', error);
+    Alert.alert('Invalid QR Code', 'The scanned QR code is not in the correct format.');
+  } finally {
+    setTimeout(() => {
+      scannedRef.current = false;
+      setScanned(false);
+      setLoading(false);
+    }, 2000);
+  }
+};
+
 
   if (!permission || !permission.granted) {
     return (
