@@ -5,6 +5,7 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
+  Dimensions,
   SafeAreaView,
   ImageBackground,
   ScrollView,
@@ -12,10 +13,11 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-// --- BACKGROUND IMAGE & ICONS ---
+const { width } = Dimensions.get('window');
+
+// --- BACKGROUND IMAGE & FILTER LOGO ---
 const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
-const FILTER_IMAGE = require('../../assets/images/marque/Filters.png');
-const SEARCH_IMAGE = require('../../assets/images/marque/Search.png'); // search icon image
+const FILTER_LOGO_IMAGE = require('../../assets/images/marque/LogoImage.jpg');
 
 // --- COLORS AND CONSTANTS ---
 const COLORS = {
@@ -31,12 +33,12 @@ const COLORS = {
 
 const FONT_SIZES = {
   header: 20,
-  search: 18,
-  filterText: 14,
+  search: 20,
+  filters: 14,
 };
 
 const SPACING = {
-  paddingHorizontal: 25,
+  paddingHorizontal: 20,
 };
 
 // --- MOCK ATTENDANCE DATA ---
@@ -74,11 +76,7 @@ const LogItem: React.FC<LogEntry> = ({ name, time, studentId }) => (
 );
 
 // --- MAIN COMPONENT ---
-interface AttendanceHistoryProps {
-  onBack: () => void; // callback for going back
-}
-
-const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack }) => {
+const AttendanceHistoryScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ImageBackground
@@ -89,7 +87,7 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack }) => {
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={onBack}>
+            <TouchableOpacity onPress={() => console.log('Go back')}>
               <Ionicons name="arrow-back" size={24} color={COLORS.headerText} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Attendance Log</Text>
@@ -98,19 +96,20 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack }) => {
           {/* Search Bar */}
           <View style={styles.searchContainer}>
             <View style={styles.searchBar}>
-              <Image
-                source={SEARCH_IMAGE}
-                style={styles.searchImage}
-                resizeMode="contain"
+              <Ionicons
+                name="search"
+                size={24}
+                color={COLORS.inputPlaceholder}
+                style={styles.searchIcon}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Search..."
-                placeholderTextColor={`rgba(120, 123, 157, 0.7)`}
+                placeholderTextColor={COLORS.inputPlaceholder}
               />
               <TouchableOpacity style={styles.filtersButton}>
                 <Image
-                  source={FILTER_IMAGE}
+                  source={FILTER_LOGO_IMAGE}
                   style={styles.filterImage}
                   resizeMode="contain"
                 />
@@ -140,17 +139,17 @@ const styles = StyleSheet.create({
   background: { flex: 1, width: '100%', height: '100%' },
   container: { flex: 1, paddingTop: 10 },
 
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: SPACING.paddingHorizontal,
     paddingBottom: 20,
-    paddingTop: 20,
   },
   headerTitle: {
     color: COLORS.headerText,
     fontSize: FONT_SIZES.header,
-    fontWeight: '700', // bold
+    fontWeight: '600',
     fontFamily: 'DM Sans',
     marginLeft: 10,
     flex: 1,
@@ -158,25 +157,17 @@ const styles = StyleSheet.create({
     transform: [{ translateX: -12 }],
   },
 
-  searchContainer: {
-    paddingHorizontal: SPACING.paddingHorizontal,
-    marginBottom: 15,
-    marginTop: 15,
-  },
+  // Search
+  searchContainer: { paddingHorizontal: SPACING.paddingHorizontal, marginBottom: 20 },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.inputBackground,
-    borderRadius: 10,
+    borderRadius: 50,
     height: 40,
     paddingHorizontal: 15,
-    marginBottom: 20,
   },
-  searchImage: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-  },
+  searchIcon: { marginRight: 10 },
   input: {
     flex: 1,
     height: '100%',
@@ -190,22 +181,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.filterButton,
     borderRadius: 25,
-    paddingHorizontal: 10,  // ⬅ smaller automatic width
-    paddingVertical: 6,
-    marginLeft: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    marginLeft: 10,
+    height: 30,
   },
-  filterImage: {
-    width: 20,
-    height: 20,
-    marginRight: 6,
-  },
+  filterImage: { width: 16, height: 16, marginRight: 5 },
   filtersText: {
     color: COLORS.headerText,
-    fontSize: FONT_SIZES.filterText,
+    fontSize: FONT_SIZES.filters,
     fontWeight: '600',
     fontFamily: 'DM Sans',
   },
 
+  // Attendance List
   contentArea: {
     flex: 1,
     backgroundColor: COLORS.contentBackground,
@@ -213,15 +202,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     overflow: 'hidden',
   },
-  logList: {
-    paddingTop: 15,
-    paddingBottom: 20,
-  },
+  logList: { paddingTop: 0 },
   logItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 25,
     paddingHorizontal: 30,
     backgroundColor: COLORS.logBackground,
   },
@@ -233,18 +219,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     fontFamily: 'DM Sans',
   },
-  logTime: {
-    fontSize: 12,
-    color: '#888888',
-    fontFamily: 'DM Sans',
-  },
-  logId: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#000',
-    marginLeft: 10,
-    fontFamily: 'DM Sans',
-  },
+  logTime: { fontSize: 12, color: '#888888', fontFamily: 'DM Sans' },
+  logId: { fontSize: 16, fontWeight: '400', color: '#000', marginLeft: 10, fontFamily: 'DM Sans' },
   separator: {
     height: 1,
     backgroundColor: COLORS.separator,
@@ -252,4 +228,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AttendanceHistory;
+export default AttendanceHistoryScreen;

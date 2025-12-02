@@ -280,3 +280,5 @@ export const STYLES = StyleSheet.create({
     color: COLORS.textGray,
   },
 });
+
+export default {}; 

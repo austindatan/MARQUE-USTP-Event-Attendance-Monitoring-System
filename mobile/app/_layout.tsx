@@ -38,7 +38,7 @@ export default function RootLayout() {
       <Stack.Screen name="login" options={{ headerShown: false }} /> 
       <Stack.Screen name="tabs" options={{ headerShown: false }} /> 
       <Stack.Screen name="tabs_organization" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tabs_container_organization" options={{ headerShown: false }} /> 
+      <Stack.Screen name="tab_container_organization" options={{ headerShown: false }} /> 
       <Stack.Screen name="tab_container/Filter_Page" options={{ headerShown: false }} /> 
       <Stack.Screen name="tab_container/EventDetails_ZFeedback" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container/Profile_ChangePassword" options={{ headerShown: false }} />
@@ -46,12 +46,12 @@ export default function RootLayout() {
       <Stack.Screen name="tab_container_organization/Profile" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/EditProfile" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container/EventDetails_Concluded" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container/EventDetails_Ongoing" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container/EventDetails_Incoming" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container/EventDetails_NoAttendance" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/Events" options={{ headerShown: false }} />
       <Stack.Screen name="tab_container_organization/EditEvents" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/Incoming" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/Scanner" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/Camera_State" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/Attendance_Camera" options={{ headerShown: false }} />
+      <Stack.Screen name="tab_container_organization/Attendance_History" options={{ headerShown: false }} />
 
       <Stack.Screen 
         name="tab_container/Search_Page" 

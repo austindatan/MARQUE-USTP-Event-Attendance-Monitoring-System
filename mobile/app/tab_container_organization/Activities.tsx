@@ -1,29 +1,33 @@
 // Activities.tsx
 // @ts-nocheck
 import React, { useRef, useState } from "react";
-import { View, Animated, Modal, ImageBackground, Text } from "react-native";
+import { View, Animated, Modal, ImageBackground } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-
 import Header from "../components/Header_Activities";
 import Incoming from "../tab_container_organization/Incoming";
 import Concluded from "../tab_container_organization/Concluded";
-import AddActivityButton from "../components/AddActivityButton"; // Floating action button
+import AddActivityButton from "../components/AddActivityButton";
+import SidebarMenu from "../components/SidebarMenu_Organization";
 
 type TabName = "Incoming" | "Concluded";
 
 const Activities = () => {
-  const { orgId } = useLocalSearchParams(); // get orgId from route
+  const { orgId } = useLocalSearchParams();
   const [activeTab, setActiveTab] = useState<TabName>("Incoming");
 
   // Scroll values for each tab
   const incomingScrollY = useRef(new Animated.Value(0)).current;
   const concludedScrollY = useRef(new Animated.Value(0)).current;
 
-  // Save last scroll positions per tab
+  // Save last scroll positions
   const tabScrollPositions = useRef<Record<TabName, number>>({
     Incoming: 0,
     Concluded: 0,
   }).current;
+
+  // Sidebar modal state
+  const [menuVisible, setMenuVisible] = useState(false);
+  const toggleMenu = () => setMenuVisible((prev) => !prev);
 
   // Track scroll per tab
   const createScrollHandler = (tabName: TabName, animatedValue: Animated.Value) =>
@@ -37,7 +41,7 @@ const Activities = () => {
       }
     );
 
-  // Switch tab and restore scroll
+  // Switch tabs and restore scroll
   const handleTabChange = (newTab: TabName) => {
     setActiveTab(newTab);
 
@@ -47,6 +51,7 @@ const Activities = () => {
     scrollValue.setValue(lastScrollPos);
   };
 
+  // Provide active tab props
   const getActiveScrollProps = () => {
     if (activeTab === "Incoming") {
       return {
@@ -66,33 +71,39 @@ const Activities = () => {
   const activeProps = getActiveScrollProps();
 
   return (
-    <View style={{ flex: 1, backgroundColor: "white" }}>
-      {/* Background */}
-      <ImageBackground
-        source={require("../../assets/images/marque/SplashScreen.png")}
-        style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
-        resizeMode="cover"
+    <ImageBackground
+      source={require("../../assets/images/marque/SplashScreen.png")}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      {/* HEADER */}
+      <Header
+        onMenuPress={toggleMenu} // Trigger sidebar modal
+        scrollY={activeProps.scrollY}
+        onToggleChange={handleTabChange}
       />
 
-      {/* Tabs */}
-      <View style={{ flex: 1 }}>
-        {activeTab === "Incoming" && <Incoming key="Incoming" {...activeProps} organizationId={orgId} />}
-        {activeTab === "Concluded" && <Concluded key="Concluded" {...activeProps} organizationId={orgId} />}
-      </View>
-
-      {/* Header */}
-      <View style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 10 }}>
-        <Header scrollY={activeProps.scrollY} onToggleChange={handleTabChange} />
-      </View>
+      {/* ACTIVE TAB CONTENT */}
+      {activeTab === "Incoming" && (
+        <Incoming key="Incoming" {...activeProps} organizationId={orgId} />
+      )}
+      {activeTab === "Concluded" && (
+        <Concluded key="Concluded" {...activeProps} organizationId={orgId} />
+      )}
 
       {/* Floating Action Button */}
       <AddActivityButton />
 
-      {/* Modal placeholder */}
-      <Modal transparent visible={false} animationType="fade" onRequestClose={() => {}}>
-        {/* Sidebar menu goes here */}
+      {/* Sidebar as Modal */}
+      <Modal
+        transparent
+        visible={menuVisible}
+        animationType="fade"
+        onRequestClose={toggleMenu}
+      >
+        <SidebarMenu isVisible={menuVisible} onClose={toggleMenu} />
       </Modal>
-    </View>
+    </ImageBackground>
   );
 };
 

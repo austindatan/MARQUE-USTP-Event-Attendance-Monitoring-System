@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  SafeAreaView,
+  Dimensions,
+  ImageBackground,
+  StatusBar,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
-export default function OrgEventDetails() {
+const { width } = Dimensions.get('window');
+
+const QrCodePlaceholder = require('../../assets/images/marque/QRCode.png');
+const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
+
+const Scanner: React.FC = () => {
   const router = useRouter();
   const [attendanceCount, setAttendanceCount] = useState(0);
 
@@ -25,65 +40,123 @@ export default function OrgEventDetails() {
   };
 
   const handleOpenCamera = () => {
-    router.push("/tab_container_organization/Camera_State");
+    router.push('/tab_container_organization/Camera_State');
   };
 
   return (
-    <View style={styles.homeContainer}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.title}>PAUGNAT</Text>
-          <Text style={styles.subtitle}>Scan QR codes to record attendance</Text>
-        </View>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" />
+      <ImageBackground
+        source={BackgroundImage}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.container}>
 
-        <TouchableOpacity
-          style={styles.cameraButton}
-          onPress={handleOpenCamera}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="camera" size={24} color="#fff" />
-          <Text style={styles.cameraButtonText}>Open Camera to Scan QR</Text>
-        </TouchableOpacity>
+          {/* Back Button */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.statsContainer}>
-          <Text style={styles.statsText}>Total Scans: {attendanceCount}</Text>
+          {/* QR Code */}
+          <View style={styles.qrCodeContainer}>
+            <Image
+              source={QrCodePlaceholder}
+              style={styles.qrCodeImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Instructions */}
+          <Text style={styles.instructionText}>
+            Scan the participant's QR code{'\n'}clearly under good lighting{'\n'}to record attendance accurately.
+          </Text>
+
+          {/* Open Camera / Scan Button */}
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={handleOpenCamera}
+          >
+            <Text style={styles.scanButtonText}>SCAN</Text>
+          </TouchableOpacity>
+
         </View>
-      </View>
-    </View>
+      </ImageBackground>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  homeContainer: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#eef2ff',
-    justifyContent: 'center',
-    padding: 16,
+    backgroundColor: '#1E2B5A',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
-  cardHeader: { marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1f2937', textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#6b7280', textAlign: 'center' },
-  cameraButton: {
-    backgroundColor: '#6366f1',
-    flexDirection: 'row',
+  container: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    gap: 12,
   },
-  cameraButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  statsContainer: { marginTop: 24, alignItems: 'center' },
-  statsText: { fontSize: 14, color: '#6b7280' },
+  header: {
+    width: '100%',
+    paddingTop: 60,
+    paddingBottom: 40,
+    alignItems: 'flex-start',
+  },
+  backButton: {
+    padding: 10,
+    marginLeft: 15,
+    marginTop: 10,
+  },
+  qrCodeContainer: {
+    width: width * 0.7,
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 50,
+  },
+  qrCodeImage: {
+    width: '80%',
+    height: '80%',
+  },
+  instructionText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    lineHeight: 20, // reduced for smaller gap between lines
+    textAlign: 'center',
+    maxWidth: 300,
+    marginBottom: 30,
+    fontWeight: 'bold', // bold text
+  },
+  scanButton: {
+    backgroundColor: '#FFC837',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    width: width * 0.5,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  scanButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.8,
+  },
+  statsContainer: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  statsText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
 });
+
+export default Scanner;

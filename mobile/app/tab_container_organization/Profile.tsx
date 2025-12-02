@@ -19,6 +19,7 @@ import axios from 'axios';
 import { BASE_URL } from "../../config";
 import { STYLES, COLORS } from '../styles/component_org_page';
 import EventCard from "../components/Card_Event";
+import AddActivityButton from "../components/AddActivityButton"; // <-- Added
 
 type EventTabType = 'Incoming' | 'Concluded';
 
@@ -122,12 +123,11 @@ const ProfilePage = () => {
       <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
 
         <View style={STYLES.headerContainer}>
-          <ImageBackground 
+          <ImageBackground 
             source={
-            org.cover_photo 
-            // to force image reload
-            ? { uri: `${org.cover_photo}?refresh=${refresh || ''}` } 
-            : require("../../assets/images/marque/CoverPage.png")
+              org.cover_photo 
+              ? { uri: `${org.cover_photo}?refresh=${refresh || ''}` } 
+              : require("../../assets/images/marque/CoverPage.png")
             }
             style={STYLES.headerImageBackground}
             imageStyle={{ opacity: 1 }}
@@ -154,17 +154,16 @@ const ProfilePage = () => {
         <View style={STYLES.profileSectionContainer}>
           <View style={STYLES.logoRow}>
             <View style={STYLES.logoContainer}>
-              <Image 
-              source={
-              org.pfp 
-              // to force image reload
-              ? { uri: `${org.pfp}?refresh=${refresh || ''}` } 
-              : require("../../assets/images/marque/LogoImage.jpg")
-              }
-              style={STYLES.logoImage}
+              <Image 
+                source={
+                  org.pfp 
+                  ? { uri: `${org.pfp}?refresh=${refresh || ''}` } 
+                  : require("../../assets/images/marque/LogoImage.jpg")
+                }
+                style={STYLES.logoImage}
               />
-              </View>
-            {/* EDIT PROFILE BUTTON */}
+            </View>
+
             <TouchableOpacity
               style={STYLES.editButton}
               onPress={() =>
@@ -181,7 +180,6 @@ const ProfilePage = () => {
 
           <Text style={STYLES.orgTitle}>{org.org_name}</Text>
 
-          {/* Social Icons */}
           <View style={STYLES.socialRow}>
             {org.fb_link && (
               <TouchableOpacity style={STYLES.socialIcon}>
@@ -195,11 +193,9 @@ const ProfilePage = () => {
             )}
           </View>
 
-          {/* Description */}
           <Text style={STYLES.sectionHeader}>About Organization</Text>
           <Text style={STYLES.aboutText}>{org.description}</Text>
 
-          {/* Events Tabs */}
           <Text style={STYLES.eventsTitle}>EVENTS</Text>
           <View style={STYLES.divider} />
 
@@ -275,12 +271,14 @@ const ProfilePage = () => {
 
         </View>
       </ScrollView>
+
+      {/* ---- FLOATING ADD BUTTON ---- */}
+      <AddActivityButton />
     </View>
   );
 };
 
 export default ProfilePage;
-
 
 /* ---------------- LOCAL TAB STYLES ---------------- */
 const tabStyles = StyleSheet.create({
