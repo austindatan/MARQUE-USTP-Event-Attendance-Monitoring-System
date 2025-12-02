@@ -114,18 +114,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
       <Animated.View
         style={[styles.toggleContainer, { backgroundColor: "transparent", transform: [{ translateY: toggleTranslateY }] }]}
       >
-        {/* Back button */}
-        <TouchableOpacity
-          style={activeTab === "Back" ? styles.activeButton : styles.inactiveButton}
-          onPress={() => handleToggle("Back")}
-        >
-          <Image
-            source={require("../../assets/images/marque/arrow-left.png")}
-            style={{ width: 20, height: 20, tintColor: "#fff" }}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-
         {/* Incoming tab */}
         <TouchableOpacity
           style={activeTab === "Incoming" ? styles.activeButton : styles.inactiveButton}

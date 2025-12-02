@@ -1,19 +1,12 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import {
-    View,
-    Animated,
-    TouchableOpacity,
-    Text,
-    ActivityIndicator,
-} from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import axios from "axios";
-import { BASE_URL } from "../../config";
-import OrgCard from "../components/Card_Organization.tsx";
+import { View, Text, Animated, ActivityIndicator, TouchableOpacity } from "react-native";
 import EventCard from "../components/Card_Event";
+import OrgCard from "../components/Card_Organization";
 import appeffects from "../styles/effects_app";
-
+import { BASE_URL } from "../../config";
+import axios from "axios";
+import { useRouter, useLocalSearchParams } from "expo-router"
 
 interface Organization {
     _id: string;
@@ -31,7 +24,6 @@ interface Event {
     event_images: string[];
 }
 
-// ⭐ LIMIT DESCRIPTION TO ONE SENTENCE
 const getOneSentence = (text: string = "") => {
     if (!text) return "";
     const sentenceEnd = text.indexOf(".");
@@ -39,27 +31,14 @@ const getOneSentence = (text: string = "") => {
     return text;
 };
 
-const Incoming = ({
-    scrollY = new Animated.Value(0),
-    handleScroll,
-    initialScroll = 0,
-}) => {
-    const scrollRef = useRef(null);
+const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     const router = useRouter();
+    const scrollRef = useRef(null);
     const { orgId } = useLocalSearchParams();
-
-    const [organizationData, setOrganizationData] =
-        useState<Organization | null>(null);
-
+    const [organizationData, setOrganizationData] = useState<Organization | null>(null);
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    const containerTranslateY = scrollY.interpolate({
-        inputRange: [0, 80],
-        outputRange: [0, -40],
-        extrapolate: "clamp",
-    });
 
     const formatDate = (dateStr) => {
         if (!dateStr) return "";
@@ -111,21 +90,6 @@ const Incoming = ({
         fetchAllData();
     }, [orgId]);
 
-    useEffect(() => {
-        if (scrollRef.current && initialScroll > 0) {
-            const t = setTimeout(() => {
-                const node = scrollRef.current?.getNode
-                    ? scrollRef.current.getNode()
-                    : scrollRef.current;
-
-                if (node && node.scrollTo) {
-                    node.scrollTo({ y: initialScroll, animated: false });
-                }
-            }, 0);
-            return () => clearTimeout(t);
-        }
-    }, [initialScroll]);
-
     const handleOrgPress = () => {
         router.push({
             pathname: "../tab_container_organization/Profile",
@@ -139,6 +103,24 @@ const Incoming = ({
             params: { eventId },
         });
     };
+
+    useEffect(() => {
+        if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
+            const t = setTimeout(() => {
+                const node = scrollRef.current?.getNode ? scrollRef.current.getNode() : scrollRef.current;
+                if (node && node.scrollTo) {
+                    node.scrollTo({ y: initialScroll, animated: false });
+                }
+            }, 0);
+            return () => clearTimeout(t);
+        }
+    }, [initialScroll]);
+
+    const containerTranslateY = scrollY.interpolate({
+        inputRange: [0, 80],
+        outputRange: [0, -40],
+        extrapolate: "clamp",
+    });
 
     if (loading) {
         return (
@@ -210,6 +192,10 @@ const Incoming = ({
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
             >
+                <View style={appeffects.pageStarter}>
+                    <Text style={appeffects.pageTitle}>Incoming Events</Text>
+                </View>
+
                 <View style={appeffects.eventList}>
                     {/* ORG CARD */}
                     <OrgCard
@@ -219,9 +205,7 @@ const Incoming = ({
                         orgLogo={orgLogoSource}
                         dateDay={formatDay(org.createdAt || new Date())}
                         type="Organizers"
-                        dateMonth={formatMonthShort(
-                            org.createdAt || new Date()
-                        )}
+                        dateMonth={formatMonthShort(org.createdAt || new Date())}
                         orgDate={formatDate(org.createdAt || new Date())}
                         description={getOneSentence(org.description)}
                         onPress={handleOrgPress}
@@ -231,8 +215,7 @@ const Incoming = ({
                     {events.length > 0 ? (
                         events.map((ev) => {
                             const evImage =
-                                ev.event_images &&
-                                ev.event_images.length > 0
+                                ev.event_images && ev.event_images.length > 0
                                     ? { uri: ev.event_images[0] }
                                     : require("../../assets/images/marque/crtcg1.png");
 
@@ -246,12 +229,8 @@ const Incoming = ({
                                     dateDay={formatDay(ev.event_date)}
                                     dateMonth={formatMonthShort(ev.event_date)}
                                     orgDate={formatDate(ev.event_date)}
-                                    description={getOneSentence(
-                                        ev.description
-                                    )}
-                                    onPress={() =>
-                                        handleEventPress(ev._id)
-                                    }
+                                    description={getOneSentence(ev.description)}
+                                    onPress={() => handleEventPress(ev._id)}
                                 />
                             );
                         })

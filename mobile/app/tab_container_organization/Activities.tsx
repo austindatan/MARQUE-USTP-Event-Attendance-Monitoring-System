@@ -8,6 +8,7 @@ import Incoming from "../tab_container_organization/Incoming";
 import Concluded from "../tab_container_organization/Concluded";
 import AddActivityButton from "../components/AddActivityButton";
 import SidebarMenu from "../components/SidebarMenu_Organization";
+import appeffects from "../styles/effects_app";
 
 type TabName = "Incoming" | "Concluded";
 
@@ -71,11 +72,7 @@ const Activities = () => {
   const activeProps = getActiveScrollProps();
 
   return (
-    <ImageBackground
-      source={require("../../assets/images/marque/SplashScreen.png")}
-      style={{ flex: 1 }}
-      resizeMode="cover"
-    >
+    <View style={[appeffects.container, { flex: 1 }]}>
       {/* HEADER */}
       <Header
         onMenuPress={toggleMenu} // Trigger sidebar modal
@@ -103,7 +100,7 @@ const Activities = () => {
       >
         <SidebarMenu isVisible={menuVisible} onClose={toggleMenu} />
       </Modal>
-    </ImageBackground>
+    </View>
   );
 };
 
