@@ -1,4 +1,3 @@
-// Header_Organization.tsx
 // @ts-nocheck
 import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, Image, Text, Animated } from "react-native";
@@ -33,7 +32,6 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
 
   return (
     <View style={{ zIndex: 10 }}>
-      {/* Top header */}
       <View style={[styles.headerfirst, { paddingBottom: 0 }]}>
         <View style={styles.topRow}>
           <TouchableOpacity onPress={onMenuPress}>
@@ -54,7 +52,6 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
         </View>
       </View>
 
-      {/* Search */}
       <Animated.View
         style={[
           styles.header,
@@ -82,7 +79,6 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
         </Animated.View>
       </Animated.View>
 
-      {/* Toggle Buttons */}
       <Animated.View
         style={[styles.toggleContainerEX, { backgroundColor: "transparent", transform: [{ translateY: toggleTranslateY }] }]}
       >

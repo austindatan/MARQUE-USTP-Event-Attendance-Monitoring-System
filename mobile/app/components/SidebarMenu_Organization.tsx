@@ -8,7 +8,7 @@ import Animated, { useSharedValue, withTiming, useAnimatedStyle, runOnJS } from 
 import { router } from "expo-router";
 
 const menuItems = [
-  { name: "Home", icon: "home-outline" }, // you can remove icon field if not needed
+  { name: "Home", icon: "home-outline" },
 ];
 
 interface SidebarMenuProps {
@@ -51,7 +51,6 @@ const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClos
     fetchStudentData();
   }, []);
 
-  // animation
   const translateX = useSharedValue(-300);
 
   useEffect(() => {
@@ -86,7 +85,6 @@ const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClos
       }
     } else {
       console.log("Navigating to:", name);
-      // handle other menu items if needed
     }
   };
 

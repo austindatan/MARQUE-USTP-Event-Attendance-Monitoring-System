@@ -1,9 +1,8 @@
-// styles_eventcard_C.js  (OPTION C)
 import { StyleSheet, Dimensions } from "react-native";
 
 const { width } = Dimensions.get("window");
 const isSmall = width < 360;
-const scale = width / 390; // but use it only for spacing + container sizes
+const scale = width / 390;
 
 export default StyleSheet.create({
   shadowWrapper: {
@@ -26,7 +25,7 @@ export default StyleSheet.create({
 
   imageContainer: {
     width: "100%",
-    height: 160 * scale, // ONLY this scales
+    height: 160 * scale,
     paddingLeft: isSmall ? 8 : 10,
     paddingRight: isSmall ? 8 : 10,
     paddingTop: isSmall ? 8 : 10,
@@ -77,7 +76,7 @@ export default StyleSheet.create({
   },
 
   eventTitle: {
-    fontSize: isSmall ? 16 : 18, // TEXT ONLY SLIGHTLY SCALES
+    fontSize: isSmall ? 16 : 18,
     color: "#000",
     fontFamily: "Inter",
   },
