@@ -1,7 +1,8 @@
 // Concluded.tsx
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, ActivityIndicator } from "react-native";
+import { View, Text, Animated, ActivityIndicator, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import axios from "axios";
 import { BASE_URL } from "../../config";
 
@@ -10,7 +11,9 @@ import appeffects from "../styles/effects_app";
 
 const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId }) => {
   const scrollRef = useRef(null);
+  const router = useRouter();
 
+  const [organizationData, setOrganizationData] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,28 +46,34 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
     return d.toLocaleString(undefined, { month: "short" });
   };
 
-  // Fetch concluded events
-  const fetchConcludedEvents = async () => {
+  // Fetch organization + concluded events
+  const fetchAllData = async () => {
     if (!organizationId) {
       setError("No organization ID provided");
       setLoading(false);
       return;
     }
     setLoading(true);
+
     try {
-      const res = await axios.get(`${BASE_URL}/events/organization/${organizationId}/concluded`);
-      setEvents(res.data || []);
+      const [orgRes, eventsRes] = await Promise.all([
+        axios.get(`${BASE_URL}/api/organizations/${organizationId}`),
+        axios.get(`${BASE_URL}/events/organization/${organizationId}/concluded`),
+      ]);
+
+      setOrganizationData(orgRes.data);
+      setEvents(eventsRes.data || []);
       setError(null);
     } catch (err) {
-      console.error("Error fetching concluded events:", err);
-      setError("Failed to load concluded events");
+      console.error("Error fetching data:", err);
+      setError("Failed to load organization or concluded events");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchConcludedEvents();
+    fetchAllData();
   }, [organizationId]);
 
   // Scroll restoration
@@ -86,16 +95,29 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
     );
   }
 
-  if (error) {
+  if (error || !organizationData) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
-        <Text style={{ color: "red", textAlign: "center", marginHorizontal: 20 }}>{error}</Text>
-        <Text style={{ marginTop: 10, color: "blue" }} onPress={fetchConcludedEvents}>
-          Retry
+        <Text style={{ color: "red", textAlign: "center", marginHorizontal: 20 }}>
+          {error || "Organization data could not be loaded."}
         </Text>
+        <TouchableOpacity onPress={fetchAllData}>
+          <Text style={{ marginTop: 10, color: "blue" }}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
+
+  const orgLogoSource = organizationData.pfp
+    ? { uri: organizationData.pfp }
+    : require("../../assets/images/marque/crk.jpg");
+
+  const handleEventPress = (eventId: string) => {
+    router.push({
+      pathname: "../tab_container_organization/Events",
+      params: { eventId },
+    });
+  };
 
   return (
     <Animated.View
@@ -116,21 +138,22 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
         <View style={appeffects.eventList}>
           {events.length > 0 ? (
             events.map((ev) => {
-              const evImage = ev.event_images && ev.event_images.length > 0
-                ? { uri: ev.event_images[0] }
-                : require("../../assets/images/marque/crtcg1.png");
+              const evImage =
+                ev.event_images && ev.event_images.length > 0
+                  ? { uri: ev.event_images[0] }
+                  : require("../../assets/images/marque/crtcg1.png");
               return (
                 <EventCard
                   key={ev._id}
                   image={evImage}
                   title={ev.event_name}
-                  organization={ev.organization_id?.org_name || "Organization"}
-                  orgLogo={ev.organization_id?.pfp ? { uri: ev.organization_id.pfp } : require("../../assets/images/marque/crk.jpg")}
+                  organization={organizationData.org_name}
+                  orgLogo={orgLogoSource}
                   dateDay={formatDay(ev.event_date)}
                   dateMonth={formatMonthShort(ev.event_date)}
                   orgDate={formatDate(ev.event_date)}
                   description={ev.description}
-                  onPress={() => console.log("Pressed event", ev._id)}
+                  onPress={() => handleEventPress(ev._id)} // <-- navigation to event
                 />
               );
             })
