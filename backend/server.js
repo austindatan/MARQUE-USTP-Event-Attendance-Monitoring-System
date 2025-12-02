@@ -22,6 +22,10 @@ app.use("/api/auth", authRouter);
 const studentRoutes = require("./routes/student");
 app.use("/api/student", studentRoutes);
 
+// Student Profile route
+const studentProfileRoutes = require('./routes/studentProfileRoutes');
+app.use('/api/student', studentProfileRoutes);
+
 // Event route  
 const eventRoutes = require("./routes/eventRoutes");
 app.use("/events", eventRoutes);
