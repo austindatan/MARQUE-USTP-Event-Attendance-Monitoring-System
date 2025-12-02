@@ -1,27 +1,26 @@
 // @ts-nocheck
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  Image, 
-  ImageBackground, 
-  ScrollView, 
-  TouchableOpacity, 
-  StatusBar,
-  StyleSheet,
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  ImageBackground,
   ActivityIndicator,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
+  StyleSheet,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import Icon from "react-native-vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
+import styles from "../styles/page_eventdetails";
+import { STYLES, COLORS } from "../styles/component_org_page";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "../../config";
-import { STYLES, COLORS } from '../styles/component_org_page';
 import EventCard from "../components/Card_Event";
-import AddActivityButton from "../components/AddActivityButton"; // <-- Added
+import axios from "axios";
 
-type EventTabType = 'Incoming' | 'Concluded';
+type EventTabType = "Incoming" | "Concluded";
 
 interface Organization {
   _id: string;
@@ -53,22 +52,28 @@ interface OrgProfileData {
 
 const ProfilePage = () => {
   const { orgId, refresh } = useLocalSearchParams();
+  const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<EventTabType>('Incoming');
+  const [activeTab, setActiveTab] = useState<EventTabType>("Incoming");
   const [profileData, setProfileData] = useState<OrgProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+
+  const STICKY_HEADER_HEIGHT = 90;
 
   const formatDateForCard = (dateString: string) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return { dateDay: '-', dateMonth: '---', orgDate: 'Invalid Date' };
+      return { dateDay: "-", dateMonth: "---", orgDate: "Invalid Date" };
     }
     return {
       dateDay: date.getDate().toString(),
-      dateMonth: date.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
-      orgDate: date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      dateMonth: date.toLocaleString("en-US", { month: "short" }).toUpperCase(),
+      orgDate: date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
     };
   };
 
@@ -86,14 +91,13 @@ const ProfilePage = () => {
     }
   };
 
-  // refresh changes
   useEffect(() => {
     if (orgId) fetchOrgProfile();
   }, [orgId, refresh]);
 
   if (loading) {
     return (
-      <View style={[STYLES.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[STYLES.container, { justifyContent: "center", alignItems: "center" }]}>
         <ActivityIndicator size="large" color={COLORS.primaryNavy} />
       </View>
     );
@@ -101,12 +105,19 @@ const ProfilePage = () => {
 
   if (error || !profileData) {
     return (
-      <View style={[STYLES.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
-        <Text style={{ color: 'red', fontSize: 18, marginBottom: 10, textAlign: 'center' }}>
+      <View
+        style={[
+          STYLES.container,
+          { justifyContent: "center", alignItems: "center", padding: 20 },
+        ]}
+      >
+        <Text style={{ color: "red", fontSize: 18, marginBottom: 10, textAlign: "center" }}>
           {error || "Organization data not available."}
         </Text>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ color: COLORS.primaryNavy, textDecorationLine: 'underline' }}>Go Back</Text>
+          <Text style={{ color: COLORS.primaryNavy, textDecorationLine: "underline" }}>
+            Go Back
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -117,48 +128,51 @@ const ProfilePage = () => {
   const concludedEvents = profileData.events.concluded;
 
   return (
-    <View style={STYLES.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-
-      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-
-        <View style={STYLES.headerContainer}>
-          <ImageBackground 
-            source={
-              org.cover_photo 
-              ? { uri: `${org.cover_photo}?refresh=${refresh || ''}` } 
-              : require("../../assets/images/marque/CoverPage.png")
-            }
-            style={STYLES.headerImageBackground}
-            imageStyle={{ opacity: 1 }}
+    <View style={styles.container}>
+      {/* TOP NAV */}
+      <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
+        <LinearGradient
+          colors={[
+            "rgba(45,45,45,0.4)",
+            "rgba(0,0,0,0.2)",
+            "rgba(255,255,255,0.1)",
+          ]}
+          style={styles.gradientOverlay}
+        />
+        <View style={styles.navRowContent}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{ flexDirection: "row", alignItems: "center" }}
           >
-            <LinearGradient
-              colors={['rgba(0,0,0,0.6)', 'transparent']}
-              style={STYLES.bannerGradient}
-            />
+            <Ionicons name="arrow-back" size={18} color="#fff" />
+            <Text style={[styles.navText, { color: "#fff" }]}>{org.org_name}</Text>
+          </TouchableOpacity>
 
-            <View style={STYLES.navRow}>
-              <TouchableOpacity 
-                style={{ flexDirection: 'row', alignItems: 'center' }}
-                onPress={() => router.back()}
-              >
-                <Icon name="arrow-back" size={24} color={COLORS.white} />
-                <Text style={STYLES.navText}>{org.org_name}</Text>
-              </TouchableOpacity>
-              
-              <MaterialCommunityIcons name="molecule" size={30} color="rgba(255,255,255,0.5)" />
-            </View>
-          </ImageBackground>
+          <View style={styles.bookmarkBtn}>
+            <Ionicons name="bookmark-outline" size={24} color="#ffffff" />
+          </View>
         </View>
+      </View>
+
+      {/* CONTENT */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <ImageBackground
+          source={
+            org.cover_photo
+              ? { uri: `${org.cover_photo}?refresh=${refresh || ""}` }
+              : require("../../assets/images/marque/CoverPage.png")
+          }
+          style={[styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]}
+        />
 
         <View style={STYLES.profileSectionContainer}>
           <View style={STYLES.logoRow}>
             <View style={STYLES.logoContainer}>
-              <Image 
+              <Image
                 source={
-                  org.pfp 
-                  ? { uri: `${org.pfp}?refresh=${refresh || ''}` } 
-                  : require("../../assets/images/marque/LogoImage.jpg")
+                  org.pfp
+                    ? { uri: `${org.pfp}?refresh=${refresh || ""}` }
+                    : require("../../assets/images/marque/LogoImage.jpg")
                 }
                 style={STYLES.logoImage}
               />
@@ -169,7 +183,7 @@ const ProfilePage = () => {
               onPress={() =>
                 router.push({
                   pathname: "../tab_container_organization/EditProfile",
-                  params: { orgId: org._id }
+                  params: { orgId: org._id },
                 })
               }
               activeOpacity={0.7}
@@ -201,25 +215,41 @@ const ProfilePage = () => {
 
           <View style={tabStyles.tabWrapper}>
             <TouchableOpacity
-              style={[tabStyles.singleTab, activeTab === 'Incoming' ? tabStyles.activeTab : tabStyles.inactiveTab]}
-              onPress={() => setActiveTab('Incoming')}
+              style={[
+                tabStyles.singleTab,
+                activeTab === "Incoming" ? tabStyles.activeTab : tabStyles.inactiveTab,
+              ]}
+              onPress={() => setActiveTab("Incoming")}
             >
-              <Text style={[tabStyles.tabText, activeTab === 'Incoming' ? tabStyles.activeTabText : tabStyles.inactiveTabText]}>
+              <Text
+                style={[
+                  tabStyles.tabText,
+                  activeTab === "Incoming" ? tabStyles.activeTabText : tabStyles.inactiveTabText,
+                ]}
+              >
                 Incoming ({incomingEvents.length})
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[tabStyles.singleTab, activeTab === 'Concluded' ? tabStyles.activeTab : tabStyles.inactiveTab]}
-              onPress={() => setActiveTab('Concluded')}
+              style={[
+                tabStyles.singleTab,
+                activeTab === "Concluded" ? tabStyles.activeTab : tabStyles.inactiveTab,
+              ]}
+              onPress={() => setActiveTab("Concluded")}
             >
-              <Text style={[tabStyles.tabText, activeTab === 'Concluded' ? tabStyles.activeTabText : tabStyles.inactiveTabText]}>
+              <Text
+                style={[
+                  tabStyles.tabText,
+                  activeTab === "Concluded" ? tabStyles.activeTabText : tabStyles.inactiveTabText,
+                ]}
+              >
                 Concluded ({concludedEvents.length})
               </Text>
             </TouchableOpacity>
           </View>
 
-          {activeTab === 'Incoming' && (
+          {activeTab === "Incoming" && (
             <View>
               {incomingEvents.length > 0 ? (
                 incomingEvents.map((event) => {
@@ -227,9 +257,15 @@ const ProfilePage = () => {
                   return (
                     <EventCard
                       key={event._id}
-                      image={event.image_url ? { uri: event.image_url } : "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"}
+                      image={
+                        event.image_url
+                          ? { uri: event.image_url }
+                          : "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"
+                      }
                       title={event.title}
-                      orgLogo={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")}
+                      orgLogo={
+                        org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")
+                      }
                       organization={org.org_name}
                       orgDate={orgDate}
                       dateDay={dateDay}
@@ -244,7 +280,7 @@ const ProfilePage = () => {
             </View>
           )}
 
-          {activeTab === 'Concluded' && (
+          {activeTab === "Concluded" && (
             <View>
               {concludedEvents.length > 0 ? (
                 concludedEvents.map((event) => {
@@ -252,9 +288,15 @@ const ProfilePage = () => {
                   return (
                     <EventCard
                       key={event._id}
-                      image={event.image_url ? { uri: event.image_url } : "https://images.unsplash.com/photo-1529101091764-c3526daf38fe"}
+                      image={
+                        event.image_url
+                          ? { uri: event.image_url }
+                          : "https://images.unsplash.com/photo-1529101091764-c3526daf38fe"
+                      }
                       title={event.title}
-                      orgLogo={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")}
+                      orgLogo={
+                        org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")
+                      }
                       organization={org.org_name}
                       orgDate={orgDate}
                       dateDay={dateDay}
@@ -268,23 +310,18 @@ const ProfilePage = () => {
               )}
             </View>
           )}
-
         </View>
       </ScrollView>
-
-      {/* ---- FLOATING ADD BUTTON ---- */}
-      <AddActivityButton />
     </View>
   );
 };
 
 export default ProfilePage;
 
-/* ---------------- LOCAL TAB STYLES ---------------- */
 const tabStyles = StyleSheet.create({
   tabWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginVertical: 12,
   },
   singleTab: {
@@ -292,24 +329,29 @@ const tabStyles = StyleSheet.create({
     paddingVertical: 8,
     marginHorizontal: 5,
     borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minWidth: 120,
   },
   activeTab: {
     backgroundColor: COLORS.primaryNavy,
   },
   inactiveTab: {
-    backgroundColor: '#d3d3d3',
+    backgroundColor: "#d3d3d3",
   },
   tabText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   activeTabText: {
     color: COLORS.white,
   },
   inactiveTabText: {
     color: COLORS.textDark,
+  },
+  noEventsText: {
+    textAlign: "center",
+    color: COLORS.textDark,
+    marginVertical: 12,
   },
 });

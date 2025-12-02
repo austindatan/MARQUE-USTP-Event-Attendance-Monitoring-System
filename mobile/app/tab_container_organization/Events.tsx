@@ -20,8 +20,6 @@ import { BASE_URL, CLOUD_NAME } from "../../config";
 // Import the floating Scanner button
 import ScannerButton from '../components/ScannerButton'; // Adjust path if needed
 
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 40 : 20;
-
 // --- Custom Header Component ---
 const CustomHeader: React.FC<{ event: any }> = ({ event }) => (
   <View style={styles.headerImageContainer}>
@@ -220,9 +218,6 @@ const Events: React.FC = () => {
   );
 };
 
-// --- Styles ---
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 40 : 20;
-
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { flex: 1, backgroundColor: '#fff' },
@@ -245,7 +240,6 @@ headerOverlay: {
 },
 headerNav: {
   position: 'absolute',
-  top: STATUS_BAR_HEIGHT + 10,
   left: 10,
   right: 20,
   flexDirection: 'row',

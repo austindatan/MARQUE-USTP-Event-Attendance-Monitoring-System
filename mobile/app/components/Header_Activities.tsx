@@ -5,9 +5,6 @@ import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
 
-// Total header height (adjust to match your design)
-export const HEADER_HEIGHT = 140;
-
 const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) => {
   const router = useRouter();
   scrollY = scrollY instanceof Animated.Value ? scrollY : new Animated.Value(0);
@@ -50,7 +47,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         left: 0,
         right: 0,
         zIndex: 10,
-        height: HEADER_HEIGHT,
         backgroundColor: "transparent",
       }}
     >
