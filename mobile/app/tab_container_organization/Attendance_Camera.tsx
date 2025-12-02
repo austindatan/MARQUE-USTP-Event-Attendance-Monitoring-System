@@ -25,7 +25,7 @@ const QR_SIZE = 250;
 
 interface AttendanceCameraProps {
   onShowHistory: () => void;
-  eventId?: string;
+  eventId: string; // required now
 }
 
 const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eventId }) => {
@@ -37,6 +37,13 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
   const scannedRef = useRef(false);
+
+  // Safety guard: eventId must exist
+  useEffect(() => {
+    if (!eventId) {
+      Alert.alert('Error', 'No event selected.');
+    }
+  }, [eventId]);
 
   // Animations for yellow scanner line
   const scanAnim = useRef(new Animated.Value(0)).current;
@@ -61,9 +68,6 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
     glowAnimation.start();
   }, []);
 
-  const DEFAULT_EVENT_ID = '6923517772c7b61301a4e31f';
-  if (!eventId) eventId = DEFAULT_EVENT_ID;
-
   useEffect(() => {
     if (permission && !permission.granted) requestPermission();
   }, [permission]);
@@ -72,6 +76,8 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   const toggleFlip = () => setIsFlipped(prev => !prev);
 
   const registerAttendance = async (studentNumber: string) => {
+    if (!eventId) return; // safeguard
+
     try {
       setLoading(true);
       const response = await fetch(`${BASE_URL}/api/attendance/register`, {
