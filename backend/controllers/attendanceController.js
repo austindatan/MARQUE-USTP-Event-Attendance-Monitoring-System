@@ -8,7 +8,7 @@ const Department = require("../models/Department");
 /* ============================================================
     TEMP DEFAULT EVENT ID FOR TESTING (COMMENTED OUT)
 ============================================================ */
- const DEFAULT_EVENT_ID = "6923517772c7b61301a4e31f"; 
+ //const DEFAULT_EVENT_ID = "6923517772c7b61301a4e31f"; 
 
 /* ============================================================
     REGISTER ATTENDANCE
@@ -18,12 +18,11 @@ exports.registerAttendance = async (req, res) => {
     let { event_id, student_number } = req.body;
 
     // Optional testing mode: uncomment the next lines to use default event
-     if (!event_id) {
-       console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
-       event_id = DEFAULT_EVENT_ID;
-     } 
+    // if (!event_id) {
+    //   console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
+    //   event_id = DEFAULT_EVENT_ID;
+    // } 
     
-
     if (!event_id) {
       return res.status(400).json({
         message: "Missing required field: event_id",
@@ -99,10 +98,10 @@ exports.getAttendanceHistory = async (req, res) => {
     let { event_id } = req.params;
 
     // Optional testing mode: uncomment the next lines to use default event
-     if (!event_id) {
-       console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
-       event_id = DEFAULT_EVENT_ID;
-     }
+    // if (!event_id) {
+    //   console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
+    //   event_id = DEFAULT_EVENT_ID;
+    // }
     
 
     if (!event_id) {

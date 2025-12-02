@@ -11,11 +11,9 @@ const Departments = ({ scrollY, studentDept }) => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter ();
 
-  // Use useCallback to memoize the function
   const fetchEvents = useCallback(async (studentDept) => {
     setIsLoading(true);
     try {
-      // Endpoint is called with the department ID string
       const res = await fetch(`${BASE_URL}/events/${studentDept}`);
       
       if (!res.ok) {
@@ -24,7 +22,6 @@ const Departments = ({ scrollY, studentDept }) => {
       
       const data = await res.json();
       setEvents(data);
-      console.log("Fetched events data:", data);
     } catch (err) {
       console.log("Error fetching events:", err);
       setEvents([]);
@@ -33,9 +30,7 @@ const Departments = ({ scrollY, studentDept }) => {
     }
   }, []);
 
-  // useEffect runs ONLY when studentDept changes from null to a valid ID string
   useEffect(() => {
-    console.log("Departments component received studentDept ID:", studentDept); 
     if (studentDept) {
       fetchEvents(studentDept); 
     }
@@ -63,16 +58,32 @@ const Departments = ({ scrollY, studentDept }) => {
     return (
       <View style={appeffects.eventList}>
         {events.map((ev) => {
-          // Date formatting logic
           const date = new Date(ev.event_date);
           const dateDay = date.getDate();
           const dateMonth = date.toLocaleString('default', { month: 'short' });
           const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-          
+
+          // Determine which EventDetails page to navigate to based on status
+          const handleEventPress = () => {
+            switch (ev.status) {
+              case "Ongoing":
+                router.push(`/tab_container/EventDetails_Ongoing?eventId=${ev._id}`);
+                break;
+              case "NoAttendance":
+                router.push(`/tab_container/EventDetails_NoAttendance?eventId=${ev._id}`);
+                break;
+              case "Concluded":
+                router.push(`/tab_container/EventDetails_Concluded?eventId=${ev._id}`);
+                break;
+              default:
+                router.push(`/tab_container/EventDetails_Incoming?eventId=${ev._id}`);
+            }
+          };
+
           return (
             <EventCard
-              onPress={() => {router.push("/tab_container/EventDetails_Concluded");}}
               key={ev._id}
+              onPress={handleEventPress}
               image={{ uri: ev.event_image }}
               title={ev.event_name}
               organization={ev.organization_id?.org_name || "Unknown Org"}

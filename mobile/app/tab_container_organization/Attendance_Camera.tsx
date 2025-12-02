@@ -1,56 +1,98 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Alert, ActivityIndicator } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera'; 
-import { Ionicons } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Animated,
+  Easing,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { BASE_URL } from '../../config';
 
+// Placeholder for custom icons
+const ICON_PLACEHOLDER_PATH = require('../../assets/images/marque/Flip.png');
+
+const PRIMARY_COLOR = '#0a0f4c';
+const SECONDARY_COLOR = '#fecb20';
+const QR_SIZE = 250;
+
 interface AttendanceCameraProps {
   onShowHistory: () => void;
-  eventId?: string; // Optional: if not provided, can use DEFAULT_EVENT_ID
+  eventId: string; // required now
 }
 
-export default function AttendanceCamera({ onShowHistory, eventId }: AttendanceCameraProps) {
+const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eventId }) => {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [isTorchOn, setIsTorchOn] = useState(false); 
+  const [isTorchOn, setIsTorchOn] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [loading, setLoading] = useState(false); // Loading state for attendance registration
+  const [loading, setLoading] = useState(false);
   const scannedRef = useRef(false);
 
-  // -------------------------------
-  // Uncomment this for testing without passing eventId
-   const DEFAULT_EVENT_ID = "6923517772c7b61301a4e31f";
-   if (!eventId) eventId = DEFAULT_EVENT_ID;
-  // -------------------------------
+  // Safety guard: eventId must exist
+  useEffect(() => {
+    if (!eventId) {
+      Alert.alert('Error', 'No event selected.');
+    }
+  }, [eventId]);
+
+  // Animations for yellow scanner line
+  const scanAnim = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
-    if (permission && !permission.granted) {
-      requestPermission();
-    }
+    const moveAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scanAnim, { toValue: QR_SIZE, duration: 2000, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(scanAnim, { toValue: 0, duration: 2000, easing: Easing.linear, useNativeDriver: true }),
+      ])
+    );
+
+    const glowAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 1000, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0.5, duration: 1000, easing: Easing.linear, useNativeDriver: true }),
+      ])
+    );
+
+    moveAnimation.start();
+    glowAnimation.start();
+  }, []);
+
+  useEffect(() => {
+    if (permission && !permission.granted) requestPermission();
   }, [permission]);
 
   const toggleFlash = () => setIsTorchOn(prev => !prev);
   const toggleFlip = () => setIsFlipped(prev => !prev);
 
   const registerAttendance = async (studentNumber: string) => {
-    try {
-      if (!eventId) throw new Error("No eventId provided");
+    if (!eventId) return; // safeguard
 
+    try {
       setLoading(true);
       const response = await fetch(`${BASE_URL}/api/attendance/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
       });
-
       const data = await response.json();
 
       if (response.ok) {
         Alert.alert(
           'Attendance Registered',
-          `${data.data.name}\nProgram: ${data.data.program || 'N/A'}\nTime: ${new Date(data.data.time_in).toLocaleTimeString()}`
+          `${data.data.name}\nProgram: ${data.data.program || 'N/A'}\nTime: ${new Date(
+            data.data.time_in
+          ).toLocaleTimeString()}`
         );
       } else {
         Alert.alert('Error', data.message || 'Unable to register attendance');
@@ -63,7 +105,7 @@ export default function AttendanceCamera({ onShowHistory, eventId }: AttendanceC
     }
   };
 
-  const handleBarCodeScanned = async ({ type, data }: any) => {
+  const handleBarCodeScanned = async ({ data }: any) => {
     if (scannedRef.current) return;
     scannedRef.current = true;
     setScanned(true);
@@ -71,9 +113,9 @@ export default function AttendanceCamera({ onShowHistory, eventId }: AttendanceC
     try {
       const parts = data.trim().split(/\s+/);
       if (parts.length < 3) throw new Error('Invalid QR format');
-      const program = parts.pop(); 
-      const studentNumber = parts.pop(); 
-      const name = parts.join(' '); 
+      const program = parts.pop();
+      const studentNumber = parts.pop();
+      const name = parts.join(' ');
 
       await registerAttendance(studentNumber);
     } catch (error) {
@@ -101,43 +143,46 @@ export default function AttendanceCamera({ onShowHistory, eventId }: AttendanceC
     );
   }
 
-  const flashIconName = isTorchOn ? 'flash' : 'flash-off';
-  const flashIconColor = isTorchOn ? '#fde047' : '#fff';
-
   return (
-    <View style={styles.cameraContainer}>
-      <StatusBar barStyle="light-content" />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
       <CameraView
-        style={styles.camera}
-        facing={isFlipped ? "front" : "back"}
+        style={StyleSheet.absoluteFill}
+        facing={isFlipped ? 'front' : 'back'}
         flash="off"
         enableTorch={isTorchOn}
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
       >
-        {/* Close Button */}
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="close" size={32} color="#fff" />
+        {/* Top Overlay */}
+        <View style={[styles.topOverlay, { paddingTop: insets.top }]}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Image source={require('../../assets/images/marque/arrow-left.png')} style={styles.bottomIconImage} />
           </TouchableOpacity>
         </View>
 
-        {/* Instruction */}
-        <View style={styles.centerOverlay}>
-          <Text style={styles.instructionText}>Position QR code within frame</Text>
-        </View>
+        {/* QR Scan Area */}
+        <View style={styles.scannerArea}>
+          <View style={styles.scannerFocus}>
+            <View style={styles.scannerFrame}>
+              {/* Rounded Corners */}
+              <View style={[styles.corner, styles.topLeft]} />
+              <View style={[styles.corner, styles.topRight]} />
+              <View style={[styles.corner, styles.bottomLeft]} />
+              <View style={[styles.corner, styles.bottomRight]} />
 
-        {/* Scan Frame */}
-        <View style={styles.frameContainer}>
-          <View style={styles.scanFrame}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
+              {/* Scanner Line BELOW corners */}
+              <Animated.View
+                style={[
+                  styles.scannerLine,
+                  {
+                    transform: [{ translateY: scanAnim }],
+                    opacity: glowAnim,
+                  },
+                ]}
+              />
+            </View>
           </View>
         </View>
 
@@ -148,59 +193,124 @@ export default function AttendanceCamera({ onShowHistory, eventId }: AttendanceC
           </View>
         )}
 
-        {/* Bottom Menu */}
-        <View style={styles.bottomMenu}>
-          <TouchableOpacity
-            style={[styles.menuButton, { backgroundColor: isTorchOn ? '#1e40af' : '#6366f1' }]} 
-            onPress={toggleFlash}
-            activeOpacity={0.8}
-          >
-            <Ionicons name={flashIconName as any} size={24} color={flashIconColor} />
-            <Text style={styles.menuButtonText}>Flash</Text>
-          </TouchableOpacity>
+        {/* Bottom Floating Bar */}
+        <View style={[styles.bottomBar, { bottom: (insets.bottom ? insets.bottom : 20) + 20 }]}>
+          <View style={styles.leftIcons}>
+            <TouchableOpacity style={styles.iconButton} onPress={toggleFlash}>
+              <Image source={require('../../assets/images/marque/Flash.png')} style={styles.bottomIconImage} />
+              <Text style={styles.iconText}>Flash</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.menuButton, { backgroundColor: isFlipped ? '#1e40af' : '#6366f1' }]} 
-            onPress={toggleFlip}
-            activeOpacity={0.8}
-          >
-            <Ionicons name={isFlipped ? "camera-reverse" : "camera"} size={24} color="#fff" />
-            <Text style={styles.menuButtonText}>Flip</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={toggleFlip}>
+              <Image source={ICON_PLACEHOLDER_PATH} style={styles.bottomIconImage} />
+              <Text style={styles.iconText}>Flip</Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={styles.menuButton}
-            onPress={onShowHistory}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="time-outline" size={24} color="#fff" />
-            <Text style={styles.menuButtonText}>Attendance Log</Text>
-          </TouchableOpacity>
+          <View style={styles.rightIcons}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => {}}>
+              <Image source={require('../../assets/images/marque/Settings.png')} style={styles.bottomIconImage} />
+              <Text style={styles.iconText}>Settings</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.iconButton} onPress={onShowHistory}>
+              <Image source={require('../../assets/images/marque/History.png')} style={styles.bottomIconImage} />
+              <Text style={styles.iconText}>History</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* Center Floating Scan Button */}
+        <TouchableOpacity style={styles.centerButton} onPress={() => {}}>
+          <Image source={require('../../assets/images/marque/QRCode.png')} style={styles.centerIconImage} />
+        </TouchableOpacity>
       </CameraView>
     </View>
   );
-}
+};
 
+// --- Styles ---
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: 'black' },
   cameraContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
-  camera: { flex: 1, width: '100%' },
   permissionText: { color: '#fff', fontSize: 16, textAlign: 'center', marginBottom: 20 },
   permissionButton: { backgroundColor: '#6366f1', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
   permissionButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  topBar: { position: 'absolute', top: 0, left: 0, right: 0, paddingTop: 50, paddingHorizontal: 20, zIndex: 10 },
-  closeButton: { alignSelf: 'flex-start', backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 25, padding: 8 },
-  centerOverlay: { position: 'absolute', top: 120, left: 0, right: 0, alignItems: 'center' },
-  instructionText: { color: '#fff', fontSize: 16, fontWeight: '500', textAlign: 'center', backgroundColor: 'rgba(0, 0, 0, 0.6)', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20 },
-  frameContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scanFrame: { width: 250, height: 250, borderWidth: 2, borderColor: 'rgba(255, 255, 255, 0.5)', borderRadius: 20, position: 'relative' },
-  corner: { position: 'absolute', width: 30, height: 30, borderColor: '#6366f1' },
-  topLeft: { top: -2, left: -2, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 20 },
-  topRight: { top: -2, right: -2, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 20 },
-  bottomLeft: { bottom: -2, left: -2, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 20 },
-  bottomRight: { bottom: -2, right: -2, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 20 },
+  topOverlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 150, zIndex: 10, flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 15, paddingBottom: 20 },
+  backButton: { padding: 8, marginTop: 10 },
+  scannerArea: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  scannerFocus: { width: QR_SIZE, height: QR_SIZE, justifyContent: 'center', alignItems: 'center' },
+  scannerFrame: { width: QR_SIZE, height: QR_SIZE, position: 'relative', overflow: 'hidden' }, // <--- changed from 'hidden' to 'visible'
+  corner: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderColor: '#FFF',
+    borderWidth: 5,
+    borderRadius: 2, // slightly rounded corners
+    zIndex: 1, // ensure corners are above scanner line
+  },
+  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
+  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
+  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
+  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
   successOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(16, 185, 129, 0.5)', justifyContent: 'center', alignItems: 'center' },
-  bottomMenu: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(17, 24, 39, 0.95)', paddingVertical: 20, paddingHorizontal: 32, paddingBottom: 40, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
-  menuButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', paddingVertical: 16, paddingHorizontal: 24, borderRadius: 12, gap: 8 },
-  menuButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  bottomBar: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    backgroundColor: PRIMARY_COLOR,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 10,
+    zIndex: 5,
+  },
+  leftIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 100 },
+  rightIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 100 },
+  iconButton: { alignItems: 'center', justifyContent: 'center', height: 60, width: '40%' },
+  iconText: { color: '#FFF', fontSize: 12, marginTop: 4, fontWeight: '600' },
+  centerButton: {
+    position: 'absolute',
+    bottom: 80,
+    left: '50%',
+    transform: [{ translateX: -30 }],
+    backgroundColor: SECONDARY_COLOR,
+    width: 55,
+    height: 55,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 10,
+    zIndex: 20,
+  },
+  bottomIconImage: { width: 20, height: 20, resizeMode: 'contain' },
+  centerIconImage: { width: 30, height: 30, resizeMode: 'contain' },
+  scannerLine: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    height: 3,
+    backgroundColor: '#fecb20',
+    borderRadius: 3,
+    shadowColor: '#fecb20',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 50,
+    elevation: 30,
+    zIndex: 0, // ensure scanner line is below corners
+  },
 });
+
+export default Attendance_Camera;

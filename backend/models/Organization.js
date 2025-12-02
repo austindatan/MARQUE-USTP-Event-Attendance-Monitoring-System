@@ -8,14 +8,14 @@ const OrganizationSchema = new mongoose.Schema(
             required: true,
         },
         org_name: { type: String, required: true },
-        org_type: { type: String, enum: ["Department Organization", "Mother Organization", "FAESO Organization"], required: true },
+        org_type: { type: String, enum: ["Unit Organization", "Mother Organization", "FAESO Organization"], required: true },
         description: { type: String, required: true },
-        pfp: { type: String }, // profile picture URL or file path
-        cover_photo: { type: String }, // cover photo URL or file path
+        pfp: { type: String },
+        cover_photo: { type: String }, 
         fb_link: { type: String },
         ig_link: { type: String },
         x_link: { type: String },
-        moderator_name: { type: String, required: true }, // array of moderator names
+        moderator_name: { type: String, required: true }, 
     },
 );
 

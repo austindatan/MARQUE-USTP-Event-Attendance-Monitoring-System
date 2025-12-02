@@ -1,15 +1,15 @@
 // @ts-nocheck
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import styles from "../styles/components_eventcardSL";
 
-const EventCardSL = ({ image, title, orgLogo, organization, dateDay, dateMonth, }) => {
+const EventCardSL = ({ image, title, orgLogo, organization, dateDay, dateMonth, onPress }) => {
 
   const short = (s, n = 15) =>
-  s && s.length > n ? `${s.slice(0, n).trim()}...` : s;
+    s && s.length > n ? `${s.slice(0, n).trim()}...` : s;
 
   return (
-    <View style={styles.shadowWrapper}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.shadowWrapper}>
       <View style={styles.card}>
         <View style={styles.imageContainer}>
           <Image
@@ -35,10 +35,9 @@ const EventCardSL = ({ image, title, orgLogo, organization, dateDay, dateMonth, 
               <Text style={styles.orgText}>{short(organization, 17)}</Text>
             </View>
           </View>
-
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

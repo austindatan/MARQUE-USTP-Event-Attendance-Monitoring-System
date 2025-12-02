@@ -39,6 +39,28 @@ app.use("/exploreorgs", exploreorgRoutes);
 const followedorgsRoutes = require('./routes/followedorgRoutes');
 app.use('/api/followed-orgs', followedorgsRoutes);
 
+// Followed Organizations route
+const bookmarksRoutes = require('./routes/bookmarksRoutes');
+app.use('/api/bookmarks', bookmarksRoutes);
+
+// Organization route
+const organizationRoutes = require('./routes/organizationRoutes');
+app.use('/api/organizations', organizationRoutes);
+
+// User route
+//const userRoutes = require("./routes/userRoutes"); 
+//app.use("/api/users", userRoutes); 
+
+const authRoutes = require("./routes/auth");
+app.use("/api/auth", authRoutes);
+
+// Feedback route
+const feedbackRoutes = require("./routes/feedbackRoutes");
+app.use("/api/feedback", feedbackRoutes);
+
+// Org Officer route
+const orgOfficerRoutes = require('./routes/orgOfficerRoutes');
+app.use('/api/memberships', orgOfficerRoutes);
 
 
 // DB connection

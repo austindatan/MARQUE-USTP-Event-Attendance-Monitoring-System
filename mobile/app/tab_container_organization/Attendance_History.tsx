@@ -1,167 +1,278 @@
 // AttendanceHistory.tsx
-// @ts-nocheck
-
-import React, { useState, useEffect } from 'react';
-import { 
-  View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, 
-  StatusBar, Alert, ActivityIndicator
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  ImageBackground,
+  ScrollView,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { BASE_URL } from "../../config";
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { BASE_URL } from '../../config';
 
-// -------------------------------
-// Optional: uncomment for testing without passing eventId
- const DEFAULT_EVENT_ID = "6923517772c7b61301a4e31f"; 
-// -------------------------------
+// --- BACKGROUND IMAGE & ICONS ---
+const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
+const FILTER_IMAGE = require('../../assets/images/marque/Filters.png');
+const SEARCH_IMAGE = require('../../assets/images/marque/Search.png'); // search icon image
 
-export default function AttendanceHistory({ eventId, onBack }: { eventId?: string, onBack: () => void }) {
-  const [attendanceLog, setAttendanceLog] = useState([]);
-  const [loading, setLoading] = useState(false);
+// --- COLORS AND CONSTANTS ---
+const COLORS = {
+  headerText: '#FFFFFF',
+  inputBackground: 'rgba(255, 255, 255, 0.15)',
+  inputPlaceholder: '#787b9d',
+  inputText: '#FFFFFF',
+  filterButton: '#222762',
+  logBackground: '#FFFFFF',
+  contentBackground: '#FFFFFF',
+  separator: '#DDDDDD',
+};
 
-  useEffect(() => {
-    fetchAttendanceHistory();
-  }, []);
+const FONT_SIZES = {
+  header: 20,
+  search: 18,
+  filterText: 14,
+};
 
-  const fetchAttendanceHistory = async () => {
-    try {
-      setLoading(true);
-      let usedEventId = eventId;
+const SPACING = {
+  paddingHorizontal: 25,
+};
 
-      // -------------------------------
-      // Optional testing: use default event if none provided
-       if (!usedEventId) {
-         console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
-         usedEventId = DEFAULT_EVENT_ID;
-       }
-      
-
-      if (!usedEventId) {
-        Alert.alert('Error', 'No event ID provided');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(`${BASE_URL}/api/attendance/history/${usedEventId}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const history = data.history || [];
-        setAttendanceLog(history);
-      } else {
-        console.log("Fetch error:", data.message);
-        Alert.alert('Error', data.message || 'Unable to fetch attendance history');
-      }
-    } catch (error) {
-      console.log("Error fetching attendance history:", error);
-      Alert.alert('Network Error', 'Unable to fetch attendance history');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClearHistory = () => {
-    Alert.alert(
-      "Clear History",
-      "This will only clear your local device history (not database). Continue?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: () => setAttendanceLog([]),
-        },
-      ]
-    );
-  };
-
-  return (
-    <SafeAreaView style={styles.historyContainer}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Header */}
-      <View style={styles.historyHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.historyHeaderText}>
-          <Text style={styles.historyTitle}>Attendance History</Text>
-          <Text style={styles.historyCount}>
-            Total Records: {attendanceLog.length}
-          </Text>
-        </View>
-      </View>
-
-      {/* Content */}
-      <ScrollView style={styles.historyContent}>
-        {loading ? (
-          <View style={styles.emptyState}>
-            <ActivityIndicator size="large" color="#6366f1" />
-            <Text style={{ color: '#6366f1', marginTop: 16 }}>Loading attendance...</Text>
-          </View>
-        ) : attendanceLog.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="time-outline" size={48} color="#9ca3af" />
-            <Text style={styles.emptyStateText}>No attendance records yet</Text>
-          </View>
-        ) : (
-          <>
-            {attendanceLog.map((record, index) => (
-              <View key={index} style={styles.recordCard}>
-                <Text style={styles.recordName}>{record.name}</Text>
-
-                <Text style={styles.recordText}>
-                  <Text style={styles.recordLabel}>Student #: </Text>
-                  {record.student_number}
-                </Text>
-
-                <Text style={styles.recordText}>
-                  <Text style={styles.recordLabel}>Program: </Text>
-                  {record.program}
-                </Text>
-
-                <Text style={styles.recordText}>
-                  <Text style={styles.recordLabel}>Date: </Text>
-                  {new Date(record.time_in).toLocaleDateString()}
-                </Text>
-
-                <Text style={styles.recordText}>
-                  <Text style={styles.recordLabel}>Time: </Text>
-                  {new Date(record.time_in).toLocaleTimeString()}
-                </Text>
-              </View>
-            ))}
-
-            <TouchableOpacity 
-              style={styles.clearButton} 
-              onPress={handleClearHistory}
-            >
-              <Text style={styles.clearButtonText}>Clear Local History</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </ScrollView>
-    </SafeAreaView>
-  );
+// --- TYPES ---
+interface LogEntry {
+  name: string;
+  time: string;
+  studentId: string;
 }
 
+interface AttendanceHistoryProps {
+  onBack: () => void;
+  eventId: string; // receive eventId from CameraState or Events page
+}
+
+// --- LOG ITEM COMPONENT ---
+const LogItem: React.FC<LogEntry> = ({ name, time, studentId }) => (
+  <View>
+    <View style={styles.logItem}>
+      <View style={styles.logDetails}>
+        <Text style={styles.logName}>{name}</Text>
+        <Text style={styles.logTime}>{time}</Text>
+      </View>
+      <Text style={styles.logId}>{studentId}</Text>
+    </View>
+    <View style={styles.separator} />
+  </View>
+);
+
+// --- MAIN COMPONENT ---
+const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }) => {
+  const [attendanceLog, setAttendanceLog] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchText, setSearchText] = useState<string>('');
+
+  // Fetch attendance log for the given eventId
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${BASE_URL}/api/attendance/history?event_id=${eventId}`);
+        const data = await response.json();
+        if (response.ok && Array.isArray(data.data)) {
+          setAttendanceLog(data.data);
+        } else {
+          setAttendanceLog([]);
+        }
+      } catch (error) {
+        console.error(error);
+        setAttendanceLog([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAttendance();
+  }, [eventId]);
+
+  // Filter logs by search text
+  const filteredLogs = attendanceLog.filter(
+    log =>
+      log.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      log.studentId.includes(searchText)
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground source={BackgroundImage} style={styles.background} resizeMode="cover">
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onBack}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.headerText} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Attendance Log</Text>
+          </View>
+
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <Image source={SEARCH_IMAGE} style={styles.searchImage} resizeMode="contain" />
+              <TextInput
+                style={styles.input}
+                placeholder="Search..."
+                placeholderTextColor="rgba(120,123,157,0.7)"
+                value={searchText}
+                onChangeText={setSearchText}
+              />
+              <TouchableOpacity style={styles.filtersButton}>
+                <Image source={FILTER_IMAGE} style={styles.filterImage} resizeMode="contain" />
+                <Text style={styles.filtersText}>Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Attendance List */}
+          <View style={styles.contentArea}>
+            {loading ? (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#10b981" />
+              </View>
+            ) : (
+              <ScrollView contentContainerStyle={styles.logList}>
+                {filteredLogs.length > 0 ? (
+                  filteredLogs.map((log, index) => <LogItem key={index} {...log} />)
+                ) : (
+                  <Text style={{ textAlign: 'center', marginTop: 20 }}>No records found.</Text>
+                )}
+                <View style={{ height: 40 }} />
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </ImageBackground>
+    </SafeAreaView>
+  );
+};
+
+// --- STYLES ---
 const styles = StyleSheet.create({
-  historyContainer: { flex: 1, backgroundColor: "#fff" },
-  historyHeader: { backgroundColor: "#6366f1", flexDirection: "row", alignItems: "center", padding: 24, paddingTop: 16 },
-  backButton: { padding: 8, marginRight: 16 },
-  historyHeaderText: { flex: 1 },
-  historyTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
-  historyCount: { fontSize: 14, color: "#c7d2fe", marginTop: 4 },
-  historyContent: { flex: 1, padding: 16 },
-  emptyState: { alignItems: "center", paddingVertical: 48 },
-  emptyStateText: { fontSize: 16, color: "#6b7280", marginTop: 16 },
-  recordCard: { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#e5e7eb", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
-  recordName: { fontSize: 18, fontWeight: "600", color: "#1f2937", flex: 1, marginBottom: 4 },
-  recordText: { fontSize: 14, color: "#4b5563", marginBottom: 2 },
-  recordLabel: { fontWeight: "500" },
-  clearButton: { backgroundColor: "#ef4444", padding: 16, borderRadius: 12, marginTop: 16, marginBottom: 32 },
-  clearButtonText: { color: "#fff", fontSize: 16, fontWeight: "600", textAlign: "center" },
+  safeArea: { flex: 1 },
+  background: { flex: 1, width: '100%', height: '100%' },
+  container: { flex: 1, paddingTop: 10 },
+
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.paddingHorizontal,
+    paddingBottom: 20,
+    paddingTop: 20,
+  },
+  headerTitle: {
+    color: COLORS.headerText,
+    fontSize: FONT_SIZES.header,
+    fontWeight: '700', // bold
+    fontFamily: 'DM Sans',
+    marginLeft: 10,
+    flex: 1,
+    textAlign: 'center',
+    transform: [{ translateX: -12 }],
+  },
+
+  searchContainer: {
+    paddingHorizontal: SPACING.paddingHorizontal,
+    marginBottom: 15,
+    marginTop: 15,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.inputBackground,
+    borderRadius: 10,
+    height: 40,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+  },
+  searchImage: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    color: COLORS.inputText,
+    fontSize: FONT_SIZES.search,
+    paddingVertical: 0,
+    fontFamily: 'DM Sans',
+  },
+  filtersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.filterButton,
+    borderRadius: 25,
+    paddingHorizontal: 10,  // ⬅ smaller automatic width
+    paddingVertical: 6,
+    marginLeft: 8,
+  },
+  filterImage: {
+    width: 20,
+    height: 20,
+    marginRight: 6,
+  },
+  filtersText: {
+    color: COLORS.headerText,
+    fontSize: FONT_SIZES.filterText,
+    fontWeight: '600',
+    fontFamily: 'DM Sans',
+  },
+
+  contentArea: {
+    flex: 1,
+    backgroundColor: COLORS.contentBackground,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
+  },
+  logList: {
+    paddingTop: 15,
+    paddingBottom: 20,
+  },
+  logItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 30,
+    backgroundColor: COLORS.logBackground,
+  },
+  logDetails: { flex: 1 },
+  logName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 2,
+    fontFamily: 'DM Sans',
+  },
+  logTime: {
+    fontSize: 12,
+    color: '#888888',
+    fontFamily: 'DM Sans',
+  },
+  logId: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000',
+    marginLeft: 10,
+    fontFamily: 'DM Sans',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: COLORS.separator,
+    marginHorizontal: 25,
+  },
 });
+
+export default AttendanceHistory;

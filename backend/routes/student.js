@@ -39,6 +39,7 @@ router.get("/id/:student_number", async (req, res) => {
 
 
     res.json({
+      _id: student._id,
       firstname: user.firstname,
       lastname: user.lastname,
       email: user.email,

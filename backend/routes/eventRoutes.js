@@ -11,7 +11,11 @@ const {
     addEvent, 
     updateEvent, 
     getOrgEventsByStatus, 
-    getOngoingEvents 
+    getOngoingEvents,
+    getEventsByOrgType,
+    getFilteredEvents,
+    getUpcomingEventsByOrganization,
+    getConcludedEventsByOrganization
 } = eventController;
 
 
@@ -23,17 +27,28 @@ router.get('/ongoing', getOngoingEvents);
 
 router.get("/all/upcoming", getAllUpcomingEvents);
 router.get("/all/concluded", getAllConcludedEvents);
-router.get("/followed", getEventsByFollowedOrgs);
 
+// GET upcoming events for a given organization
+router.get('/organization/:orgId/upcoming', eventController.getUpcomingEventsByOrganization);
+router.get('/organization/:orgId/concluded', eventController.getConcludedEventsByOrganization);
+
+
+// NEW ROUTE – MUST BE ABOVE departmentId
+router.get("/event/:id", eventController.getEventById);
+
+router.get("/followed", getEventsByFollowedOrgs);
 router.get("/following/:userId", getFollowedOrgEvents);
 
 router.post("/add", uploadEventImages.array("event_images", 10), addEvent);
 router.put("/update/:id", uploadEventImages.array("event_images", 10), updateEvent);
 
 router.get("/details/:organizationId", getOrgEventsByStatus);
+router.get("/by-org-type/:orgType", getEventsByOrgType);
+router.get('/filter', getFilteredEvents);
 
+// LAST
+router.get("/:departmentId", getEventsByDepartment);
 
-router.get("/:departmentId", getEventsByDepartment); 
 
 
 module.exports = router;
