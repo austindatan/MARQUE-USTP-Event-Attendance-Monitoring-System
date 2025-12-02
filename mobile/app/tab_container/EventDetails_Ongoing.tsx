@@ -132,10 +132,42 @@ const Event_Ongoing = () => {
     );
   }
 
-  // Format date/time
-  const eventDate = formatDate(event.start_date || event.event_date);
-  const startTime = formatTime(event.start_time);
-  const endTime = formatTime(event.end_time);
+  // DATE OBJECT
+  const eventDateObj = event.start_date || event.event_date ? new Date(event.start_date || event.event_date) : null;
+
+  // Full date format: "30 December, 2025"
+  const eventDateFormatted = eventDateObj
+    ? eventDateObj.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "Date N/A";
+
+  // Weekday: "Wednesday"
+  const eventDay = eventDateObj
+    ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
+    : "";
+
+  // Time formatting
+  const startTimeFormatted = event.start_time
+    ? new Date(event.start_time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
+    : null;
+
+  const endTimeFormatted = event.end_time
+    ? new Date(event.end_time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
+    : null;
+
+  // Final time string
+  let eventTimeFull = "Time N/A";
+  if (eventDay && startTimeFormatted && endTimeFormatted) {
+    eventTimeFull = `${eventDay}, ${startTimeFormatted} - ${endTimeFormatted}`;
+  } else if (eventDay && startTimeFormatted) {
+    eventTimeFull = `${eventDay}, ${startTimeFormatted}`;
+  } else if (eventDay) {
+    eventTimeFull = eventDay; // Show day even without time
+  }
+
 
   return (
     <View style={styles.container}>
@@ -178,8 +210,8 @@ const Event_Ongoing = () => {
             <Ionicons name="calendar" size={20} color="#0A0F51" />
           </View>
           <View>
-            <Text style={styles.infoPrimary}>{eventDate}</Text>
-            <Text style={styles.infoSecondary}>{startTime} – {endTime}</Text>
+           <Text style={styles.infoPrimary}>{eventDateFormatted}</Text>
+          <Text style={styles.infoSecondary}>{eventTimeFull}</Text>
           </View>
         </View>
 
