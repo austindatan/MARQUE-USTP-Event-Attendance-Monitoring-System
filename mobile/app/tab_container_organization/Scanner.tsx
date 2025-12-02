@@ -12,12 +12,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
 const QrCodePlaceholder = require('../../assets/images/marque/QRCode.png');
 const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
+const { eventId } = useLocalSearchParams();
 
 const Scanner: React.FC = () => {
   const router = useRouter();
@@ -40,8 +41,12 @@ const Scanner: React.FC = () => {
   };
 
   const handleOpenCamera = () => {
-    router.push('/tab_container_organization/Camera_State');
+    router.push({
+      pathname: '/tab_container_organization/Camera_State',
+      params: { eventId } // pass it forward
+    });
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

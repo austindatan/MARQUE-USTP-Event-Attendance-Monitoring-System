@@ -1,4 +1,5 @@
-import React from 'react';
+// AttendanceHistory.tsx
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,8 +10,10 @@ import {
   ImageBackground,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { BASE_URL } from '../../config';
 
 // --- BACKGROUND IMAGE & ICONS ---
 const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
@@ -39,25 +42,17 @@ const SPACING = {
   paddingHorizontal: 25,
 };
 
-// --- MOCK ATTENDANCE DATA ---
+// --- TYPES ---
 interface LogEntry {
   name: string;
   time: string;
   studentId: string;
 }
 
-const attendanceLog: LogEntry[] = [
-  { name: 'Nikka Rodriguez', time: '2025-10-10 10:34 AM', studentId: '2023300204' },
-  { name: 'Zyrile Retuertas', time: '2025-10-10 10:33 AM', studentId: '2023300181' },
-  { name: 'Vonzelle Puray', time: '2025-10-10 10:34 AM', studentId: '2023300111' },
-  { name: 'Sabrina Aryan', time: '2025-10-10 10:34 AM', studentId: '2023300222' },
-  { name: 'Austin Datan', time: '2025-10-10 10:34 AM', studentId: '2023300209' },
-  { name: 'Angelo Binonggo', time: '2025-10-10 10:34 AM', studentId: '2023300304' },
-  { name: 'Finnah Bajas', time: '2025-10-10 10:34 AM', studentId: '2023300207' },
-  { name: 'Sabrina Carpenter', time: '2025-10-10 10:34 AM', studentId: '2023303021' },
-  { name: 'John Doe', time: '2025-10-10 10:35 AM', studentId: '2023300400' },
-  { name: 'Jane Smith', time: '2025-10-10 10:36 AM', studentId: '2023300500' },
-];
+interface AttendanceHistoryProps {
+  onBack: () => void;
+  eventId: string; // receive eventId from CameraState or Events page
+}
 
 // --- LOG ITEM COMPONENT ---
 const LogItem: React.FC<LogEntry> = ({ name, time, studentId }) => (
@@ -74,18 +69,44 @@ const LogItem: React.FC<LogEntry> = ({ name, time, studentId }) => (
 );
 
 // --- MAIN COMPONENT ---
-interface AttendanceHistoryProps {
-  onBack: () => void; // callback for going back
-}
+const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }) => {
+  const [attendanceLog, setAttendanceLog] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchText, setSearchText] = useState<string>('');
 
-const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack }) => {
+  // Fetch attendance log for the given eventId
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${BASE_URL}/api/attendance/history?event_id=${eventId}`);
+        const data = await response.json();
+        if (response.ok && Array.isArray(data.data)) {
+          setAttendanceLog(data.data);
+        } else {
+          setAttendanceLog([]);
+        }
+      } catch (error) {
+        console.error(error);
+        setAttendanceLog([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAttendance();
+  }, [eventId]);
+
+  // Filter logs by search text
+  const filteredLogs = attendanceLog.filter(
+    log =>
+      log.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      log.studentId.includes(searchText)
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ImageBackground
-        source={BackgroundImage}
-        style={styles.background}
-        resizeMode="cover"
-      >
+      <ImageBackground source={BackgroundImage} style={styles.background} resizeMode="cover">
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
@@ -98,22 +119,16 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack }) => {
           {/* Search Bar */}
           <View style={styles.searchContainer}>
             <View style={styles.searchBar}>
-              <Image
-                source={SEARCH_IMAGE}
-                style={styles.searchImage}
-                resizeMode="contain"
-              />
+              <Image source={SEARCH_IMAGE} style={styles.searchImage} resizeMode="contain" />
               <TextInput
                 style={styles.input}
                 placeholder="Search..."
-                placeholderTextColor={`rgba(120, 123, 157, 0.7)`}
+                placeholderTextColor="rgba(120,123,157,0.7)"
+                value={searchText}
+                onChangeText={setSearchText}
               />
               <TouchableOpacity style={styles.filtersButton}>
-                <Image
-                  source={FILTER_IMAGE}
-                  style={styles.filterImage}
-                  resizeMode="contain"
-                />
+                <Image source={FILTER_IMAGE} style={styles.filterImage} resizeMode="contain" />
                 <Text style={styles.filtersText}>Filters</Text>
               </TouchableOpacity>
             </View>
@@ -121,12 +136,20 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack }) => {
 
           {/* Attendance List */}
           <View style={styles.contentArea}>
-            <ScrollView contentContainerStyle={styles.logList}>
-              {attendanceLog.map((log, index) => (
-                <LogItem key={index} {...log} />
-              ))}
-              <View style={{ height: 40 }} />
-            </ScrollView>
+            {loading ? (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#10b981" />
+              </View>
+            ) : (
+              <ScrollView contentContainerStyle={styles.logList}>
+                {filteredLogs.length > 0 ? (
+                  filteredLogs.map((log, index) => <LogItem key={index} {...log} />)
+                ) : (
+                  <Text style={{ textAlign: 'center', marginTop: 20 }}>No records found.</Text>
+                )}
+                <View style={{ height: 40 }} />
+              </ScrollView>
+            )}
           </View>
         </View>
       </ImageBackground>
