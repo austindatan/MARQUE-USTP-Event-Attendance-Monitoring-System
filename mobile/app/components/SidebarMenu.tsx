@@ -6,7 +6,7 @@ import { BASE_URL } from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import Animated, { useSharedValue, withTiming, useAnimatedStyle, runOnJS } from "react-native-reanimated";
-import { router } from "expo-router"; // import router
+import { router } from "expo-router";
 
 const menuItems = [
   { name: "Home", icon: "home-outline" },

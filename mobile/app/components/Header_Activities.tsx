@@ -5,9 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
 
+// scrollY prop is no longer used for animation
 const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) => {
   const router = useRouter();
-  scrollY = scrollY instanceof Animated.Value ? scrollY : new Animated.Value(0);
+  // Removed: scrollY = scrollY instanceof Animated.Value ? scrollY : new Animated.Value(0);
+  // It's fine to keep the prop, but no need to initialize here if unused.
 
   const [activeTab, setActiveTab] = useState<"Back" | "Incoming" | "Concluded">("Incoming");
 
@@ -19,25 +21,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
       onToggleChange(tab);
     }
   };
-
-  // Scroll animations
-  const searchOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
-  const searchTranslateY = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [0, -30],
-    extrapolate: "clamp",
-  });
-
-  const toggleTranslateY = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [0, -40],
-    extrapolate: "clamp",
-  });
 
   return (
     <View
@@ -71,30 +54,30 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         </View>
       </View>
 
-      {/* Search Row (optional, animated) */}
-      <Animated.View
+      {/* Search Row - Converted to standard <View> */}
+      <View
         style={[
           styles.header,
           {
             paddingTop: 0,
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            transform: [{ translateY: searchTranslateY }],
+            // REMOVED: transform: [{ translateY: searchTranslateY }],
           },
         ]}
       >
-        <Animated.View
-          style={[styles.searchRow, { opacity: searchOpacity }]}
+        <View // Replaced Animated.View with View and removed opacity style
+          style={styles.searchRow}
         />
-      </Animated.View>
+      </View>
 
-      {/* Toggle Tabs */}
-      <Animated.View
+      {/* Toggle Tabs - Converted to standard <View> */}
+      <View
         style={[
           styles.toggleContainerEX,
           {
             backgroundColor: "transparent",
-            transform: [{ translateY: toggleTranslateY }],
+            // REMOVED: transform: [{ translateY: toggleTranslateY }],
           },
         ]}
       >
@@ -125,7 +108,7 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         >
           <Text style={styles.activeTextEX}>Concluded</Text>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     </View>
   );
 };

@@ -1,28 +1,12 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
 import EventCard from "../components/Card_Event";
 import OrgCard from "../components/Card_Organization";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
 import axios from "axios";
-import { useRouter, useLocalSearchParams } from "expo-router"
-
-interface Organization {
-    _id: string;
-    org_name: string;
-    description: string;
-    pfp: string;
-    createdAt?: string;
-}
-
-interface Event {
-    _id: string;
-    event_name: string;
-    description: string;
-    event_date: string;
-    event_images: string[];
-}
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 const getOneSentence = (text: string = "") => {
     if (!text) return "";
@@ -35,11 +19,12 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     const router = useRouter();
     const scrollRef = useRef(null);
     const { orgId } = useLocalSearchParams();
-    const [organizationData, setOrganizationData] = useState<Organization | null>(null);
-    const [events, setEvents] = useState<Event[]>([]);
+    const [organizationData, setOrganizationData] = useState(null);
+    const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
 
+    // ---- DATE HELPERS ----
     const formatDate = (dateStr) => {
         if (!dateStr) return "";
         const d = new Date(dateStr);
@@ -59,6 +44,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         return new Date(dateStr).toLocaleString(undefined, { month: "short" });
     };
 
+    // ---- FETCH ORGANIZATION + INCOMING EVENTS ----
     const fetchAllData = async () => {
         if (!orgId) {
             setError("No organization ID found in route parameters.");
@@ -70,7 +56,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         try {
             const [orgRes, eventsRes] = await Promise.all([
                 axios.get(`${BASE_URL}/api/organizations/${orgId}`),
-                axios.get(`${BASE_URL}/events/organization/${orgId}/upcoming`),
+                axios.get(`${BASE_URL}/api/organization/${orgId}/upcoming`),
             ]);
 
             setOrganizationData(orgRes.data);
@@ -78,9 +64,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
             setError(null);
         } catch (err) {
             console.error("Error fetching data:", err);
-            setError(
-                "Failed to load organization or events details. Check network and API route."
-            );
+            setError("Failed to load organization or events details.");
         } finally {
             setLoading(false);
         }
@@ -89,6 +73,23 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     useEffect(() => {
         fetchAllData();
     }, [orgId]);
+
+    // ---- RESTORE SCROLL POSITION ----
+    useEffect(() => {
+        if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
+            const t = setTimeout(() => {
+                const node = scrollRef.current?.getNode
+                    ? scrollRef.current.getNode()
+                    : scrollRef.current;
+
+                if (node?.scrollTo) {
+                    node.scrollTo({ y: initialScroll, animated: false });
+                }
+            }, 0);
+
+            return () => clearTimeout(t);
+        }
+    }, [initialScroll]);
 
     const handleOrgPress = () => {
         router.push({
@@ -104,56 +105,20 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         });
     };
 
-    useEffect(() => {
-        if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
-            const t = setTimeout(() => {
-                const node = scrollRef.current?.getNode ? scrollRef.current.getNode() : scrollRef.current;
-                if (node && node.scrollTo) {
-                    node.scrollTo({ y: initialScroll, animated: false });
-                }
-            }, 0);
-            return () => clearTimeout(t);
-        }
-    }, [initialScroll]);
-
-    const containerTranslateY = scrollY.interpolate({
-        inputRange: [0, 80],
-        outputRange: [0, -40],
-        extrapolate: "clamp",
-    });
-
+    // ---- LOADING ----
     if (loading) {
         return (
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingTop: 180,
-                }}
-            >
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
                 <ActivityIndicator size="large" color="#0000ff" />
             </View>
         );
     }
 
+    // ---- ERROR ----
     if (error || !organizationData) {
         return (
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingTop: 180,
-                }}
-            >
-                <Text
-                    style={{
-                        color: "red",
-                        textAlign: "center",
-                        marginHorizontal: 20,
-                    }}
-                >
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
+                <Text style={{ color: "red", textAlign: "center", marginHorizontal: 20 }}>
                     {error || "Organization data could not be loaded."}
                 </Text>
                 <TouchableOpacity onPress={fetchAllData}>
@@ -163,6 +128,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         );
     }
 
+    // ---- FINAL UI ----
     const org = organizationData;
     const orgImageSource = org.pfp
         ? { uri: org.pfp }
@@ -173,27 +139,19 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         : require("../../assets/images/marque/crk.jpg");
 
     return (
-        <Animated.View
-            style={{
-                flex: 1,
-                backgroundColor: "transparent",
-                transform: [{ translateY: containerTranslateY }],
-            }}
-        >
-            <Animated.ScrollView
+        <View style={{ flex: 1, backgroundColor: "transparent" }}>
+            <ScrollView
                 ref={scrollRef}
                 style={{ flex: 1, backgroundColor: "transparent" }}
                 contentContainerStyle={{
                     backgroundColor: "transparent",
-                    paddingTop: 180,
-                    paddingBottom: 80,
+                    paddingTop: 165,
                 }}
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
             >
                 <View style={appeffects.pageStarter}>
-                    <Text style={appeffects.pageTitle}>Incoming Events</Text>
                 </View>
 
                 <View style={appeffects.eventList}>
@@ -204,11 +162,11 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                         organization={org.org_name}
                         orgLogo={orgLogoSource}
                         dateDay={formatDay(org.createdAt || new Date())}
-                        type="Organizers"
                         dateMonth={formatMonthShort(org.createdAt || new Date())}
                         orgDate={formatDate(org.createdAt || new Date())}
                         description={getOneSentence(org.description)}
                         onPress={handleOrgPress}
+                        type="Organizers"
                     />
 
                     {/* EVENTS LIST */}
@@ -235,19 +193,13 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                             );
                         })
                     ) : (
-                        <Text
-                            style={{
-                                textAlign: "center",
-                                color: "gray",
-                                marginTop: 20,
-                            }}
-                        >
+                        <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>
                             No upcoming events for this organization.
                         </Text>
                     )}
                 </View>
-            </Animated.ScrollView>
-        </Animated.View>
+            </ScrollView>
+        </View>
     );
 };
 

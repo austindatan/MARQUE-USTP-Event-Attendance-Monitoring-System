@@ -3,9 +3,9 @@
 import React, { useRef, useState } from "react";
 import { View, Animated, Modal, ImageBackground } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import Header from "../components/Header_Activities";
-import Incoming from "../tab_container_organization/Incoming";
-import Concluded from "../tab_container_organization/Concluded";
+import Header from "../components/Header_Activities"; // Assuming you renamed Header_Activities to Header
+import Incoming from "./Incoming"; // Adjust path as needed
+import Concluded from "./Concluded"; // You'll need to apply similar fixes to Concluded.tsx
 import AddActivityButton from "../components/AddActivityButton";
 import SidebarMenu from "../components/SidebarMenu_Organization";
 import appeffects from "../styles/effects_app";
@@ -16,11 +16,11 @@ const Activities = () => {
   const { orgId } = useLocalSearchParams();
   const [activeTab, setActiveTab] = useState<TabName>("Incoming");
 
-  // Scroll values for each tab
+  // Scroll values for each tab - KEPT FOR SCROLL MEMORY
   const incomingScrollY = useRef(new Animated.Value(0)).current;
   const concludedScrollY = useRef(new Animated.Value(0)).current;
 
-  // Save last scroll positions
+  // Save last scroll positions - KEPT FOR SCROLL MEMORY
   const tabScrollPositions = useRef<Record<TabName, number>>({
     Incoming: 0,
     Concluded: 0,
@@ -30,25 +30,22 @@ const Activities = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const toggleMenu = () => setMenuVisible((prev) => !prev);
 
-  // Track scroll per tab
-  const createScrollHandler = (tabName: TabName, animatedValue: Animated.Value) =>
-    Animated.event(
-      [{ nativeEvent: { contentOffset: { y: animatedValue } } }],
-      {
-        useNativeDriver: true,
-        listener: (event: any) => {
-          tabScrollPositions[tabName] = event.nativeEvent.contentOffset.y;
-        },
-      }
-    );
+  // Track scroll per tab - KEPT FOR SCROLL MEMORY
+  const createScrollHandler = (tabName, animatedValue) => (event) => {
+    const y = event.nativeEvent.contentOffset.y;
+    animatedValue.setValue(y);
+    tabScrollPositions[tabName] = y;
+  };
 
-  // Switch tabs and restore scroll
+
+  // Switch tabs and restore scroll - KEPT FOR SCROLL MEMORY
   const handleTabChange = (newTab: TabName) => {
     setActiveTab(newTab);
 
     const scrollValue = newTab === "Incoming" ? incomingScrollY : concludedScrollY;
     const lastScrollPos = tabScrollPositions[newTab] || 0;
 
+    // Restores the Animated Value to the last saved position
     scrollValue.setValue(lastScrollPos);
   };
 
@@ -73,11 +70,10 @@ const Activities = () => {
 
   return (
     <View style={[appeffects.container, { flex: 1 }]}>
-      {/* HEADER */}
-      <Header
-        onMenuPress={toggleMenu} // Trigger sidebar modal
-        scrollY={activeProps.scrollY}
-        onToggleChange={handleTabChange}
+      {/* HEADER - Now static */}
+      <Header onMenuPress={toggleMenu} // Trigger sidebar modal
+              scrollY={activeProps.scrollY}
+              onToggleChange={handleTabChange}
       />
 
       {/* ACTIVE TAB CONTENT */}

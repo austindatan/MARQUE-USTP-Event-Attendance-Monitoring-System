@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { useFonts } from 'expo-font'; 
 import * as SplashScreen from 'expo-splash-screen'; 
 import {useEffect} from 'react';
+import { StatusBar } from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -33,32 +34,16 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} /> 
-      <Stack.Screen name="login" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tabs" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tabs_organization" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tab_container_organization" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tab_container/Filter_Page" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tab_container/EventDetails_ZFeedback" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container/Profile_ChangePassword" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/Activities" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/Profile" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/EditProfile" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container/EventDetails_Concluded" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/Events" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/EditEvents" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/Scanner" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/Camera_State" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/Attendance_Camera" options={{ headerShown: false }} />
-      <Stack.Screen name="tab_container_organization/Attendance_History" options={{ headerShown: false }} />
-
-      <Stack.Screen 
-        name="tab_container/Search_Page" 
-        options={{
-          headerShown: false,
-        }} 
+    <>
+      {/* 💡 ADDED: Sets the Status Bar text, icons, and indicators to WHITE */}
+      <StatusBar 
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
       />
-    </Stack>
+
+      
+      <Stack screenOptions={{headerShown: false}}/>
+    </>
   );
 }
