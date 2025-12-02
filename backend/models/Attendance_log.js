@@ -13,7 +13,7 @@ const AttendanceLogSchema = new mongoose.Schema(
             required: true,
         },
         status: { type: String, enum: ['Present', 'Absent', 'Late'], required: true },
-        time_in: {type: Date},
+        time_in: { type: Date, required: true },
         time_out: {type: Date},
     },
 );
