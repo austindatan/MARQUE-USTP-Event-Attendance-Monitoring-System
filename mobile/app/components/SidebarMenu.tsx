@@ -55,16 +55,15 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
     fetchStudentData();
   }, []);
 
-  // animation
   const translateX = useSharedValue(-300);
 
   useEffect(() => {
     if (isVisible) {
-      setRenderSidebar(true); // opening
+      setRenderSidebar(true); 
       translateX.value = withTiming(0, { duration: 250 });
     } else {
       translateX.value = withTiming(-300, { duration: 250 }, () => {
-        runOnJS(setRenderSidebar)(false); // closing
+        runOnJS(setRenderSidebar)(false);
       });
     }
   }, [isVisible]);
@@ -74,31 +73,43 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
   }));
 
   const handleMenuItemPress = async (name: string) => {
-    onClose(); // close the sidebar first
+    onClose();
+
+    type MenuName = "Home" | "Notifications" | "Bookmarks" | "Profile";
+
+    const routes = {
+        Home: "/tabs/Events",
+        Notifications: "/tab_container/Bookmark_Page",
+        Bookmarks: "/tab_container/Bookmark_Page",
+        Profile: "/tabs/Profile",
+    } as const; 
+
+    type RoutePath = typeof routes[keyof typeof routes];
 
     if (name === "Your Organizations") {
-      try {
-        const studentNumber = await AsyncStorage.getItem("student_number");
+        try {
+            const studentNumber = await AsyncStorage.getItem("student_number");
+            if (!studentNumber) {
+                console.log("No student number found in AsyncStorage.");
+                return;
+            }
 
-        if (!studentNumber) {
-          console.log("No student number found in AsyncStorage.");
-          return;
+            router.push("/tabs_organization/Teams");
+            return;
+        } catch (err) {
+            console.error("Error navigating to Organizations:", err);
+            return;
         }
-
-        // Optional: make an API call if you want to fetch org data
-        // const res = await fetch(`${BASE_URL}/api/student/${studentNumber}/organizations`);
-        // const data = await res.json();
-
-        // Navigate to Teams page
-        router.push("../tabs_organization/Teams");
-      } catch (err) {
-        console.error("Error navigating to Organizations:", err);
-      }
-    } else {
-      console.log("Navigating to:", name);
-      // handle other menu items here if you want
     }
-  };
+
+    if (name in routes) {
+        router.push(routes[name as MenuName] as RoutePath); 
+    } else {
+        console.warn(`⚠️ No route found for menu item: ${name}`);
+    }
+};
+
+
 
   if (!renderSidebar) return null;
 
