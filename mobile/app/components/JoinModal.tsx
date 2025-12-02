@@ -1,4 +1,3 @@
-// JoinModal.tsx
 // @ts-nocheck
 import React from "react";
 import {
@@ -9,7 +8,6 @@ import {
   Image,
 } from "react-native";
 
-// Import styles from external file
 import styles from "../styles/components_joinmodal";
 
 const SPYGLASS_ICON = require("../../assets/images/marque/MARQUE_whitelogo.png");

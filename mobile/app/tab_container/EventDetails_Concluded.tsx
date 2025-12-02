@@ -95,7 +95,16 @@ const Event_Concluded = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={styles.infoRow}>
+        <TouchableOpacity
+          style={styles.infoRow}
+          onPress={() => {
+            router.push({
+              pathname: "/tab_container/EventDetails_ZLocation",
+              params: { markerId: 52 },  // <--- SEND MARKER ID HERE
+            });
+          }}
+        >
+
           <View style={styles.iconBox}>
             <Ionicons name="location" size={20} color="#0A0F51" />
           </View>
@@ -103,7 +112,7 @@ const Event_Concluded = ({ navigation }) => {
             <Text style={styles.infoPrimary}>Cafeteria Hall</Text>
             <Text style={styles.infoSecondary}>Building 5</Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         <Text style={styles.sectionTitle}>About Event</Text>
 

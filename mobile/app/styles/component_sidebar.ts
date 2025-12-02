@@ -61,12 +61,12 @@ const styles = StyleSheet.create({
 
   organizationsButton: {
     marginTop: 10,
-    paddingVertical: 12, // slightly smaller to fit image nicely
-    paddingHorizontal: 15, // add horizontal padding
+    paddingVertical: 12,
+    paddingHorizontal: 15,
     borderRadius: 10,
     backgroundColor: "#FFC844",
     flexDirection: "row",
-    justifyContent: "flex-start", // aligns image and text to the left
+    justifyContent: "flex-start",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "white",
-    marginLeft: 12, // spacing between image and text
+    marginLeft: 12,
   },
 });
 

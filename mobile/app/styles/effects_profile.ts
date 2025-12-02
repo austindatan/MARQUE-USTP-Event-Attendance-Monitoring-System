@@ -3,8 +3,7 @@ import { StyleSheet, Dimensions } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
-// Base guideline sizes (for scaling)
-const guidelineBaseWidth = 375;   // iPhone 11 width
+const guidelineBaseWidth = 375;
 const guidelineBaseHeight = 812;
 
 const scale = size => (width / guidelineBaseWidth) * size;
@@ -149,10 +148,6 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans-Medium",
     color: "#111",
   },
-
-  // ------------------------------------------
-  // CHANGE PASSWORD SECTION
-  // ------------------------------------------
 
   containerCh: {
     flex: 1,

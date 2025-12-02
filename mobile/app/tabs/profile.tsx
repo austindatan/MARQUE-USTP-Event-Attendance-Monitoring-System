@@ -1,21 +1,25 @@
 // @ts-nocheck
-import React from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, } from "react-native";
+
+import React, { useState } from "react";
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header_Profile";
 import EventCardSL from "../components/Card_EventAttendance";
+import SidebarMenu from "../components/SidebarMenu";
 import styles from "../styles/effects_profile"
 import { useRouter } from "expo-router";
 
 const ProfilePage = ({ navigation }) => {
   const router = useRouter();
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const toggleMenu = () => setMenuVisible(prev => !prev);
 
   return (
     <View style={styles.container}>
-      <Header />
+      <Header onMenuPress={toggleMenu} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
         <View style={styles.profileHeader}>
           <Image
             source={require("../../assets/images/sabrina_profile.jpg")}
@@ -95,9 +99,17 @@ const ProfilePage = ({ navigation }) => {
 
         <View style={{ height: 80 }} />
       </ScrollView>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={menuVisible}
+        onRequestClose={toggleMenu}
+      >
+        <SidebarMenu isVisible={menuVisible} onClose={toggleMenu} />
+      </Modal>
     </View>
   );
 };
 
 export default ProfilePage;
-

@@ -32,24 +32,5 @@ export default function RootLayout() {
     return null;
   }
 
-  return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} /> 
-      <Stack.Screen name="login" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tabs" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tabs_organization" options={{ headerShown: false }} /> 
-      <Stack.Screen name="tabs_container_organization" options={{ headerShown: false }} /> 
-
-      
-      <Stack.Screen 
-        name="tab_container/Search_Page" 
-        options={{
-          headerShown: false,
-          
-          presentation: 'modal', 
-          animation: 'slide_from_bottom', 
-        }} 
-      />
-    </Stack>
-  );
+  return <Stack screenOptions={{headerShown: false}}/>;
 }

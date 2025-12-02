@@ -170,19 +170,6 @@ async function Seed() {
        
       },
       {
-        event_name: "Aleba: The Future of Vrkan",
-        event_image: "https://github.com/austindatan/MARQUE-USTP-Event-Attendance-Monitoring-System/blob/main/mobile/assets/images/coffee_and_pastry.png?raw=true",
-        event_type: "Training",
-        description: "Discover the next wave of innovation.",
-        event_date: new Date("2025-12-30"),
-        start_time: new Date("2025-12-30T09:00:00"),
-        end_time: new Date("2025-12-30T12:00:00"),
-        venue: "Engineering Building",
-        status: "Upcoming",
-        is_mandatory: true,
-        organization_id: org_jpice._id
-      },
-      {
         event_name: "Lycanfest 2025",
         event_image: "https://res.cloudinary.com/dhfgfpoav/image/upload/v1763983155/crtcg1_uohxoo.png",
         event_type: "General Assembly",
