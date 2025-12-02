@@ -7,40 +7,42 @@ const Department = require("../models/Department");
 const Event = require("../models/Event");
 
 /* ============================================================
-    HELPER: CHECK IF EVENT IS ACTIVE
+   HELPER: UTC-SAFE EVENT CHECKS
 ============================================================ */
+
+// Check if event is active (today, within start & end time)
 const isEventActive = (event) => {
   if (!event) return false;
 
   const now = new Date();
-  const eventDate = new Date(event.event_date);
-  const startTime = new Date(event.start_time);
-  const endTime = new Date(event.end_time);
+  const nowUTC = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
 
-  // Check if today is the same day as event
+  const eventDate = new Date(event.event_date); // assuming stored in UTC
+  const startTimeUTC = new Date(event.start_time);
+  const endTimeUTC = new Date(event.end_time);
+
+  // Check if today is the same as event (UTC)
   const isSameDay =
-    now.getFullYear() === eventDate.getFullYear() &&
-    now.getMonth() === eventDate.getMonth() &&
-    now.getDate() === eventDate.getDate();
+    nowUTC.getUTCFullYear() === eventDate.getUTCFullYear() &&
+    nowUTC.getUTCMonth() === eventDate.getUTCMonth() &&
+    nowUTC.getUTCDate() === eventDate.getUTCDate();
 
-  const isWithinTime = now >= startTime && now <= endTime;
+  const isWithinTime = nowUTC >= startTimeUTC && nowUTC <= endTimeUTC;
 
   return isSameDay && isWithinTime;
 };
 
-/**
- * Returns true if the current time is within the first 30 minutes of the event start
- */
+// Check if current time is within first 30 minutes of event start (UTC-safe)
 const isEventWithin30Min = (event) => {
   if (!event) return false;
 
   const now = new Date();
-  const startTime = new Date(event.start_time);
+  const nowUTC = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
 
-  // Event is active only within first 30 minutes after start
-  const thirtyMinutesAfterStart = new Date(startTime.getTime() + 30 * 60 * 1000);
+  const startTimeUTC = new Date(event.start_time);
+  const thirtyMinutesAfterStart = new Date(startTimeUTC.getTime() + 30 * 60 * 1000);
 
-  return now >= startTime && now <= thirtyMinutesAfterStart;
+  return nowUTC >= startTimeUTC && nowUTC <= thirtyMinutesAfterStart;
 };
 
 /* ============================================================
