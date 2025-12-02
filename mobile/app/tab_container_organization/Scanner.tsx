@@ -18,10 +18,10 @@ const { width } = Dimensions.get('window');
 
 const QrCodePlaceholder = require('../../assets/images/marque/QRCode.png');
 const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
-const { eventId } = useLocalSearchParams();
 
 const Scanner: React.FC = () => {
   const router = useRouter();
+  const { eventId } = useLocalSearchParams();
   const [attendanceCount, setAttendanceCount] = useState(0);
 
   useEffect(() => {
