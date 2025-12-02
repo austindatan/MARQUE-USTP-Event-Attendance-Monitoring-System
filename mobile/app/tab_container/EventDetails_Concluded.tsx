@@ -179,6 +179,11 @@ const Event_Concluded = () => {
             </View>
           )}
 
+          <TouchableOpacity
+            style={[styles.infoBox, { marginBottom: 10 }]}>
+            <Text style={styles.infoText}>This event has concluded.</Text>
+          </TouchableOpacity>
+
           {/* 🔥 FEEDBACK BUTTON FIXED */}
           {!hasSubmittedFeedback ? (
             <TouchableOpacity

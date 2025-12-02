@@ -1,11 +1,10 @@
 // Concluded.tsx
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import { BASE_URL } from "../../config";
-
 import EventCard from "../components/Card_Event";
 import appeffects from "../styles/effects_app";
 
@@ -17,12 +16,6 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const containerTranslateY = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [0, -40],
-    extrapolate: "clamp",
-  });
 
   // Format date helpers
   const formatDate = (dateStr) => {
@@ -75,18 +68,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
   useEffect(() => {
     fetchAllData();
   }, [organizationId]);
-
-  // Scroll restoration
-  useEffect(() => {
-    if (scrollRef.current && initialScroll > 0) {
-      const t = setTimeout(() => {
-        const node = scrollRef.current?.getNode ? scrollRef.current.getNode() : scrollRef.current;
-        if (node && node.scrollTo) node.scrollTo({ y: initialScroll, animated: false });
-      }, 0);
-      return () => clearTimeout(t);
-    }
-  }, [initialScroll]);
-
+  
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
@@ -120,17 +102,16 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
   };
 
   return (
-    <Animated.View
+    <View
       style={{
         flex: 1,
         backgroundColor: "transparent",
-        transform: [{ translateY: containerTranslateY }],
       }}
     >
-      <Animated.ScrollView
+      <ScrollView
         ref={scrollRef}
         style={{ flex: 1, backgroundColor: "transparent" }}
-        contentContainerStyle={{ backgroundColor: "transparent", paddingTop: 180, paddingBottom: 80 }}
+        contentContainerStyle={{ backgroundColor: "transparent", paddingTop: 170 }}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
@@ -153,7 +134,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
                   dateMonth={formatMonthShort(ev.event_date)}
                   orgDate={formatDate(ev.event_date)}
                   description={ev.description}
-                  onPress={() => handleEventPress(ev._id)} // <-- navigation to event
+                  onPress={() => handleEventPress(ev._id)}
                 />
               );
             })
@@ -163,8 +144,8 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
             </Text>
           )}
         </View>
-      </Animated.ScrollView>
-    </Animated.View>
+      </ScrollView>
+    </View>
   );
 };
 
