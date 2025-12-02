@@ -5,8 +5,10 @@ import EventCardSL from "../components/Card_EventSL";
 import appeffects from "../styles/effects_app";
 import Card_Blank from "../components/Card_Blank";
 import { BASE_URL } from "../../config";
+import { useRouter } from "expo-router"
 
 const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
+  const router = useRouter ();
   const scrollRef = useRef(null);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,11 +54,11 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     if (isLoading) {
       return (
         <View style={{ flex: 1, paddingTop: 50 }}>
-            <ActivityIndicator size="large" color="#FFD700" />
+          <ActivityIndicator size="large" color="#FFD700" />
         </View>
       );
     }
-    
+
     if (events.length === 0) {
       return (
         <View style={{ flex: 1, paddingTop: 50, alignItems: 'center' }}>
@@ -68,28 +70,34 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     return (
       <>
         {events.map((event) => {
-            // Date formatting logic
-            const date = new Date(event.event_date);
-            const dateDay = date.getDate();
-            const dateMonth = date.toLocaleString('default', { month: 'short' });
-            
-            return (
-              <EventCardSL
-                key={event._id}
-                image={{ uri: event.event_image || null }}
-                title={event.event_name}
-                organization={event.organization_id?.org_name || "Unknown Org"}
-                orgLogo={{ uri: event.organization_id?.pfp || null }}
-                dateDay={dateDay}
-                dateMonth={dateMonth}
-                description={event.description} 
-              />
-            );
+          const date = new Date(event.event_date);
+          const dateDay = date.getDate();
+          const dateMonth = date.toLocaleString('default', { month: 'short' });
+
+          const handleEventPress = () => {
+            // Navigate to EventDetails_Ongoing for concluded events
+            router.push(`/tab_container/EventDetails_Concluded?eventId=${event._id}`);
+          };
+
+          return (
+            <EventCardSL
+              key={event._id}
+              onPress={handleEventPress}
+              image={{ uri: event.event_image || null }}
+              title={event.event_name}
+              organization={event.organization_id?.org_name || "Unknown Org"}
+              orgLogo={{ uri: event.organization_id?.pfp || null }}
+              dateDay={dateDay}
+              dateMonth={dateMonth}
+              description={event.description} 
+            />
+          );
         })}
         <Card_Blank /> 
       </>
     );
   };
+
   
   return (
     <Animated.View
