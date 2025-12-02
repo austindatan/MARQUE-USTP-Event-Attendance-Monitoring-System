@@ -4,35 +4,60 @@ const AttendanceLog = require("../models/Attendance_log");
 const Student = require("../models/Student");
 const User = require("../models/User");
 const Department = require("../models/Department");
+const Event = require("../models/Event");
 
 /* ============================================================
-    TEMP DEFAULT EVENT ID FOR TESTING (COMMENTED OUT)
+   HELPER: UTC-SAFE EVENT CHECKS
 ============================================================ */
- //const DEFAULT_EVENT_ID = "6923517772c7b61301a4e31f"; 
+
+// Check if event is active (today, within start & end time)
+const isEventActive = (event) => {
+  if (!event) return false;
+
+  const now = new Date();
+  const nowUTC = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+
+  const eventDate = new Date(event.event_date); // assuming stored in UTC
+  const startTimeUTC = new Date(event.start_time);
+  const endTimeUTC = new Date(event.end_time);
+
+  // Check if today is the same as event (UTC)
+  const isSameDay =
+    nowUTC.getUTCFullYear() === eventDate.getUTCFullYear() &&
+    nowUTC.getUTCMonth() === eventDate.getUTCMonth() &&
+    nowUTC.getUTCDate() === eventDate.getUTCDate();
+
+  const isWithinTime = nowUTC >= startTimeUTC && nowUTC <= endTimeUTC;
+
+  return isSameDay && isWithinTime;
+};
+
+// Check if current time is within first 30 minutes of event start (UTC-safe)
+const isEventWithin30Min = (event) => {
+  if (!event) return false;
+
+  const now = new Date();
+  const nowUTC = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+
+  const startTimeUTC = new Date(event.start_time);
+  const thirtyMinutesAfterStart = new Date(startTimeUTC.getTime() + 30 * 60 * 1000);
+
+  return nowUTC >= startTimeUTC && nowUTC <= thirtyMinutesAfterStart;
+};
 
 /* ============================================================
     REGISTER ATTENDANCE
 ============================================================ */
-exports.registerAttendance = async (req, res) => {
+const registerAttendance = async (req, res) => {
   try {
-    let { event_id, student_number } = req.body;
+    const { event_id, student_number } = req.body;
 
-    // Optional testing mode: uncomment the next lines to use default event
-    // if (!event_id) {
-    //   console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
-    //   event_id = DEFAULT_EVENT_ID;
-    // } 
-    
     if (!event_id) {
-      return res.status(400).json({
-        message: "Missing required field: event_id",
-      });
+      return res.status(400).json({ message: "Missing required field: event_id" });
     }
 
     if (!student_number) {
-      return res.status(400).json({
-        message: "Missing required field: student_number",
-      });
+      return res.status(400).json({ message: "Missing required field: student_number" });
     }
 
     // Find student by student_number and populate related fields
@@ -46,11 +71,22 @@ exports.registerAttendance = async (req, res) => {
 
     const user = student.users_id;
 
+    // Fetch event to check time restrictions
+    const event = await Event.findById(event_id);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Check if within first 30 minutes of event start
+    if (!isEventWithin30Min(event)) {
+      return res.status(403).json({
+        message:
+          "Scanner is disabled. Attendance can only be registered within the first 30 minutes of the event start.",
+      });
+    }
+
     // Prevent duplicate logs for the same event
-    const existingLog = await AttendanceLog.findOne({
-      event_id,
-      user_id: user._id,
-    });
+    const existingLog = await AttendanceLog.findOne({ event_id, user_id: user._id });
 
     if (existingLog) {
       return res.status(200).json({
@@ -83,7 +119,6 @@ exports.registerAttendance = async (req, res) => {
         time_in: newLog.time_in,
       },
     });
-
   } catch (error) {
     console.error("REGISTER ATTENDANCE ERROR:", error);
     return res.status(500).json({ message: "Server Error", error });
@@ -93,21 +128,12 @@ exports.registerAttendance = async (req, res) => {
 /* ============================================================
     GET ATTENDANCE HISTORY
 ============================================================ */
-exports.getAttendanceHistory = async (req, res) => {
+const getAttendanceHistory = async (req, res) => {
   try {
     let { event_id } = req.params;
 
-    // Optional testing mode: uncomment the next lines to use default event
-    // if (!event_id) {
-    //   console.warn("⚠️ No event_id provided — using DEFAULT event for testing.");
-    //   event_id = DEFAULT_EVENT_ID;
-    // }
-    
-
     if (!event_id) {
-      return res.status(400).json({
-        message: "Missing required field: event_id",
-      });
+      return res.status(400).json({ message: "Missing required field: event_id" });
     }
 
     // Trim to avoid ObjectId cast errors
@@ -119,8 +145,9 @@ exports.getAttendanceHistory = async (req, res) => {
     // Format logs with student info and department
     const formatted = await Promise.all(
       logs.map(async (log) => {
-        const student = await Student.findOne({ users_id: log.user_id._id })
-          .populate("department_id");
+        const student = await Student.findOne({ users_id: log.user_id._id }).populate(
+          "department_id"
+        );
 
         return {
           name: `${log.user_id.firstname} ${log.user_id.lastname}`,
@@ -136,9 +163,19 @@ exports.getAttendanceHistory = async (req, res) => {
       message: "Attendance history retrieved successfully",
       history: formatted,
     });
-
   } catch (error) {
     console.error("GET HISTORY ERROR:", error);
     return res.status(500).json({ message: "Server Error", error });
   }
+};
+
+/* ============================================================
+    EXPORTS
+============================================================ */
+module.exports = {
+  registerAttendance,
+  getAttendanceHistory,
+  isEventActive,
+  isEventWithin30Min,
+  Event, // export Event model if needed for routes
 };

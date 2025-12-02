@@ -1,4 +1,4 @@
-// Events.tsx (Backend integration applied)
+// Events.tsx
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import {
@@ -10,7 +10,6 @@ import {
   ScrollView,
   SafeAreaView,
   Platform,
-  AspectRatio,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -66,6 +65,8 @@ const Events: React.FC = () => {
   const router = useRouter();
   const { eventId } = useLocalSearchParams();
   const [event, setEvent] = useState<any>(null);
+  const [eventActive, setEventActive] = useState(false);
+  const [within30Min, setWithin30Min] = useState(false);
 
   // Load DM Sans fonts
   const [fontsLoaded] = useFonts({
@@ -73,37 +74,35 @@ const Events: React.FC = () => {
     'DMSans-Bold': require('../../assets/fonts/DMSans_24pt-Regular.ttf'),
   });
 
-  // --- Fetch event from backend ---
-  const fetchEventDetails = async () => {
-    if (!eventId) return;
-
-    try {
-      const res = await fetch(`${BASE_URL}/events/event/${eventId}`);
-      const data = await res.json();
-
-      const eventObj = data.event || data;
-
-      // FIX Cloudinary URLs for single image
-      if (eventObj.event_image && !eventObj.event_image.startsWith("http")) {
-        eventObj.event_image = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${eventObj.event_image.replace(/ /g, "%20")}`;
-      }
-
-      // FIX Cloudinary URLs for multiple images
-      if (Array.isArray(eventObj.event_images)) {
-        eventObj.event_images = eventObj.event_images.map((img) => {
-          if (!img) return null;
-          if (img.startsWith("http")) return img;
-          return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${img.replace(/ /g, "%20")}`;
-        });
-      }
-
-      setEvent(eventObj);
-    } catch (err) {
-      console.error("Error fetching event:", err);
-    }
-  };
-
+  // --- Fetch event and status ---
   useEffect(() => {
+    const fetchEventDetails = async () => {
+      if (!eventId) return;
+
+      try {
+        // Fetch event data
+        const res = await fetch(`${BASE_URL}/events/event/${eventId}`);
+        const data = await res.json();
+        const eventObj = data.event || data;
+
+        // Fix Cloudinary URLs if needed
+        if (eventObj.event_image && !eventObj.event_image.startsWith("http")) {
+          eventObj.event_image = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${eventObj.event_image.replace(/ /g, "%20")}`;
+        }
+
+        setEvent(eventObj);
+
+        // Fetch status from backend
+        const statusRes = await fetch(`${BASE_URL}/attendance/event-status/${eventObj._id}`);
+        const statusData = await statusRes.json();
+        setEventActive(statusData.isActive);
+        setWithin30Min(statusData.within30Min);
+
+      } catch (err) {
+        console.error("Error fetching event or status:", err);
+      }
+    };
+
     fetchEventDetails();
   }, [eventId]);
 
@@ -138,7 +137,10 @@ const Events: React.FC = () => {
 
           {/* Buttons Row */}
           <View style={styles.buttonsRow}>
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity
+              style={[styles.actionButton, !eventActive && { opacity: 0.5 }]}
+              disabled={!eventActive}
+            >
               <Image
                 source={require('../../assets/images/marque/Download.png')}
                 style={styles.buttonIconImage}
@@ -151,7 +153,10 @@ const Events: React.FC = () => {
 
             <View style={{ width: 10 }} />
 
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity
+              style={[styles.actionButton, !eventActive && { opacity: 0.5 }]}
+              disabled={!eventActive}
+            >
               <Image
                 source={require('../../assets/images/marque/Download.png')}
                 style={styles.buttonIconImage}
@@ -209,10 +214,13 @@ const Events: React.FC = () => {
 
       {/* ---- FLOATING SCANNER BUTTON ---- */}
       <ScannerButton
-        onPress={() => router.push({
-        pathname: '/tab_container_organization/Scanner',
-        params: { eventId } // this comes from useLocalSearchParams()
-      })}
+        disabled={!eventActive || !within30Min}
+        onPress={() =>
+          router.push({
+            pathname: '/tab_container_organization/Scanner',
+            params: { eventId },
+          })
+        }
       />
     </SafeAreaView>
   );
