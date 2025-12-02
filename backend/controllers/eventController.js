@@ -165,14 +165,29 @@ const getAllConcludedEvents = async (req, res) => {
 const getUpcomingEventsByOrganization = async (req, res) => {
   try {
     const { orgId } = req.params;
-    if (!orgId) return res.status(400).json({ message: "Organization ID required" });
+    if (!orgId)
+      return res.status(400).json({ message: "Organization ID required" });
 
-    // Filter: event_date >= now AND organization_id == orgId
     const now = new Date();
+
+    // Normalize today's date to midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const events = await Event.find({
       organization_id: orgId,
-      event_date: { $gte: now },
+      $or: [
+        // 🔹 Includes events today or later
+        { event_date: { $gte: today } },
+
+        // 🔹 Includes ongoing events even if event_date < now
+        {
+          $and: [
+            { start_time: { $lte: now } },
+            { end_time: { $gte: now } },
+          ],
+        },
+      ],
     })
       .populate("organization_id")
       .sort({ event_date: 1 });
