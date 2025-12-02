@@ -1,5 +1,6 @@
-// Events.tsx
-import React from 'react';
+// Events.tsx (Backend integration applied)
+// @ts-nocheck
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,31 +10,23 @@ import {
   ScrollView,
   SafeAreaView,
   Platform,
+  AspectRatio,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFonts } from 'expo-font';
+import { BASE_URL, CLOUD_NAME } from "../../config";
 
 // Import the floating Scanner button
 import ScannerButton from '../components/ScannerButton'; // Adjust path if needed
 
-// --- Hardcoded Data (Mimicking API Response) ---
-const eventData = {
-  title: 'Appetite: Free Meals for BSIT...',
-  date: '17 October, 2025',
-  time: 'Friday, 11:00AM – 1:00PM',
-  locationName: 'SITE Corner',
-  locationDetails: 'CITC Bldg 9, 4th Floor',
-  about:
-    'APPETITE | Heads up BSIT students! Get ready to start your morning the IT way! Join us today for AppetITE– our way of promoting student well-being through shared meals and meaningful connections. \n\nLocation: SITE Corner, 4th Floor, CITC Building. \nTime: 11:00 AM\n\nBe among the first 100 IT students to get free coffee and pastry! See you bright and early, techies!',
-  organizer: 'Society of Information...',
-};
+const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 40 : 20;
 
 // --- Custom Header Component ---
-const CustomHeader: React.FC = () => (
+const CustomHeader: React.FC<{ event: any }> = ({ event }) => (
   <View style={styles.headerImageContainer}>
     <Image
-      source={require('../../assets/images/marque/Appetite.png')}
+      source={event.event_image ? { uri: event.event_image } : require('../../assets/images/marque/Appetite.png')}
       style={styles.headerImage}
       resizeMode="cover"
     />
@@ -73,6 +66,8 @@ const InfoRow: React.FC<InfoRowProps> = ({
 // --- Main Component ---
 const Events: React.FC = () => {
   const router = useRouter();
+  const { eventId } = useLocalSearchParams();
+  const [event, setEvent] = useState<any>(null);
 
   // Load DM Sans fonts
   const [fontsLoaded] = useFonts({
@@ -80,7 +75,41 @@ const Events: React.FC = () => {
     'DMSans-Bold': require('../../assets/fonts/DMSans_24pt-Regular.ttf'),
   });
 
-  if (!fontsLoaded) {
+  // --- Fetch event from backend ---
+  const fetchEventDetails = async () => {
+    if (!eventId) return;
+
+    try {
+      const res = await fetch(`${BASE_URL}/events/event/${eventId}`);
+      const data = await res.json();
+
+      const eventObj = data.event || data;
+
+      // FIX Cloudinary URLs for single image
+      if (eventObj.event_image && !eventObj.event_image.startsWith("http")) {
+        eventObj.event_image = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${eventObj.event_image.replace(/ /g, "%20")}`;
+      }
+
+      // FIX Cloudinary URLs for multiple images
+      if (Array.isArray(eventObj.event_images)) {
+        eventObj.event_images = eventObj.event_images.map((img) => {
+          if (!img) return null;
+          if (img.startsWith("http")) return img;
+          return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${img.replace(/ /g, "%20")}`;
+        });
+      }
+
+      setEvent(eventObj);
+    } catch (err) {
+      console.error("Error fetching event:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchEventDetails();
+  }, [eventId]);
+
+  if (!fontsLoaded || !event) {
     return null;
   }
 
@@ -90,23 +119,23 @@ const Events: React.FC = () => {
         style={styles.container}
         contentContainerStyle={styles.scrollViewContent}
       >
-        <CustomHeader />
+        <CustomHeader event={event} />
 
         <View style={styles.content}>
-          <Text style={styles.eventTitle}>{eventData.title}</Text>
+          <Text style={styles.eventTitle}>{event.event_name}</Text>
 
           {/* Date & Time Row */}
           <InfoRow
             iconSource={require('../../assets/images/marque/Calendar.png')}
-            primaryText={eventData.date}
-            secondaryText={eventData.time}
+            primaryText={new Date(event.event_date).toLocaleDateString()}
+            secondaryText={`${new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – ${new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
           />
 
           {/* Location Row */}
           <InfoRow
             iconSource={require('../../assets/images/marque/Location.png')}
-            primaryText={eventData.locationName}
-            secondaryText={eventData.locationDetails}
+            primaryText={event.venue}
+            secondaryText={event.venue_details || ""}
           />
 
           {/* Buttons Row */}
@@ -138,20 +167,20 @@ const Events: React.FC = () => {
 
           {/* About Event */}
           <Text style={styles.sectionHeader}>About Event</Text>
-          <Text style={styles.aboutText}>{eventData.about}</Text>
+          <Text style={styles.aboutText}>{event.description}</Text>
 
           {/* Organizer Row */}
           <View style={styles.organizerRow}>
             <View style={styles.organizerLogoContainer}>
               <Image
-                source={require('../../assets/images/marque/LogoImage.jpg')}
+                source={event.organization_id?.pfp ? { uri: event.organization_id.pfp } : require('../../assets/images/marque/LogoImage.jpg')}
                 style={styles.organizerLogoImage}
                 resizeMode="cover"
               />
             </View>
             <View style={styles.organizerTextContainer}>
               <Text style={styles.organizerName} numberOfLines={1}>
-                {eventData.organizer}
+                {event.organization_id?.org_name}
               </Text>
               <Text style={styles.organizerRole}>Organizers</Text>
             </View>
@@ -182,7 +211,10 @@ const Events: React.FC = () => {
 
       {/* ---- FLOATING SCANNER BUTTON ---- */}
       <ScannerButton
-        onPress={() => router.push('../tab_container_organization/Scanner')}
+        onPress={() => router.push({
+        pathname: '/tab_container_organization/Scanner',
+        params: { eventId } // this comes from useLocalSearchParams()
+      })}
       />
     </SafeAreaView>
   );
@@ -197,20 +229,28 @@ const styles = StyleSheet.create({
   scrollViewContent: { paddingBottom: 0 },
 
   // Header
-  headerImageContainer: { height: 230, width: '100%' },
-  headerImage: { width: '100%', height: '100%' },
-  headerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  headerNav: {
-    position: 'absolute',
-    top: STATUS_BAR_HEIGHT + 10,
-    left: 10,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  headerImageContainer: { 
+  width: '100%',
+  aspectRatio: 16 / 9, // <-- makes it responsive like EditProfile banner
+  overflow: 'hidden',  // optional: crop overflow
+  borderRadius: 12,    // optional: rounded corners
+},
+headerImage: { 
+  width: '100%', 
+  height: '100%' 
+},
+headerOverlay: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: 'rgba(0,0,0,0.3)',
+},
+headerNav: {
+  position: 'absolute',
+  top: STATUS_BAR_HEIGHT + 10,
+  left: 10,
+  right: 20,
+  flexDirection: 'row',
+  alignItems: 'center',
+},
   backButton: { padding: 5 },
   headerTitle: {
     fontSize: 18,
