@@ -166,9 +166,9 @@ const EventFeedback = () => {
       });
 
       if (res.ok) {
-        Alert.alert("Thank You!", "Your feedback has been submitted.", [
-          { text: "OK", onPress: () => router.back() },
-        ]);
+        // ⭐ FIX 1: Store status persistently and go back smoothly
+        await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
+        router.back(); // Use back() instead of push()
       } else {
         const errorData = await res.json();
 
@@ -177,6 +177,9 @@ const EventFeedback = () => {
             "Already Submitted",
             "You have already submitted feedback for this event."
           );
+          // ⭐ FIX 2: Store status persistently and go back smoothly
+          await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
+          router.back(); // Use back() instead of push()
         } else {
           Alert.alert(
             "Submission Failed",

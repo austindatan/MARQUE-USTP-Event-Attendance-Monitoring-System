@@ -1,11 +1,12 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../styles/page_eventdetails";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { BASE_URL, CLOUD_NAME } from "../../config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Event_Concluded = () => {
   const router = useRouter();
@@ -55,19 +56,38 @@ const Event_Concluded = () => {
 
   // 🔹 Check feedback status
   const checkFeedbackStatus = async () => {
-    if (!eventId || !userId) return;
+    if (!eventId || !userId) return;
 
+    // 1. Check local storage for persistent status (instant update after navigating back)
     try {
-      const res = await fetch(`${BASE_URL}/api/feedback/status/${eventId}/${userId}`);
-
-      if (!res.ok) return;
-
-      const data = await res.json();
-      setHasSubmittedFeedback(data.hasSubmitted || false);
+        const localStatus = await AsyncStorage.getItem(`feedback_status_${eventId}`);
+        if (localStatus === 'submitted') {
+            setHasSubmittedFeedback(true);
+            return; // Exit if found locally
+        }
     } catch (err) {
-      console.error("Error checking feedback:", err);
+        console.error("Error checking local feedback status:", err);
     }
-  };
+
+    // 2. Fallback to API check
+    try {
+      const res = await fetch(`${BASE_URL}/api/feedback/status/${eventId}/${userId}`);
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const submitted = data.hasSubmitted || false;
+      setHasSubmittedFeedback(submitted);
+
+      // If API confirms, store it locally for faster subsequent loads
+      if (submitted) {
+          await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
+      }
+      
+    } catch (err) {
+      console.error("Error checking feedback:", err);
+    }
+  };
 
   // 🔹 Follow status
   const checkFollowStatus = async (orgId) => {
@@ -108,12 +128,14 @@ const Event_Concluded = () => {
   };
 
   // 🔹 Load data
-  useEffect(() => {
-    if (eventId) {
-      fetchEventDetails();
-      checkFeedbackStatus();
-    }
-  }, [eventId]);
+  useFocusEffect(
+    useCallback(() => {
+      if (eventId) {
+        fetchEventDetails();
+        checkFeedbackStatus();
+      }
+    }, [eventId]) // Re-run only if eventId changes
+  );
 
   // 🔹 Load follow status
   useEffect(() => {
@@ -130,10 +152,51 @@ const Event_Concluded = () => {
     );
   }
 
-  // Format date/time
-  const eventDate = new Date(event.event_date).toLocaleDateString();
-  const startTime = new Date(event.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  const endTime = new Date(event.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  // DATE
+  const eventDateObj = event.event_date ? new Date(event.event_date) : null;
+
+  // Format: "30 December, 2025"
+  const eventDateFormatted = eventDateObj
+    ? eventDateObj.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "Date N/A";
+
+  // Get weekday: "Wednesday"
+  const eventDay = eventDateObj
+    ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
+    : "";
+
+  // TIME
+  const startTime = event.start_time
+    ? new Date(event.start_time).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : null;
+
+  const endTime = event.end_time
+    ? new Date(event.end_time).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : null;
+
+  // FINAL TIME STRING
+  let eventTimeFull = "Time N/A";
+
+  if (eventDay && startTime && endTime) {
+    eventTimeFull = `${eventDay}, ${startTime} - ${endTime}`;
+  } else if (eventDay && startTime) {
+    eventTimeFull = `${eventDay}, ${startTime}`;
+  } else if (eventDay) {
+    eventTimeFull = eventDay; // Always show day even without time
+  }
+
 
   const eventImageSource = event.event_image
     ? { uri: event.event_image }
@@ -207,8 +270,8 @@ const Event_Concluded = () => {
             <Ionicons name="calendar" size={20} color="#0A0F51" />
           </View>
           <View>
-            <Text style={styles.infoPrimary}>{eventDate}</Text>
-            <Text style={styles.infoSecondary}>{startTime} – {endTime}</Text>
+            <Text style={styles.infoPrimary}>{eventDateFormatted}</Text>
+            <Text style={styles.infoSecondary}>{eventTimeFull}</Text>
           </View>
         </View>
 

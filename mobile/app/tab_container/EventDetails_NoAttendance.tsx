@@ -126,10 +126,51 @@ const Event_NoAttendance = () => {
     );
   }
 
-  // Format date/time
-  const eventDate = formatDate(event.start_date || event.event_date);
-  const startTime = formatTime(event.start_time);
-  const endTime = formatTime(event.end_time);
+  // DATE
+  const eventDateObj = event.event_date ? new Date(event.event_date) : null;
+
+  // Format: "30 December, 2025"
+  const eventDateFormatted = eventDateObj
+    ? eventDateObj.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "Date N/A";
+
+  // Get weekday: "Wednesday"
+  const eventDay = eventDateObj
+    ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
+    : "";
+
+  // TIME
+  const startTime = event.start_time
+    ? new Date(event.start_time).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : null;
+
+  const endTime = event.end_time
+    ? new Date(event.end_time).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : null;
+
+  // FINAL TIME STRING
+  let eventTimeFull = "Time N/A";
+
+  if (eventDay && startTime && endTime) {
+    eventTimeFull = `${eventDay}, ${startTime} - ${endTime}`;
+  } else if (eventDay && startTime) {
+    eventTimeFull = `${eventDay}, ${startTime}`;
+  } else if (eventDay) {
+    eventTimeFull = eventDay; // Always show day even without time
+  }
+
 
   return (
     <View style={styles.container}>
@@ -174,8 +215,8 @@ const Event_NoAttendance = () => {
             <Ionicons name="calendar" size={20} color="#0A0F51" />
           </View>
           <View>
-            <Text style={styles.infoPrimary}>{eventDate}</Text>
-            <Text style={styles.infoSecondary}>{startTime} – {endTime}</Text>
+            <Text style={styles.infoPrimary}>{eventDateFormatted}</Text>
+            <Text style={styles.infoSecondary}>{eventTimeFull}</Text>
           </View>
         </View>
 

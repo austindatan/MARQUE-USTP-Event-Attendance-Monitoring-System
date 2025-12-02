@@ -201,20 +201,55 @@ const Event_Incoming = () => {
     );
   }
   
-  // NOTE: Assuming your API returns start_date and end_date/start_time/end_time
   // DATE
-  const eventDate = eventData.event_date
-    ? new Date(eventData.event_date).toLocaleDateString()
+  const eventDateObj = eventData.event_date
+    ? new Date(eventData.event_date)
+    : null;
+
+  // Format: "30 December, 2025"
+  const eventDate = eventDateObj
+    ? eventDateObj.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
     : "Date N/A";
+
+  // Get weekday: "Wednesday"
+  const eventDay = eventDateObj
+    ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
+    : "";
 
   // TIME
   const startTime = eventData.start_time
-    ? new Date(eventData.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : "Time N/A";
+    ? new Date(eventData.start_time).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : null;
 
   const endTime = eventData.end_time
-    ? new Date(eventData.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : "Time N/A";
+    ? new Date(eventData.end_time).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : null;
+
+  // FINAL TIME STRING
+  let eventTimeFull = "Time N/A";
+
+  if (eventDay && startTime && endTime) {
+    eventTimeFull = `${eventDay}, ${startTime} - ${endTime}`;
+  } else if (eventDay && startTime) {
+    eventTimeFull = `${eventDay}, ${startTime}`;
+  } else if (eventDay) {
+    eventTimeFull = eventDay; // Always show day even without time
+  }
+
+
+
 
   const organizerPfpSource = eventData.organization_id?.pfp
     ? { uri: eventData.organization_id.pfp }
@@ -276,7 +311,7 @@ const Event_Incoming = () => {
 
           <View>
             <Text style={styles.infoPrimary}>{eventDate}</Text>
-            <Text style={styles.infoSecondary}>{startTime} - {endTime}</Text>
+            <Text style={styles.infoSecondary}>{eventTimeFull}</Text>
           </View>
         </View>
 
