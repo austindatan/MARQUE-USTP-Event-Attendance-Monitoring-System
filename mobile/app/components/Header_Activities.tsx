@@ -1,10 +1,12 @@
-// Header_Activities.tsx
 // @ts-nocheck
 import React, { useState } from "react";
 import { View, TouchableOpacity, Image, Text, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
+
+// Total header height (adjust to match your design)
+export const HEADER_HEIGHT = 140;
 
 const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) => {
   const router = useRouter();
@@ -21,6 +23,7 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
     }
   };
 
+  // Scroll animations
   const searchOpacity = scrollY.interpolate({
     inputRange: [0, 80],
     outputRange: [1, 0],
@@ -40,7 +43,18 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
   });
 
   return (
-    <View style={{ zIndex: 10 }}>
+    <View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
+        height: HEADER_HEIGHT,
+        backgroundColor: "transparent",
+      }}
+    >
+      {/* Top Row (menu, logo, notifications) */}
       <View style={[styles.headerfirst, { paddingBottom: 0 }]}>
         <View style={styles.topRow}>
           <TouchableOpacity onPress={onMenuPress}>
@@ -61,6 +75,7 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         </View>
       </View>
 
+      {/* Search Row (optional, animated) */}
       <Animated.View
         style={[
           styles.header,
@@ -68,33 +83,26 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
             paddingTop: 0,
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            transform: [
-              {
-                translateY: scrollY.interpolate({
-                  inputRange: [0, 80],
-                  outputRange: [0, -40],
-                  extrapolate: "clamp",
-                }),
-              },
-            ],
+            transform: [{ translateY: searchTranslateY }],
           },
         ]}
       >
         <Animated.View
-          style={[
-            styles.searchRow,
-            { opacity: searchOpacity, transform: [{ translateY: searchTranslateY }] },
-          ]}
+          style={[styles.searchRow, { opacity: searchOpacity }]}
         />
       </Animated.View>
 
+      {/* Toggle Tabs */}
       <Animated.View
         style={[
           styles.toggleContainerEX,
-          { backgroundColor: "transparent", transform: [{ translateY: toggleTranslateY }] },
+          {
+            backgroundColor: "transparent",
+            transform: [{ translateY: toggleTranslateY }],
+          },
         ]}
       >
-        {/* Back Button as Image */}
+        {/* Back Button */}
         <TouchableOpacity
           style={activeTab === "Back" ? styles.activeButtonEX : styles.inactiveButtonEX}
           onPress={() => handleToggle("Back")}

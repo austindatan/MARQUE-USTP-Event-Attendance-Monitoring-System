@@ -1,230 +1,385 @@
-// @ts-nocheck
-import React from "react";
+// Events.tsx
+import React from 'react';
 import {
+  StyleSheet,
   View,
   Text,
   Image,
   TouchableOpacity,
   ScrollView,
-  ImageBackground,
-  Dimensions,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import styles from "../styles/page_eventdetails";
-import { useRouter } from "expo-router";
+  SafeAreaView,
+  Platform,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useFonts } from 'expo-font';
 
-// Going avatars stack (participants)
-const GoingAvatarStack = () => {
-  const avatars = [
-    { id: 1, source: require("../../assets/images/profile_pic.png"), zIndex: 3 },
-    { id: 2, source: require("../../assets/images/neka_profile.jpg"), zIndex: 2 },
-    { id: 3, source: require("../../assets/images/sabrina_profile.jpg"), zIndex: 1 },
-  ];
+// Import the floating Scanner button
+import ScannerButton from '../components/ScannerButton'; // Adjust path if needed
 
-  return (
-    <View style={styles.avatarStackContainer}>
-      {avatars.map((avatar, index) => (
-        <View
-          key={avatar.id}
-          style={[
-            styles.avatarContainer,
-            index > 0 && styles.overlappingAvatar,
-            { zIndex: avatar.zIndex },
-          ]}
-        >
-          <Image source={avatar.source} style={styles.goingAvatar} />
-        </View>
-      ))}
-    </View>
-  );
+// --- Hardcoded Data (Mimicking API Response) ---
+const eventData = {
+  title: 'Appetite: Free Meals for BSIT...',
+  date: '17 October, 2025',
+  time: 'Friday, 11:00AM – 1:00PM',
+  locationName: 'SITE Corner',
+  locationDetails: 'CITC Bldg 9, 4th Floor',
+  about:
+    'APPETITE | Heads up BSIT students! Get ready to start your morning the IT way! Join us today for AppetITE– our way of promoting student well-being through shared meals and meaningful connections. \n\nLocation: SITE Corner, 4th Floor, CITC Building. \nTime: 11:00 AM\n\nBe among the first 100 IT students to get free coffee and pastry! See you bright and early, techies!',
+  organizer: 'Society of Information...',
 };
 
-// InfoRow component for date/location
-const InfoRow = ({ iconName, primary, secondary }) => (
+// --- Custom Header Component ---
+const CustomHeader: React.FC = () => (
+  <View style={styles.headerImageContainer}>
+    <Image
+      source={require('../../assets/images/marque/Appetite.png')}
+      style={styles.headerImage}
+      resizeMode="cover"
+    />
+    <View style={styles.headerOverlay} />
+    <View style={styles.headerNav}>
+      <TouchableOpacity style={styles.backButton}>
+        <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Event Details</Text>
+    </View>
+  </View>
+);
+
+// --- Info Row Component ---
+interface InfoRowProps {
+  iconSource: any;
+  primaryText: string;
+  secondaryText: string;
+}
+
+const InfoRow: React.FC<InfoRowProps> = ({
+  iconSource,
+  primaryText,
+  secondaryText,
+}) => (
   <View style={styles.infoRow}>
     <View style={styles.iconBox}>
-      <Ionicons name={iconName} size={20} color="#0A0F51" />
+      <Image source={iconSource} style={styles.iconImage} resizeMode="contain" />
     </View>
-    <View>
-      <Text style={styles.infoPrimary}>{primary}</Text>
-      <Text style={styles.infoSecondary}>{secondary}</Text>
+    <View style={styles.infoTextContainer}>
+      <Text style={styles.primaryInfoText}>{primaryText}</Text>
+      <Text style={styles.secondaryInfoText}>{secondaryText}</Text>
     </View>
   </View>
 );
 
-// Report Button component
-const ReportButton = ({ text }) => (
-  <TouchableOpacity
-    style={[
-      styles.infoBox,
-      {
-        flex: 1,
-        marginRight: 5,
-        paddingVertical: 12,
-        alignItems: "center",
-        justifyContent: "center",
-      },
-    ]}
-  >
-    <Text style={styles.infoText}>{text}</Text>
-  </TouchableOpacity>
-);
-
-// Container for multiple report buttons
-const ReportButtons = () => (
-  <View style={{ flexDirection: "row", marginHorizontal: 10, marginVertical: 10 }}>
-    <ReportButton text="Analytics Reports" />
-    <ReportButton text="Attendance Spreadsheets" />
-  </View>
-);
-
-// Main Events screen
-const Events = () => {
+// --- Main Component ---
+const Events: React.FC = () => {
   const router = useRouter();
-  const STICKY_HEADER_HEIGHT = 90;
 
-  // Responsive header size
-  const { width } = Dimensions.get("window");
-  const headerHeight = 300; // change if needed
+  // Load DM Sans fonts
+  const [fontsLoaded] = useFonts({
+    'DMSans-Regular': require('../../assets/fonts/DMSans_18pt-Medium.ttf'),
+    'DMSans-Bold': require('../../assets/fonts/DMSans_24pt-Regular.ttf'),
+  });
 
-  const handleBack = () => {
-    router.back();
-  };
-
-  const handleEdit = () => {
-    router.push("../tab_container_organization/EditEvents");
-  };
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
-    <View style={styles.container}>
-      {/* Sticky Header */}
-      <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
-        <LinearGradient
-          colors={[
-            "rgba(45, 45, 45, 0.4)",
-            "rgba(0, 0, 0, 0.2)",
-            "rgba(255,255,255,0.1)",
-          ]}
-          locations={[0, 0.7, 1]}
-          style={styles.gradientOverlay}
-        />
-        <View style={styles.navRowContent}>
-          <TouchableOpacity
-            style={{ flexDirection: "row", alignItems: "center" }}
-            onPress={handleBack}
-          >
-            <Ionicons name="arrow-back" size={18} color="#fff" />
-            <Text style={[styles.navText, { color: "#fff" }]}>
-              Appetite: Free Meals for BSIT Students
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bookmarkBtn}>
-            <Ionicons name="bookmark-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        <CustomHeader />
 
-      {/* Scrollable Content */}
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Updated Header Image */}
-        <ImageBackground
-          source={require("../../assets/images/marque/Appetite.png")}
-          style={[
-            styles.headerImageBackgroundCon,
-            {
-              paddingTop: STICKY_HEADER_HEIGHT,
-              width: width,
-              height: headerHeight,
-            },
-          ]}
-          imageStyle={{ opacity: 1 }}
-        />
+        <View style={styles.content}>
+          <Text style={styles.eventTitle}>{eventData.title}</Text>
 
-        <Text style={styles.eventTitle}>Appetite: Free Meals for BSIT...</Text>
+          {/* Date & Time Row */}
+          <InfoRow
+            iconSource={require('../../assets/images/marque/Calendar.png')}
+            primaryText={eventData.date}
+            secondaryText={eventData.time}
+          />
 
-        {/* Date / Location */}
-        <InfoRow
-          iconName="calendar"
-          primary="17 October, 2025"
-          secondary="Friday, 11:00 AM – 1:00 PM"
-        />
-        <InfoRow
-          iconName="location"
-          primary="SITE Corner"
-          secondary="CITC Bldg 9, 4th Floor"
-        />
+          {/* Location Row */}
+          <InfoRow
+            iconSource={require('../../assets/images/marque/Location.png')}
+            primaryText={eventData.locationName}
+            secondaryText={eventData.locationDetails}
+          />
 
-        {/* Report Buttons */}
-        <ReportButtons />
+          {/* Buttons Row */}
+          <View style={styles.buttonsRow}>
+            <TouchableOpacity style={styles.actionButton}>
+              <Image
+                source={require('../../assets/images/marque/Download.png')}
+                style={styles.buttonIconImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.actionButtonText}>
+                Analytics{'\n'}Reports
+              </Text>
+            </TouchableOpacity>
 
-        {/* About Event */}
-        <Text style={styles.sectionTitle}>About Event</Text>
-        <Text style={styles.aboutText}>
-          Focus: Promoting student well-being through shared meals and meaningful
-          connections.
-          {"\n"}Target Audience: BSIT students.
-          {"\n"}Special Offer: Be among the first 100 IT students to get free coffee
-          and pastry!
-          {"\n"}Specific Location: SITE Corner, 4th Floor, CITC Building.
-          {"\n"}Start Time: 11:00 AM.
-        </Text>
+            <View style={{ width: 10 }} />
 
-        {/* Organizer Card */}
-        <View style={styles.organizerCard}>
-          <View style={styles.organizerLeft}>
-            <Image
-              source={require("../../assets/images/marque/crk.jpg")}
-              style={styles.organizerLogo}
-            />
-            <View>
-              <Text style={styles.organizerName}>Society of Information ...</Text>
-              <Text style={styles.organizerLabel}>Organizers</Text>
-            </View>
+            <TouchableOpacity style={styles.actionButton}>
+              <Image
+                source={require('../../assets/images/marque/Download.png')}
+                style={styles.buttonIconImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.actionButtonText}>
+                Attendance{'\n'}Spreadsheets
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.followButton}>
-            <Text style={styles.followText}>Follow</Text>
-          </TouchableOpacity>
+          {/* About Event */}
+          <Text style={styles.sectionHeader}>About Event</Text>
+          <Text style={styles.aboutText}>{eventData.about}</Text>
+
+          {/* Organizer Row */}
+          <View style={styles.organizerRow}>
+            <View style={styles.organizerLogoContainer}>
+              <Image
+                source={require('../../assets/images/marque/LogoImage.jpg')}
+                style={styles.organizerLogoImage}
+                resizeMode="cover"
+              />
+            </View>
+            <View style={styles.organizerTextContainer}>
+              <Text style={styles.organizerName} numberOfLines={1}>
+                {eventData.organizer}
+              </Text>
+              <Text style={styles.organizerRole}>Organizers</Text>
+            </View>
+            <TouchableOpacity style={styles.followButton}>
+              <Text style={styles.followButtonText}>Follow</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <Text style={styles.organizerDesc}>
-          SITE empowers future IT professionals through cutting-edge initiatives
-          and a strong community spirit.
-        </Text>
-
-        <View style={{ height: 20 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Floating Edit Button */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 20,
-          left: 20,
-          right: 20,
-          zIndex: 10,
-        }}
-      >
+      {/* Bottom Fixed Button */}
+      <View style={styles.bottomBar}>
         <TouchableOpacity
-          onPress={handleEdit}
-          style={{
-            backgroundColor: "#FFD700",
-            paddingVertical: 15,
-            borderRadius: 20,
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: "#FFD700",
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.5,
-            shadowRadius: 10,
-          }}
+          style={styles.editEventButton}
+          onPress={() => router.push('/tab_container_organization/EditEvents')}
         >
-          <Text style={{ fontWeight: "bold", fontSize: 16 }}>Edit Event</Text>
+          <Text style={styles.editEventText}>Edit Event</Text>
+          <MaterialCommunityIcons
+            name="send"
+            size={20}
+            color="#fff"
+            style={{ marginLeft: 8 }}
+          />
         </TouchableOpacity>
       </View>
-    </View>
+
+      {/* ---- FLOATING SCANNER BUTTON ---- */}
+      <ScannerButton
+        onPress={() => router.push('../tab_container_organization/Scanner')}
+      />
+    </SafeAreaView>
   );
 };
+
+// --- Styles ---
+const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 40 : 20;
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#fff' },
+  scrollViewContent: { paddingBottom: 0 },
+
+  // Header
+  headerImageContainer: { height: 230, width: '100%' },
+  headerImage: { width: '100%', height: '100%' },
+  headerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  headerNav: {
+    position: 'absolute',
+    top: STATUS_BAR_HEIGHT + 10,
+    left: 10,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: { padding: 5 },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '200',
+    color: '#fff',
+    marginLeft: 2,
+    fontFamily: 'DMSans-Bold',
+  },
+
+  // Content
+  content: { paddingHorizontal: 20, paddingTop: 20 },
+  eventTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 15,
+    fontFamily: 'DMSans-Bold',
+  },
+
+  // Info Rows
+  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+    backgroundColor: '#F0F0F0',
+  },
+  iconImage: { width: 24, height: 24 },
+  infoTextContainer: { justifyContent: 'center' },
+  primaryInfoText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333',
+    fontFamily: 'DMSans-Bold',
+  },
+  secondaryInfoText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+    fontFamily: 'DMSans-Regular',
+  },
+
+  // Buttons
+  buttonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+    marginBottom: 5,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#d3d3d3',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    flex: 1,
+    justifyContent: 'flex-start',
+    minHeight: 48,
+  },
+  actionButtonText: {
+    marginLeft: 10,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ffffff',
+    fontFamily: 'DMSans-Bold',
+    textAlign: 'left',
+    lineHeight: 14,
+  },
+  buttonIconImage: { width: 25, height: 25 },
+
+  // About
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 10,
+    marginTop: 5,
+    fontFamily: 'DMSans-Bold',
+  },
+  aboutText: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: '#444',
+    marginBottom: 5,
+    fontFamily: 'DMSans-Regular',
+  },
+
+  // Organizer
+  organizerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  organizerLogoContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  organizerLogoImage: { width: '100%', height: '100%' },
+  organizerTextContainer: { flex: 1, marginLeft: 15, justifyContent: 'center' },
+  organizerName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000',
+    fontFamily: 'DMSans-Bold',
+  },
+  organizerRole: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
+    fontFamily: 'DMSans-Regular',
+  },
+  followButton: {
+    backgroundColor: '#E5E6FE',
+    paddingVertical: 4,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    height: 32,
+    justifyContent: 'center',
+  },
+  followButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#6466F1',
+    fontFamily: 'DMSans-Bold',
+  },
+
+  // Bottom Bar
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    paddingBottom: Platform.OS === 'ios' ? 35 : 20,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  editEventButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFC83F',
+    paddingVertical: 15,
+    borderRadius: 18,
+    width: '100%',
+    minHeight: 55,
+  },
+  editEventText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    fontFamily: 'DMSans-Bold',
+  },
+});
 
 export default Events;
