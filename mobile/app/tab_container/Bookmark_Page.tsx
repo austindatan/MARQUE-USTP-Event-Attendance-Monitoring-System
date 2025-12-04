@@ -2,11 +2,10 @@
 import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Header from "../components/Header_Profile";
-import EventCardSL from "../components/Card_EventAttendance";
-import SidebarMenu from "../components/SidebarMenu";
-import styles from "../styles/effects_profile"
+import Header from "../components/Header_Normal";
+import styles from "../styles/components_bookmark"
 import { useRouter } from "expo-router";
+import BookmarkCard from "../components/Card_Bookmark";
 
 const Bookmark = ({ navigation }) => {
   const router = useRouter();
@@ -16,97 +15,33 @@ const Bookmark = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header onMenuPress={toggleMenu} />
+      <Header />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.profileHeader}>
-          <Image
-            source={require("../../assets/images/sabrina_profile.jpg")}
-            style={styles.profileImage}
-          />
+      <ScrollView showsVerticalScrollIndicator={false} style={{paddingHorizontal: 20, paddingTop: 20}}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={18} color="#0A0F51" />
+          <Text style={styles.backText}>Bookmarks</Text>
+        </TouchableOpacity>
 
-          <Text style={styles.name}>Sabrina Aryan</Text>
-          <Text style={styles.department}>College of Information Technology</Text>
-          <Text style={styles.course}>BS Information Technology</Text>
-        </View>
-
-        <View style={styles.infoBlock}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Student ID</Text>
-            <Text style={styles.value}>20233300120</Text>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>sabrinaarayn@gmail.com</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>Attendance Summary</Text>
-        <View style={styles.attendanceCard}>
-          <View style={styles.cardContainer}>
-            <EventCardSL
-              image={require("../../assets/images/marque/crtcg1.png")}
-              title="Last Cookie Standing!"
-              dateDay="17"
-              dateMonth="NOV"
-            />
-            <EventCardSL
-              image={require("../../assets/images/marque/crtcg1.png")}
-              title="Last Cookie Standing!"
-              dateDay="17"
-              dateMonth="NOV"
-            />
-            <EventCardSL
-              image={require("../../assets/images/marque/crtcg1.png")}
-              title="Last Cookie Standing!"
-              dateDay="17"
-              dateMonth="NOV"
-            />
-            <EventCardSL
-              image={require("../../assets/images/marque/crtcg1.png")}
-              title="Last Cookie Standing!"
-              dateDay="17"
-              dateMonth="NOV"
-            />
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>Settings</Text>
-
-        <View style={styles.settingsBlock}>
-          <TouchableOpacity style={styles.settingItem}>
-            <Ionicons name="create" size={20} color="#0A0F51" />
-            <Text style={styles.settingLabel}>Change Avatar</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem} onPress={() => {router.push("/tab_container/Profile_ChangePassword");}}>
-            <Ionicons name="lock-closed" size={20} color="#0A0F51" />
-            <Text style={styles.settingLabel}>Change Password</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <Ionicons name="notifications" size={20} color="#0A0F51" />
-            <Text style={styles.settingLabel}>Notifications</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <Ionicons name="log-out" size={20} color="red" />
-            <Text style={[styles.settingLabel, { color: "red" }]}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-
+        <BookmarkCard
+          id={1}
+          title="Campus Fun Run 2025"
+          image={require("../../assets/images/marque/crtcg1.png")}
+          orgLogo={require("../../assets/images/marque/crk.jpg")}
+          organization="Cookie Run Kingdom"
+          dateDay="12"
+          dateMonth="Jan"
+          orgDate="Jan 5, 2025"
+          orgText=""
+          subText=""
+          onPress={() => console.log("Open event", 1)}
+          onRemove={() => console.log("Remove bookmark", 1)}
+        />
         <View style={{ height: 80 }} />
       </ScrollView>
-
-      <Modal
-        animationType="fade"
-        transparent
-        visible={menuVisible}
-        onRequestClose={toggleMenu}
-      >
-        <SidebarMenu isVisible={menuVisible} onClose={toggleMenu} />
-      </Modal>
     </View>
   );
 };
