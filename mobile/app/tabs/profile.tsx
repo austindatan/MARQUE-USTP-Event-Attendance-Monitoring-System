@@ -135,6 +135,34 @@ const ProfilePage = () => {
     );
   }
 
+  const handleLogout = async () => {
+  Alert.alert(
+    "Confirm Logout",
+    "Are you sure you want to logout?",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await axios.post(`${BASE_URL}/api/auth/logout`);
+
+            // Clear stored user login session
+            await AsyncStorage.removeItem("student_number");
+            await AsyncStorage.removeItem("username");
+            await AsyncStorage.removeItem("token");
+            router.replace("/login");
+          } catch (err) {
+            console.log("Logout error:", err);
+            Alert.alert("Error", "Failed to logout");
+          }
+        }
+      }
+    ]
+  );
+};
+
   return (
     <View style={styles.container}>
       <Header onMenuPress={toggleMenu} />
@@ -234,11 +262,9 @@ const ProfilePage = () => {
             <Text style={styles.settingLabel}>Notifications</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem} onPress={handleLogout}>
             <Ionicons name="log-out" size={20} color="red" />
-            <Text style={[styles.settingLabel, { color: "red" }]}>
-              Logout
-            </Text>
+            <Text style={[styles.settingLabel, { color: "red" }]}>Logout</Text>
           </TouchableOpacity>
         </View>
 
