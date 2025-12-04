@@ -7,11 +7,13 @@ require("dotenv").config();
 
 const router = express.Router();
 
+// ===============================
+// LOGIN
+// ===============================
 router.post("/login", async (req, res) => {
   const { student_number, password } = req.body;
 
   try {
-    // find by student_number 
     const student = await Student.findOne({ student_number }).populate("users_id");
     if (!student || !student.users_id) {
       return res.status(400).json({ message: "Invalid Student ID or password" });
@@ -19,7 +21,6 @@ router.post("/login", async (req, res) => {
 
     const user = student.users_id;
 
-    // compare input password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid Student ID or password" });
@@ -43,6 +44,11 @@ router.post("/login", async (req, res) => {
     console.error("Login error:", error);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+// LOGOUT
+router.post("/logout", (req, res) => {
+  return res.json({ message: "Logged out successfully" });
 });
 
 module.exports = router;
