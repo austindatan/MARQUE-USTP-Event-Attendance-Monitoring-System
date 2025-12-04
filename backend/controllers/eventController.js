@@ -161,42 +161,30 @@ const getAllConcludedEvents = async (req, res) => {
   }
 };
 
-// get upcoming events for a specific organization
+// events/organization/:orgId/upcoming
 const getUpcomingEventsByOrganization = async (req, res) => {
-  try {
-    const { orgId } = req.params;
-    if (!orgId)
-      return res.status(400).json({ message: "Organization ID required" });
+    try {
+        const { orgId } = req.params;
+        if (!orgId)
+            return res.status(400).json({ message: "Organization ID required" });
 
-    const now = new Date();
+        // FIX: Only rely on precise timestamps (end_time >= now)
+        const now = new Date(); 
 
-    // Normalize today's date to midnight
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+        const events = await Event.find({
+            organization_id: orgId,
+            // 🎯 This is the fix: It ignores the simple 'event_date' field,
+            // ensuring the event shows up as long as it hasn't concluded.
+            end_time: { $gte: now }, 
+        })
+          .populate("organization_id")
+          .sort({ start_time: 1 });
 
-    const events = await Event.find({
-      organization_id: orgId,
-      $or: [
-        // 🔹 Includes events today or later
-        { event_date: { $gte: today } },
-
-        // 🔹 Includes ongoing events even if event_date < now
-        {
-          $and: [
-            { start_time: { $lte: now } },
-            { end_time: { $gte: now } },
-          ],
-        },
-      ],
-    })
-      .populate("organization_id")
-      .sort({ event_date: 1 });
-
-    return res.status(200).json(events);
-  } catch (err) {
-    console.error("Error fetching organization upcoming events:", err);
-    return res.status(500).json({ message: "Server error fetching organization's upcoming events" });
-  }
+        return res.status(200).json(events);
+    } catch (err) {
+        console.error("Error fetching organization upcoming events:", err);
+        return res.status(500).json({ message: "Server error fetching organization's upcoming events" });
+    }
 };
 
 const getConcludedEventsByOrganization = async (req, res) => {
@@ -479,7 +467,73 @@ const getEventById = async (req, res) => {
   }
 };
 
+/* ============================================================
+    HELPER: CHECK IF EVENT IS ACTIVE
+============================================================ */
+const isEventActive = (event) => {
+  if (!event) return false;
+
+  const now = new Date();
+  const eventDate = new Date(event.event_date);
+  const startTime = new Date(event.start_time);
+  const endTime = new Date(event.end_time);
+
+  // Check if today is the same day as event
+  const isSameDay =
+    now.getFullYear() === eventDate.getFullYear() &&
+    now.getMonth() === eventDate.getMonth() &&
+    now.getDate() === eventDate.getDate();
+
+  const isWithinTime = now >= startTime && now <= endTime;
+
+  return isSameDay && isWithinTime;
+};
+
+/**
+ * Returns true if the current time is within the first 30 minutes of the event start
+ */
+const isEventWithin30Min = (event) => {
+  if (!event) return false;
+
+  const now = new Date();
+  const startTime = new Date(event.start_time);
+
+  const thirtyMinutesAfterStart = new Date(startTime.getTime() + 30 * 60 * 1000);
+
+  // simply return true/false
+  return now >= startTime && now <= thirtyMinutesAfterStart;
+};
+
+const getEventStatus = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const now = new Date();
+    const startTime = new Date(event.start_time);
+    const endTime = new Date(event.end_time);
+
+    const isActive = now >= startTime && now <= endTime;
+
+    // Within 30 minutes of start time
+    const within30Min =
+      now >= startTime &&
+      now <= new Date(startTime.getTime() + 30 * 60 * 1000);
+
+    return res.json({
+      isActive,
+      within30Min,
+    });
+  } catch (error) {
+    console.error("Error in getEventStatus:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
 
 
-export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents, getEventsByOrgType, getFilteredEvents, getFollowedEvents, getEventById, getUpcomingEventsByOrganization, getConcludedEventsByOrganization,  };
+
+export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents, getEventsByOrgType, getFilteredEvents, getFollowedEvents, getEventById, getUpcomingEventsByOrganization, getConcludedEventsByOrganization, isEventActive, isEventWithin30Min, getEventStatus };
