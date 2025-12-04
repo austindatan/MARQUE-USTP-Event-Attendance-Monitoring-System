@@ -11,13 +11,15 @@ import {
   StyleSheet,
   TextInput,
   Alert,
-  aspectRatio
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import axios from "axios";
 import { BASE_URL } from "../../config";
 import * as ImagePicker from 'expo-image-picker';
+
+// Import the modal
+import EditProfileModal from "../components/EditProfileModal";
 
 // --- COLORS DEFINITION ---
 const COLORS = {
@@ -191,7 +193,10 @@ const EditProfile = () => {
   const [bannerUri, setBannerUri] = useState(PLACEHOLDER_ASSETS.bannerUri);
   const [logoUri, setLogoUri] = useState(PLACEHOLDER_ASSETS.logoUri);
 
-  // Load existing organization data
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+
+  // Load existing data
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -211,21 +216,19 @@ const EditProfile = () => {
     if (orgId) loadProfile();
   }, [orgId]);
 
-  // Pick image from gallery
-  const handleImagePick = async (setImageFunction: Function, aspectRatio = [4, 3]) => {
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: aspectRatio as [number, number],
-    quality: 0.7,
-  });
+  const handleImagePick = async (setImageFunction, aspectRatio = [4, 3]) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: aspectRatio,
+      quality: 0.7,
+    });
 
-  if (!result.canceled) {
-    setImageFunction({ uri: result.assets[0].uri, local: true });
-  }
-};
+    if (!result.canceled) {
+      setImageFunction({ uri: result.assets[0].uri, local: true });
+    }
+  };
 
-  // Save and upload images
   const handleSave = async () => {
     if (!orgName || !description) {
       Alert.alert('Error', 'Organization Name and Description are required.');
@@ -256,18 +259,23 @@ const EditProfile = () => {
       }
 
       await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      Alert.alert("Success", "Organization profile updated successfully!", [
-        {
-          text: "OK",
-          onPress: () => router.push({
-            pathname: "../tab_container_organization/Profile",
-            params: { orgId, refresh: Date.now().toString() }
-          }),
-        }
-      ]);
+      console.log("Data updates successfully.");
+
+      // Show success modal
+      setShowModal(true);
+
+      // Auto-close + redirect after 2 seconds
+      setTimeout(() => {
+        setShowModal(false);
+        router.push({
+          pathname: "../tab_container_organization/Profile",
+          params: { orgId, refresh: Date.now().toString() }
+        });
+      }, 2000);
+
     } catch (err) {
       console.error("Error updating org:", err);
       Alert.alert("Error", "Failed to update organization.");
@@ -278,56 +286,117 @@ const EditProfile = () => {
     <View style={STYLES.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <ScrollView showsVerticalScrollIndicator={false}>
+        
         {/* Banner */}
         <View style={STYLES.headerContainer}>
           <ImageBackground source={bannerUri} style={STYLES.headerImageBackground}>
             <View style={STYLES.bannerOverlay}>
               <View style={STYLES.bannerContent}>
                 <View style={STYLES.navRow}>
-                  <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity onPress={() => router.back()}>
                     <Icon name="arrow-back" size={24} color={COLORS.white} />
                   </TouchableOpacity>
                   <View style={{ width: 60 }} />
                 </View>
               </View>
             </View>
-            <TouchableOpacity style={STYLES.bannerCameraIcon} onPress={() => handleImagePick(setBannerUri)}>
-              <Image source={require("../../assets/images/marque/Camera1.png")} style={{ width: 24, height: 24, resizeMode: 'contain' }} />
+
+            {/* Banner Picker */}
+            <TouchableOpacity
+              style={STYLES.bannerCameraIcon}
+              onPress={() => handleImagePick(setBannerUri)}
+            >
+              <Image source={require("../../assets/images/marque/Camera1.png")}
+                style={{ width: 24, height: 24 }} />
             </TouchableOpacity>
           </ImageBackground>
         </View>
 
-        {/* Form */}
+        {/* FORM SECTION */}
         <View style={STYLES.contentContainer}>
-          {/* Logo */}
+          
+          {/* Logo Picker */}
           <View style={STYLES.logoWrapper}>
-            <TouchableOpacity style={STYLES.logoContainer} onPress={() => handleImagePick(setLogoUri, [1, 1])}>
+            <TouchableOpacity
+              style={STYLES.logoContainer}
+              onPress={() => handleImagePick(setLogoUri, [1, 1])}
+            >
               <Image source={logoUri} style={STYLES.logoImage} />
               <View style={STYLES.logoCameraOverlay}>
-                <Image source={require("../../assets/images/marque/Camera1.png")} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
+                <Image
+                  source={require("../../assets/images/marque/Camera1.png")}
+                  style={{ width: 30, height: 30 }}
+                />
               </View>
             </TouchableOpacity>
           </View>
 
-          <Text style={STYLES.sectionHeader}>Organization Information</Text>
-          <TouchableOpacity style={STYLES.saveButton} onPress={handleSave} activeOpacity={0.8}>
+          {/* SAVE BUTTON */}
+          <TouchableOpacity
+            style={STYLES.saveButton}
+            onPress={handleSave}
+            activeOpacity={0.8}
+          >
             <Text style={STYLES.saveButtonText}>SAVE</Text>
           </TouchableOpacity>
 
-          <Text style={STYLES.label}>Organization Name<Text style={STYLES.requiredAsterisk}>*</Text></Text>
-          <TextInput style={STYLES.textInput} value={orgName} onChangeText={setOrgName} placeholder="Enter Organization Name" placeholderTextColor={COLORS.placeholderText} />
+          {/* INPUTS */}
+          <Text style={STYLES.sectionHeader}>Organization Information</Text>
 
-          <Text style={STYLES.label}>Description<Text style={STYLES.requiredAsterisk}>*</Text></Text>
-          <TextInput style={[STYLES.textInput, STYLES.textArea]} value={description} onChangeText={setDescription} placeholder="Enter a description for your organization" placeholderTextColor={COLORS.placeholderText} multiline />
+          <Text style={STYLES.label}>
+            Organization Name<Text style={STYLES.requiredAsterisk}>*</Text>
+          </Text>
+          <TextInput
+            style={STYLES.textInput}
+            value={orgName}
+            onChangeText={setOrgName}
+            placeholder="Enter Organization Name"
+            placeholderTextColor={COLORS.placeholderText}
+          />
+
+          <Text style={STYLES.label}>
+            Description<Text style={STYLES.requiredAsterisk}>*</Text>
+          </Text>
+          <TextInput
+            style={[STYLES.textInput, STYLES.textArea]}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Enter a description for your organization"
+            placeholderTextColor={COLORS.placeholderText}
+            multiline
+          />
 
           <Text style={STYLES.sectionHeader}>Social Media Links</Text>
+
           <Text style={STYLES.label}>Facebook</Text>
-          <TextInput style={STYLES.textInput} value={facebookLink} onChangeText={setFacebookLink} placeholder="https://www.facebook.com/username" placeholderTextColor={COLORS.placeholderText} />
+          <TextInput
+            style={STYLES.textInput}
+            value={facebookLink}
+            onChangeText={setFacebookLink}
+            placeholder="https://www.facebook.com/username"
+            placeholderTextColor={COLORS.placeholderText}
+          />
 
           <Text style={STYLES.label}>Instagram</Text>
-          <TextInput style={STYLES.textInput} value={instagramLink} onChangeText={setInstagramLink} placeholder="https://www.instagram.com/username" placeholderTextColor={COLORS.placeholderText} marginBottom={30} />
+          <TextInput
+            style={STYLES.textInput}
+            value={instagramLink}
+            onChangeText={setInstagramLink}
+            placeholder="https://www.instagram.com/username"
+            placeholderTextColor={COLORS.placeholderText}
+          />
+
         </View>
       </ScrollView>
+
+      {/* SUCCESS MODAL */}
+      <EditProfileModal
+        visible={showModal}
+        title="Profile Updated!"
+        message="Your organization profile has been successfully updated."
+        onClose={() => setShowModal(false)}
+      />
+
     </View>
   );
 };
