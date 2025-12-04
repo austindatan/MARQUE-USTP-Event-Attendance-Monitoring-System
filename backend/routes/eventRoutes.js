@@ -15,7 +15,10 @@ const {
     getEventsByOrgType,
     getFilteredEvents,
     getUpcomingEventsByOrganization,
-    getConcludedEventsByOrganization
+    getConcludedEventsByOrganization,
+    isEventActive,
+    isEventWithin30Min,
+    getEventStatus
 } = eventController;
 
 
@@ -32,6 +35,8 @@ router.get("/all/concluded", getAllConcludedEvents);
 router.get('/organization/:orgId/upcoming', eventController.getUpcomingEventsByOrganization);
 router.get('/organization/:orgId/concluded', eventController.getConcludedEventsByOrganization);
 
+// Optional: Check if event is active and/or within first 30 minutes
+router.get('/event-status/:id', eventController.getEventStatus);
 
 // NEW ROUTE – MUST BE ABOVE departmentId
 router.get("/event/:id", eventController.getEventById);

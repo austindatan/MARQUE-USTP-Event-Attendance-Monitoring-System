@@ -132,3 +132,48 @@ exports.getStudentAttendance = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+// CHANGE STUDENT PASSWORD
+const bcrypt = require("bcryptjs");
+
+exports.changeStudentPassword = async (req, res) => {
+  try {
+    const student_number = req.params.student_number;
+    const { current_password, new_password } = req.body;
+
+    if (!current_password || !new_password) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // Password length min
+    if (new_password.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters long."
+      });
+    }
+
+    const student = await Student.findOne({ student_number });
+    if (!student) return res.status(404).json({ message: "Student not found." });
+
+    const user = await User.findById(student.users_id);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    const isMatch = await bcrypt.compare(current_password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect." });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(new_password, salt);
+
+    await user.save();
+
+    res.json({ message: "Password changed successfully." });
+
+  } catch (err) {
+    console.error("Error in changeStudentPassword:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
