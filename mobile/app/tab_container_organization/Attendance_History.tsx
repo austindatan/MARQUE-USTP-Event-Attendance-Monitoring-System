@@ -1,16 +1,16 @@
 // AttendanceHistory.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  ImageBackground,
-  ScrollView,
-  Image,
-  ActivityIndicator,
+    View,
+    Text,
+    TextInput,
+    StyleSheet,
+    TouchableOpacity,
+    SafeAreaView,
+    ImageBackground,
+    ScrollView,
+    Image,
+    ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { BASE_URL } from '../../config';
@@ -18,143 +18,179 @@ import { BASE_URL } from '../../config';
 // --- BACKGROUND IMAGE & ICONS ---
 const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
 const FILTER_IMAGE = require('../../assets/images/marque/Filters.png');
-const SEARCH_IMAGE = require('../../assets/images/marque/Search.png'); // search icon image
+const SEARCH_IMAGE = require('../../assets/images/marque/Search.png');
 
 // --- COLORS AND CONSTANTS ---
 const COLORS = {
-  headerText: '#FFFFFF',
-  inputBackground: 'rgba(255, 255, 255, 0.15)',
-  inputPlaceholder: '#787b9d',
-  inputText: '#FFFFFF',
-  filterButton: '#222762',
-  logBackground: '#FFFFFF',
-  contentBackground: '#FFFFFF',
-  separator: '#DDDDDD',
+    headerText: '#FFFFFF',
+    inputBackground: 'rgba(255, 255, 255, 0.15)',
+    inputPlaceholder: '#787b9d',
+    inputText: '#FFFFFF',
+    filterButton: '#222762',
+    logBackground: '#FFFFFF',
+    contentBackground: '#FFFFFF',
+    separator: '#DDDDDD',
 };
 
 const FONT_SIZES = {
-  header: 20,
-  search: 18,
-  filterText: 14,
+    header: 20,
+    search: 18,
+    filterText: 14,
 };
 
 const SPACING = {
-  paddingHorizontal: 25,
+    paddingHorizontal: 25,
 };
 
 // --- TYPES ---
 interface LogEntry {
-  name: string;
-  time: string;
-  studentId: string;
-}
-
-interface AttendanceHistoryProps {
-  onBack: () => void;
-  eventId: string; // receive eventId from CameraState or Events page
+    name: string;
+    date: string;              // MM-DD-YYYY
+    time: string;              // h:mm A
+    student_number: string;
+    program: string;  
 }
 
 // --- LOG ITEM COMPONENT ---
-const LogItem: React.FC<LogEntry> = ({ name, time, studentId }) => (
-  <View>
-    <View style={styles.logItem}>
-      <View style={styles.logDetails}>
-        <Text style={styles.logName}>{name}</Text>
-        <Text style={styles.logTime}>{time}</Text>
-      </View>
-      <Text style={styles.logId}>{studentId}</Text>
+const LogItem: React.FC<LogEntry> = ({ name, date, time, student_number, program }) => (
+    <View>
+        <View style={styles.logItem}>
+            <View style={styles.logDetails}>
+                <Text style={styles.logName}>{name}</Text>
+                <Text style={styles.logTime}>{date}  {time}</Text>
+            </View>
+            <View style={styles.logDetails}>
+                <Text style={styles.logId}>{student_number}</Text>
+                <Text style={styles.logProgram}>{program}</Text>
+            </View>
+        </View>
+        <View style={styles.separator} />
     </View>
-    <View style={styles.separator} />
-  </View>
 );
 
 // --- MAIN COMPONENT ---
-const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }) => {
-  const [attendanceLog, setAttendanceLog] = useState<LogEntry[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [searchText, setSearchText] = useState<string>('');
+interface AttendanceHistoryProps {
+    onBack: () => void;
+    eventId: string;
+}
 
-  // Fetch attendance log for the given eventId
-  useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${BASE_URL}/api/attendance/history?event_id=${eventId}`);
-        const data = await response.json();
-        if (response.ok && Array.isArray(data.data)) {
-          setAttendanceLog(data.data);
-        } else {
-          setAttendanceLog([]);
+const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }) => {
+    const [attendanceLog, setAttendanceLog] = useState<LogEntry[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [searchText, setSearchText] = useState<string>('');
+
+    const searchTimeout = useRef<number | null>(null);
+
+    const fetchAttendance = async (query?: string) => {
+        try {
+            setLoading(true);
+            const url = query
+                ? `${BASE_URL}/api/attendance/search/${eventId}?q=${encodeURIComponent(query)}`
+                : `${BASE_URL}/api/attendance/history/${eventId}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (response.ok && Array.isArray(data.history)) {
+                setAttendanceLog(data.history);
+            } else {
+                console.warn("Failed to retrieve attendance history", data);
+                setAttendanceLog([]);
+            }
+        } catch (error) {
+            console.error("Network error:", error);
+            setAttendanceLog([]);
+        } finally {
+            setLoading(false);
         }
-      } catch (error) {
-        console.error(error);
-        setAttendanceLog([]);
-      } finally {
-        setLoading(false);
-      }
     };
 
-    fetchAttendance();
-  }, [eventId]);
+    // Initial load
+    useEffect(() => {
+        fetchAttendance();
+    }, [eventId]);
 
-  // Filter logs by search text
-  const filteredLogs = attendanceLog.filter(
-    log =>
-      log.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      log.studentId.includes(searchText)
-  );
+    // Debounced search
+    useEffect(() => {
+        if (searchTimeout.current) {
+            clearTimeout(searchTimeout.current);
+        }
+        searchTimeout.current = setTimeout(() => {
+            fetchAttendance(searchText.trim());
+        }, 500); // 500ms delay
+    }, [searchText]);
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ImageBackground source={BackgroundImage} style={styles.background} resizeMode="cover">
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onBack}>
-              <Ionicons name="arrow-back" size={24} color={COLORS.headerText} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Attendance Log</Text>
-          </View>
+    // Filter logs (in case you want client-side fallback filtering)
+    const filteredLogs = attendanceLog.filter(
+        log =>
+            log.name.toLowerCase().includes(searchText.toLowerCase()) ||
+            log.student_number.includes(searchText)
+    );
 
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <Image source={SEARCH_IMAGE} style={styles.searchImage} resizeMode="contain" />
-              <TextInput
-                style={styles.input}
-                placeholder="Search..."
-                placeholderTextColor="rgba(120,123,157,0.7)"
-                value={searchText}
-                onChangeText={setSearchText}
-              />
-              <TouchableOpacity style={styles.filtersButton}>
-                <Image source={FILTER_IMAGE} style={styles.filterImage} resizeMode="contain" />
-                <Text style={styles.filtersText}>Filters</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+    return (
+        <SafeAreaView style={styles.safeArea}>
+            <ImageBackground source={BackgroundImage} style={styles.background} resizeMode="cover">
+                <View style={styles.container}>
 
-          {/* Attendance List */}
-          <View style={styles.contentArea}>
-            {loading ? (
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#10b981" />
-              </View>
-            ) : (
-              <ScrollView contentContainerStyle={styles.logList}>
-                {filteredLogs.length > 0 ? (
-                  filteredLogs.map((log, index) => <LogItem key={index} {...log} />)
-                ) : (
-                  <Text style={{ textAlign: 'center', marginTop: 20 }}>No records found.</Text>
-                )}
-                <View style={{ height: 40 }} />
-              </ScrollView>
-            )}
-          </View>
-        </View>
-      </ImageBackground>
-    </SafeAreaView>
-  );
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={onBack}>
+                            <Ionicons name="arrow-back" size={24} color={COLORS.headerText} />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle}>Attendance Log</Text>
+                    </View>
+
+                    {/* Search Bar */}
+                    <View style={styles.searchContainer}>
+                        <View style={styles.searchBar}>
+                            <Image source={SEARCH_IMAGE} style={styles.searchImage} resizeMode="contain" />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Search..."
+                                placeholderTextColor="rgba(120,123,157,0.7)"
+                                value={searchText}
+                                onChangeText={setSearchText}
+                            />
+                            <TouchableOpacity style={styles.filtersButton}>
+                                <Image source={FILTER_IMAGE} style={styles.filterImage} resizeMode="contain" />
+                                <Text style={styles.filtersText}>Filters</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* Attendance List */}
+                    <View style={styles.contentArea}>
+                        {loading ? (
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                <ActivityIndicator size="large" color="#10b981" />
+                            </View>
+                        ) : (
+                            <ScrollView contentContainerStyle={styles.logList}>
+                                {filteredLogs.length > 0 ? (
+                                    filteredLogs.map((log, index) => (
+                                        <LogItem
+                                            key={index}
+                                            name={log.name}
+                                            date={log.date}
+                                            time={log.time}
+                                            student_number={log.student_number}
+                                            program={log.program}
+                                        />
+                                    ))
+                                ) : (
+                                    <Text style={{ textAlign: 'center', marginTop: 20 }}>
+                                        No records found.
+                                    </Text>
+                                )}
+                                <View style={{ height: 40 }} />
+                            </ScrollView>
+                        )}
+                    </View>
+
+                </View>
+            </ImageBackground>
+        </SafeAreaView>
+    );
 };
 
 // --- STYLES ---
@@ -173,7 +209,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: COLORS.headerText,
     fontSize: FONT_SIZES.header,
-    fontWeight: '700', // bold
+    fontWeight: '700',
     fontFamily: 'DM Sans',
     marginLeft: 10,
     flex: 1,
@@ -213,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.filterButton,
     borderRadius: 25,
-    paddingHorizontal: 10,  // ⬅ smaller automatic width
+    paddingHorizontal: 10,
     paddingVertical: 6,
     marginLeft: 8,
   },
@@ -268,6 +304,12 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontFamily: 'DM Sans',
   },
+  logProgram: {
+    fontSize: 12,
+    color: '#888888',
+    fontFamily: 'DM Sans',
+    textAlign: 'right',
+},
   separator: {
     height: 1,
     backgroundColor: COLORS.separator,
