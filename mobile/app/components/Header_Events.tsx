@@ -1,28 +1,20 @@
-// Header_Activities.tsx
 // @ts-nocheck
 import React, { useState } from "react";
-import { View, TouchableOpacity, Image, Text, Animated } from "react-native";
+import { View, TouchableOpacity, Image, Text, Animated,} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
 
-const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) => {
+const Header = ({ onMenuPress, scrollY, onToggleChange }) => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"Back" | "Incoming" | "Concluded">("Incoming");
-
-  // Improved scrollY handling
+  const [activeTab, setActiveTab] = useState("departments");
   const animatedScrollY = scrollY || new Animated.Value(0);
 
-  const handleToggle = (tab: "Back" | "Incoming" | "Concluded") => {
+  const handleToggle = (tab) => {
     setActiveTab(tab);
-    if (tab === "Back") {
-      router.back(); // Back navigation
-    } else if (onToggleChange) {
-      onToggleChange(tab);
-    }
+    if (onToggleChange) onToggleChange(tab);
   };
 
-  // Animations
   const searchOpacity = animatedScrollY.interpolate({
     inputRange: [0, 80],
     outputRange: [1, 0],
@@ -43,7 +35,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
 
   return (
     <View style={{ zIndex: 10 }}>
-      {/* Top header with menu, logo, notifications */}
       <View style={[styles.headerfirst, { paddingBottom: 0 }]}>
         <View style={styles.topRow}>
           <TouchableOpacity onPress={onMenuPress}>
@@ -64,7 +55,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         </View>
       </View>
 
-      {/* Animated search row */}
       <Animated.View
         style={[
           styles.header,
@@ -85,9 +75,14 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         ]}
       >
         <Animated.View
-          style={[styles.searchRow, { opacity: searchOpacity, transform: [{ translateY: searchTranslateY }] }]}
+          style={[
+            styles.searchRow,
+            {
+              opacity: searchOpacity,
+              transform: [{ translateY: searchTranslateY }],
+            },
+          ]}
         >
-          {/* Search bar */}
           <TouchableOpacity
             activeOpacity={1}
             style={styles.searchContainer}
@@ -97,11 +92,7 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
             <Text style={{ color: "#8c8c8c", fontSize: 16 }}>Search...</Text>
           </TouchableOpacity>
 
-          {/* Filter button */}
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => router.push("/tab_container/Filter_Page")}
-          >
+          <TouchableOpacity style={styles.filterButton} onPress={() => router.push("/tab_container/Filter_Page")}>
             <View style={styles.filterB}>
               <Ionicons name="filter" size={14} color="#222762" />
             </View>
@@ -110,24 +101,24 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         </Animated.View>
       </Animated.View>
 
-      {/* Toggle tabs */}
       <Animated.View
-        style={[styles.toggleContainer, { backgroundColor: "transparent", transform: [{ translateY: toggleTranslateY }] }]}
+        style={[
+          styles.toggleContainer,
+          { transform: [{ translateY: toggleTranslateY }] },
+        ]}
       >
-        {/* Incoming tab */}
         <TouchableOpacity
-          style={activeTab === "Incoming" ? styles.activeButton : styles.inactiveButton}
-          onPress={() => handleToggle("Incoming")}
+          style={activeTab === "departments" ? styles.activeButton : styles.inactiveButton}
+          onPress={() => handleToggle("departments")}
         >
-          <Text style={styles.activeText}>Incoming</Text>
+          <Text style={styles.activeText}>Departments</Text>
         </TouchableOpacity>
 
-        {/* Concluded tab */}
         <TouchableOpacity
-          style={activeTab === "Concluded" ? styles.activeButton : styles.inactiveButton}
-          onPress={() => handleToggle("Concluded")}
+          style={activeTab === "organizations" ? styles.activeButton : styles.inactiveButton}
+          onPress={() => handleToggle("organizations")}
         >
-          <Text style={styles.activeText}>Concluded</Text>
+          <Text style={styles.activeText}>Organizations</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
