@@ -1,10 +1,14 @@
 // AddActivityButton.tsx
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View, GestureResponderEvent } from "react-native";
 
-const AddActivityButton = () => {
+interface Props {
+  onPress?: (event: GestureResponderEvent) => void;
+}
+
+const AddActivityButton: React.FC<Props> = ({ onPress }) => {
   return (
-    <TouchableOpacity style={styles.floatingButton}>
+    <TouchableOpacity style={styles.floatingButton} onPress={onPress}>
       {/* Inner outlined circle */}
       <View style={styles.innerCircle} />
 

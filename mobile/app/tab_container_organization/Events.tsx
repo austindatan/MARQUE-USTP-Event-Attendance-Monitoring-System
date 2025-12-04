@@ -93,7 +93,7 @@ const Events: React.FC = () => {
         setEvent(eventObj);
 
         // Fetch status from backend
-        const statusRes = await fetch(`${BASE_URL}/attendance/event-status/${eventObj._id}`);
+        const statusRes = await fetch(`${BASE_URL}/events/event-status/${eventObj._id}`);
         const statusData = await statusRes.json();
         setEventActive(statusData.isActive);
         setWithin30Min(statusData.within30Min);
@@ -212,16 +212,17 @@ const Events: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* ---- FLOATING SCANNER BUTTON ---- */}
-      <ScannerButton
-        disabled={!eventActive || !within30Min}
-        onPress={() =>
-          router.push({
-            pathname: '/tab_container_organization/Scanner',
-            params: { eventId },
-          })
-        }
-      />
+      {/* ---- FLOATING SCANNER BUTTON: SHOW ONLY IF EVENT ACTIVE AND WITHIN 30 MIN ---- */}
+      {eventActive && within30Min && (
+        <ScannerButton
+          onPress={() =>
+            router.push({
+              pathname: '/tab_container_organization/Scanner',
+              params: { eventId },
+            })
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
