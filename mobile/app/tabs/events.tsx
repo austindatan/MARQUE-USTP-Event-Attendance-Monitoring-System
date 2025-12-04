@@ -7,6 +7,7 @@ import appeffects from "../styles/effects_app";
 import Departments from "../tab_container/Event_Department";
 import Organizations from "../tab_container/Event_Organization";
 import { BASE_URL } from "../../config";
+import { useRouter } from "expo-router";
 
 const Events = () => {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -35,8 +36,19 @@ const Events = () => {
     }
   };
 
-
   const toggleMenu = () => setMenuVisible(prev => !prev);
+
+  const router = useRouter();
+  useEffect(() => {
+  const checkAuth = async () => {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      router.replace("/");
+    }
+  };
+  checkAuth();
+}, []);
+
 
   return (
     <View style={[appeffects.container, { flex: 1 }]}>
