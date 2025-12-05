@@ -42,7 +42,7 @@ const GoingAvatarStack = () => {
   return (
     <View style={styles.avatarStackContainer}>
       {avatars.map((avatar, index) => (
-        <Viewt
+        <View
           key={avatar.id}
           style={[
             styles.avatarContainer,
@@ -51,7 +51,7 @@ const GoingAvatarStack = () => {
           ]}
         >
           <Image source={avatar.source} style={styles.goingAvatar} />
-        </Viewt>
+        </View>
       ))}
     </View>
   );
@@ -248,6 +248,9 @@ const Event_Incoming = () => {
     eventTimeFull = eventDay; // Always show day even without time
   }
 
+
+
+
   const organizerPfpSource = eventData.organization_id?.pfp
     ? { uri: eventData.organization_id.pfp }
     : require("../../assets/images/profile_pic.png"); // Fallback image
@@ -278,12 +281,27 @@ const Event_Incoming = () => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
+
         <ImageBackground
           source={{ uri: eventData.event_image }}
           style={[styles.headerImageBackground, { paddingTop: STICKY_HEADER_HEIGHT }]}
-        />
+          imageStyle={{ opacity: 1 }}
+        >
+          <View style={styles.inviteRow}>
+            <View style={styles.goingContainer}>
+              <View style={styles.tabRow}>
+                <GoingAvatarStack />
+                <Text style={styles.goingText}>+{eventData.attendee_count || eventData.going_count || 0} Going</Text>
+              </View>
 
-        <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{eventData.title || eventData.event_name}</Text>
+              <TouchableOpacity style={styles.inviteButton}>
+                <Text style={styles.inviteText}>Invite</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ImageBackground>
+
+        <Text style={styles.eventTitle}>{eventData.title || eventData.event_name}</Text>
 
         {/* DATE & TIME */}
         <View style={styles.infoRow}>

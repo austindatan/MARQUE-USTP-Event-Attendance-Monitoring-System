@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 15,
     color: "#333",
-    fontWeight: "500",
+    fontFamily: "DMSans-Bold",
   },
 
   organizationsButton: {
@@ -76,9 +76,9 @@ const styles = StyleSheet.create({
   },
   organizationsText: {
     fontSize: 16,
-    fontWeight: "bold",
     color: "white",
     marginLeft: 12,
+    fontFamily: "DMSans-Bold",
   },
 });
 

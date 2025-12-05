@@ -100,7 +100,7 @@ export const STYLES = StyleSheet.create({
   // Org Info
   orgTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontFamily: "DMSans-Bold",
     color: COLORS.textDark,
     marginBottom: 15,
   },
@@ -123,9 +123,9 @@ export const STYLES = StyleSheet.create({
   // About Section
   sectionHeader: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#444',
     marginBottom: 8,
+    fontFamily: "DMSans-Bold",
   },
   aboutText: {
     fontSize: 14,
@@ -133,15 +133,16 @@ export const STYLES = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 20,
     textAlign: 'justify',
+    fontFamily: "DMSans-Medium",
   },
 
   // Events Section
   eventsTitle: {
     textAlign: 'center',
     fontSize: 16,
-    fontWeight: '600',
     letterSpacing: 1,
     marginBottom: 10,
+    fontFamily: "DMSans-Bold",
   },
   divider: {
     height: 1,
@@ -236,7 +237,7 @@ export const STYLES = StyleSheet.create({
     borderRadius: 50,      // pill shape
     alignItems: 'center',
     justifyContent: 'center', // vertically center text
-    minWidth: 120,          // ensures oblong width
+    minWidth: 120,
   },
   activeTab: {
     backgroundColor: COLORS.primaryNavy,
@@ -248,13 +249,15 @@ export const STYLES = StyleSheet.create({
   },
   tabText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: "DMSans-Bold",
   },
   activeTabText: {
     color: COLORS.white,
+    fontFamily: "DMSans-Bold",
   },
   inactiveTabText: {
     color: COLORS.textDark,
+    fontFamily: "DMSans-Bold",
   },
   bannerGradient: {
   position: 'absolute',

@@ -65,8 +65,7 @@ const JoinOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
           onScroll={handleScroll}
           scrollEventThrottle={16}
         >
-          <View style={appeffects.pageStarter}>
-            <Text style={appeffects.pageTitle}>Join Organizations</Text>
+          <View style={appeffects.pageStarterORG}>
           </View>
 
           <View style={appeffects.eventList}>

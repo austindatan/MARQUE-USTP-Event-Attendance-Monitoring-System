@@ -30,6 +30,13 @@ const appeffects = StyleSheet.create({
         alignItems: "center",
     },
 
+    pageStarterORG: {
+        marginTop: scaleSize(10),
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+
     pageTitle: { 
         padding: scaleSize(20),
         fontSize: normalize(18), 
