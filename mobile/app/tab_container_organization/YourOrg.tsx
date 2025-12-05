@@ -121,8 +121,7 @@ const YourOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <View style={appeffects.pageStarter}>
-          <Text style={appeffects.pageTitle}>Your Organizations</Text>
+        <View style={appeffects.pageStarterORG}>
         </View>
 
         <View style={appeffects.eventList}>

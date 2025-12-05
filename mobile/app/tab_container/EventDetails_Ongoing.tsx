@@ -196,7 +196,7 @@ const Event_Ongoing = () => {
           style={[styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]}
         />
 
-        <Text style={styles.eventTitle}>{event.event_title || event.event_name}</Text>
+        <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{event.event_title || event.event_name}</Text>
 
         <View style={styles.infoColumn}>
           <View style={styles.infoBox}>
@@ -234,8 +234,8 @@ const Event_Ongoing = () => {
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image source={{ uri: event.organization_id?.pfp }} style={styles.organizerLogo} />
-            <View>
-              <Text style={styles.organizerName}>{event.organization_id?.org_name}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">{event.organization_id?.org_name}</Text>
               <Text style={styles.organizerLabel}>Organizer</Text>
             </View>
           </View>

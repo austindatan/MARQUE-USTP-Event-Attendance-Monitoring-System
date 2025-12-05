@@ -156,7 +156,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
           style={styles.organizationsButton}
           onPress={() => handleMenuItemPress("Your Organizations")}
         >
-          <Ionicons name="people-circle-outline" size={24} color="#222762" />
+          <Ionicons name="people-circle-outline" size={24} color="#fff" />
           <Text style={styles.organizationsText}>Your Organizations</Text>
         </TouchableOpacity>
       </Animated.View>

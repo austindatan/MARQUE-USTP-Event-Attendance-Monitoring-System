@@ -19,8 +19,8 @@ const EventCard = ({ image, title, description, onPress }) => {
         </View>
 
         <View style={styles.details}>
-          <Text style={styles.eventTitle}>{title}</Text>
-          <Text style={styles.desc}>{description}</Text>
+          <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{title}</Text>
+          <Text style={styles.desc} numberOfLines={2} ellipsizeMode="tail">{description}</Text>
         </View>
       </View>
     </TouchableOpacity>

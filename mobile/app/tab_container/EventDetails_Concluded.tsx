@@ -233,7 +233,7 @@ const Event_Concluded = () => {
           style={[styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]}
         />
 
-        <Text style={styles.eventTitle}>{event.event_name}</Text>
+        <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{event.event_name}</Text>
 
         <View style={styles.infoColumn}>
           {event.attendanceRecorded && (
@@ -303,8 +303,8 @@ const Event_Concluded = () => {
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image source={organizerPfpSource} style={styles.organizerLogo} />
-            <View>
-              <Text style={styles.organizerName}>{event.organization_id?.org_name}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">{event.organization_id?.org_name}</Text>
               <Text style={styles.organizerLabel}>Organizers</Text>
             </View>
           </View>

@@ -15,7 +15,7 @@ const rs = (size) => {
 const AVATAR_SIZE = rs(24);
 const OVERLAP_AMOUNT = rs(8);
 
-const styles = StyleSheet.create({
+const stylesINC = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: rs(16),
     paddingHorizontal: rs(20),
-    marginTop: rs(10),
+    marginTop: rs(22),
     marginBottom: rs(8),
     fontFamily: "DMSans-Bold",
   },
@@ -334,34 +334,7 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans-Medium",
   },
 
-  // Buttons
-  buttonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 10,
-    paddingHorizontal: 20,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#d3d3d3',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    flex: 1,
-    justifyContent: 'flex-start',
-    minHeight: 48,
-  },
-  actionButtonText: {
-    marginLeft: 10,
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#090913ff',
-    fontFamily: 'DMSans-Bold',
-    textAlign: 'left',
-    lineHeight: 14,
-  },
-  buttonIconImage: { width: 25, height: 25 },
+  
 });
 
-export default styles;
+export default stylesINC;

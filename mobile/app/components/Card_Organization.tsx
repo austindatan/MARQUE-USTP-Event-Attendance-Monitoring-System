@@ -39,9 +39,8 @@ const OrgCardHighlighted = ({
               style={styles.organizationLogo}
             />
             <View style={styles.orgRow}>
-              <Text style={styles.eventTitle}>{organization}</Text>
-              <Text style={styles.orgText}>{type}</Text>
-              <Text style={styles.subText}>{role}</Text>
+              <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{organization}</Text>
+              <Text style={styles.orgText} numberOfLines={2} ellipsizeMode="tail">{type}</Text>
             </View>
           </View>
           <Text style={styles.desc}>{description}</Text>

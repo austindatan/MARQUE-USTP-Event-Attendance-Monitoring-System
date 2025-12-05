@@ -14,9 +14,12 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import styles from "../styles/page_eventdetails";
 import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 import { BASE_URL } from "../../config";
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from "expo-linear-gradient";
 
 // Import the modal
 import EditProfileModal from "../components/EditProfileModal";
@@ -104,8 +107,8 @@ const STYLES = StyleSheet.create({
   },
   saveButtonText: {
     color: COLORS.saveButtonText,
-    fontWeight: 'bold',
     fontSize: 14,
+    fontFamily: "DMSans-Bold",
   },
   contentContainer: {
     paddingHorizontal: 20,
@@ -150,17 +153,24 @@ const STYLES = StyleSheet.create({
   },
   sectionHeader: {
     fontSize: 20,
-    fontWeight: 'bold',
     color: COLORS.textDark,
-    marginBottom: 10,
     marginTop: 40,
+    fontFamily: "DMSans-Bold",
   },
+
+  sectionHeaderSOC: {
+    fontSize: 20,
+    color: COLORS.textDark,
+    marginTop: 20,
+    fontFamily: "DMSans-Bold",
+  },
+
   label: {
     fontSize: 16,
-    fontWeight: '600',
     color: COLORS.textDark,
     marginBottom: 8,
     marginTop: 15,
+    fontFamily: "DMSans-Bold",
   },
   requiredAsterisk: {
     color: COLORS.requiredAsterisk,
@@ -185,6 +195,7 @@ const STYLES = StyleSheet.create({
 const EditProfile = () => {
   const router = useRouter();
   const { orgId } = useLocalSearchParams();
+  const STICKY_HEADER_HEIGHT = 90;
 
   const [orgName, setOrgName] = useState('');
   const [description, setDescription] = useState('');
@@ -284,7 +295,25 @@ const EditProfile = () => {
 
   return (
     <View style={STYLES.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
+        <LinearGradient
+          colors={[
+            "rgba(45,45,45,0.4)",
+            "rgba(0,0,0,0.2)",
+            "rgba(255,255,255,0.1)",
+          ]}
+          style={styles.gradientOverlay}
+        />
+        <View style={styles.navRowContent}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{ flexDirection: "row", alignItems: "center" }}
+          >
+            <Ionicons name="arrow-back" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false}>
         
         {/* Banner */}
@@ -293,9 +322,6 @@ const EditProfile = () => {
             <View style={STYLES.bannerOverlay}>
               <View style={STYLES.bannerContent}>
                 <View style={STYLES.navRow}>
-                  <TouchableOpacity onPress={() => router.back()}>
-                    <Icon name="arrow-back" size={24} color={COLORS.white} />
-                  </TouchableOpacity>
                   <View style={{ width: 60 }} />
                 </View>
               </View>
@@ -366,7 +392,7 @@ const EditProfile = () => {
             multiline
           />
 
-          <Text style={STYLES.sectionHeader}>Social Media Links</Text>
+          <Text style={STYLES.sectionHeaderSOC}>Social Media Links</Text>
 
           <Text style={STYLES.label}>Facebook</Text>
           <TextInput
@@ -387,6 +413,8 @@ const EditProfile = () => {
           />
 
         </View>
+
+        <View style={{ height: 20 }} />
       </ScrollView>
 
       {/* SUCCESS MODAL */}

@@ -29,7 +29,6 @@ const styles = StyleSheet.create({
     color: "#000",
     fontFamily: "Inter",
     fontWeight: "600",
-    marginBottom: 4,
   },
 
   orgDetails: {

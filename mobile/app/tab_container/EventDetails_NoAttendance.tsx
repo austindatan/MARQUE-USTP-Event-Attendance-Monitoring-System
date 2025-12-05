@@ -197,7 +197,7 @@ const Event_NoAttendance = () => {
           style={[styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]}
         />
 
-        <Text style={styles.eventTitle}>{event.event_title || event.event_name}</Text>
+        <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{event.event_title || event.event_name}</Text>
 
         {/* 🔹 Attendance Upload Section */}
         <View style={styles.infoColumn}>
@@ -239,8 +239,8 @@ const Event_NoAttendance = () => {
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image source={{ uri: event.organization_id?.pfp }} style={styles.organizerLogo} />
-            <View>
-              <Text style={styles.organizerName}>{event.organization_id?.org_name}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">{event.organization_id?.org_name}</Text>
               <Text style={styles.organizerLabel}>Organizer</Text>
             </View>
           </View>
@@ -254,7 +254,7 @@ const Event_NoAttendance = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.organizerDesc}>{event.organization_id?.description}</Text>
+        <Text style={[styles.organizerDesc]}>{event.organization_id?.description}</Text>
         <View style={{ height: 20 }} />
       </ScrollView>
     </View>

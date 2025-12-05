@@ -93,7 +93,6 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
             />
           );
         })}
-        <Card_Blank /> 
       </>
     );
   };
@@ -117,7 +116,6 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         contentContainerStyle={{
           backgroundColor: "transparent",
           paddingTop: 125,
-          paddingBottom: 40,
         }}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}

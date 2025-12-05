@@ -145,12 +145,8 @@ const ProfilePage = () => {
             style={{ flexDirection: "row", alignItems: "center" }}
           >
             <Ionicons name="arrow-back" size={18} color="#fff" />
-            <Text style={[styles.navText, { color: "#fff" }]}>{org.org_name}</Text>
+            <Text style={[styles.navTextORG, { color: "#fff" }]} numberOfLines={2} ellipsizeMode="tail">{org.org_name}</Text>
           </TouchableOpacity>
-
-          <View style={styles.bookmarkBtn}>
-            <Ionicons name="bookmark-outline" size={24} color="#ffffff" />
-          </View>
         </View>
       </View>
 
@@ -341,13 +337,15 @@ const tabStyles = StyleSheet.create({
   },
   tabText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: "DMSans-Bold",
   },
   activeTabText: {
     color: COLORS.white,
+    fontFamily: "DMSans-Bold",
   },
   inactiveTabText: {
     color: COLORS.textDark,
+    fontFamily: "DMSans-Medium",
   },
   noEventsText: {
     textAlign: "center",

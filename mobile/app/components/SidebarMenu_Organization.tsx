@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_sidebar";
 import { BASE_URL } from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -123,10 +124,7 @@ const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClos
               style={styles.menuItem}
               onPress={() => handleMenuItemPress(item.name)}
             >
-              <Image
-                source={require("../../assets/images/marque/HomeMenuBarButton.png")} // correct local image import
-                style={{ width: 24, height: 23 }}
-              />
+              <Ionicons name="home-outline" size={24} color="#000" />
               <Text style={styles.menuText}>{item.name}</Text>
             </TouchableOpacity>
           ))}
@@ -136,10 +134,7 @@ const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClos
           style={styles.organizationsButton}
           onPress={() => handleMenuItemPress("Student Side")}
         >
-          <Image
-            source={require("../../assets/images/marque/StudentSideLogo.png")}
-            style={{ width: 24, height: 23 }}
-          />
+          <Ionicons name="people-circle-outline" size={24} color="#fff" />
           <Text style={styles.organizationsText}>Student Side</Text>
         </TouchableOpacity>
       </Animated.View>
