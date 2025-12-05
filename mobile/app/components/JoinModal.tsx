@@ -1,12 +1,6 @@
 // @ts-nocheck
 import React from "react";
-import {
-  Modal,
-  View,
-  Text,
-  Pressable,
-  Image,
-} from "react-native";
+import { Modal, View, Text, Pressable, Image, } from "react-native";
 
 import styles from "../styles/components_joinmodal";
 

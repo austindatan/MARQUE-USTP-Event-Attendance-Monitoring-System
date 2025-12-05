@@ -1,57 +1,20 @@
-// AttendanceHistory.tsx
 import React, { useEffect, useState, useRef } from 'react';
-import {
-    View,
-    Text,
-    TextInput,
-    StyleSheet,
-    TouchableOpacity,
-    SafeAreaView,
-    ImageBackground,
-    ScrollView,
-    Image,
-    ActivityIndicator,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ImageBackground, ScrollView, Image, ActivityIndicator, } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { BASE_URL } from '../../config';
 
-// --- BACKGROUND IMAGE & ICONS ---
 const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
 const FILTER_IMAGE = require('../../assets/images/marque/Filters.png');
 const SEARCH_IMAGE = require('../../assets/images/marque/Search.png');
 
-// --- COLORS AND CONSTANTS ---
-const COLORS = {
-    headerText: '#FFFFFF',
-    inputBackground: 'rgba(255, 255, 255, 0.15)',
-    inputPlaceholder: '#787b9d',
-    inputText: '#FFFFFF',
-    filterButton: '#222762',
-    logBackground: '#FFFFFF',
-    contentBackground: '#FFFFFF',
-    separator: '#DDDDDD',
-};
-
-const FONT_SIZES = {
-    header: 20,
-    search: 18,
-    filterText: 14,
-};
-
-const SPACING = {
-    paddingHorizontal: 25,
-};
-
-// --- TYPES ---
 interface LogEntry {
     name: string;
-    date: string;              // MM-DD-YYYY
-    time: string;              // h:mm A
+    date: string;
+    time: string;
     student_number: string;
     program: string;  
 }
 
-// --- LOG ITEM COMPONENT ---
 const LogItem: React.FC<LogEntry> = ({ name, date, time, student_number, program }) => (
     <View>
         <View style={styles.logItem}>
@@ -68,7 +31,6 @@ const LogItem: React.FC<LogEntry> = ({ name, date, time, student_number, program
     </View>
 );
 
-// --- MAIN COMPONENT ---
 interface AttendanceHistoryProps {
     onBack: () => void;
     eventId: string;
@@ -105,12 +67,10 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }
         }
     };
 
-    // Initial load
     useEffect(() => {
         fetchAttendance();
     }, [eventId]);
 
-    // Debounced search
     useEffect(() => {
         if (searchTimeout.current) {
             clearTimeout(searchTimeout.current);
@@ -120,7 +80,6 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }
         }, 500); // 500ms delay
     }, [searchText]);
 
-    // Filter logs (in case you want client-side fallback filtering)
     const filteredLogs = attendanceLog.filter(
         log =>
             log.name.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -128,11 +87,10 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }
     );
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <View style={styles.safeArea}>
             <ImageBackground source={BackgroundImage} style={styles.background} resizeMode="cover">
                 <View style={styles.container}>
 
-                    {/* Header */}
                     <View style={styles.header}>
                         <TouchableOpacity onPress={onBack}>
                             <Ionicons name="arrow-back" size={24} color={COLORS.headerText} />
@@ -140,7 +98,6 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }
                         <Text style={styles.headerTitle}>Attendance Log</Text>
                     </View>
 
-                    {/* Search Bar */}
                     <View style={styles.searchContainer}>
                         <View style={styles.searchBar}>
                             <Image source={SEARCH_IMAGE} style={styles.searchImage} resizeMode="contain" />
@@ -158,7 +115,6 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }
                         </View>
                     </View>
 
-                    {/* Attendance List */}
                     <View style={styles.contentArea}>
                         {loading ? (
                             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -189,11 +145,31 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }
 
                 </View>
             </ImageBackground>
-        </SafeAreaView>
+        </View>
     );
 };
 
-// --- STYLES ---
+const COLORS = {
+    headerText: '#FFFFFF',
+    inputBackground: 'rgba(255, 255, 255, 0.15)',
+    inputPlaceholder: '#787b9d',
+    inputText: '#FFFFFF',
+    filterButton: '#222762',
+    logBackground: '#FFFFFF',
+    contentBackground: '#FFFFFF',
+    separator: '#DDDDDD',
+};
+
+const FONT_SIZES = {
+    header: 20,
+    search: 18,
+    filterText: 14,
+};
+
+const SPACING = {
+    paddingHorizontal: 25,
+};
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   background: { flex: 1, width: '100%', height: '100%' },

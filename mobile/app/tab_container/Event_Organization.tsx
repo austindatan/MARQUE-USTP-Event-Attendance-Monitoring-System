@@ -7,8 +7,7 @@ import appeffects from "../styles/effects_app";
 import EmptyCard from "../components/Card_Empty";
 import { BASE_URL } from "../../config";
 
-// ⚠️ Replace this with the actual way you get the logged-in student's ID 
-const MOCK_STUDENT_ID = '692402df4600376c2cea56eb'; // temporary for testing
+const MOCK_STUDENT_ID = '692402df4600376c2cea56eb';
 
 const Organizations = ({ scrollY }) => {
   const router = useRouter();
@@ -78,18 +77,15 @@ const Organizations = ({ scrollY }) => {
     return (
       <View style={appeffects.eventList}>
         {events.map((ev) => {
-          // Date formatting logic
           const date = new Date(ev.event_date);
           const dateDay = date.getDate();
           const dateMonth = date.toLocaleString('default', { month: 'short' });
           const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-          // Time formatting logic
           const startTime = new Date(ev.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
           const endTime = new Date(ev.end_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
           const timeVenueStr = `⏰ ${startTime} - ${endTime} | 📍 ${ev.venue}`;
 
-          // Determine navigation based on event status
           const handleEventPress = () => {
             switch (ev.status) {
               case "Ongoing":

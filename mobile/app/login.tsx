@@ -13,7 +13,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // auto-redirect
   useEffect(() => {
     const checkLogin = async () => {
       const token = await AsyncStorage.getItem("token");
@@ -25,7 +24,6 @@ const Login = () => {
     checkLogin();
   }, []);
 
-  // Animation setup
   const logoY = useSharedValue(0);
   const formOpacity = useSharedValue(0);
   const formY = useSharedValue(40);
@@ -42,7 +40,6 @@ const Login = () => {
     transform: [{ translateY: formY.value }],
   }));
 
-  // LOGIN HANDLER
   const handleLogin = async () => {
     setErrorMessage("");
 
@@ -70,7 +67,6 @@ const Login = () => {
       }
 
       if (response.ok) {
-        // Save token and student number
         if (data.token) {
           await AsyncStorage.setItem("token", data.token);
         }

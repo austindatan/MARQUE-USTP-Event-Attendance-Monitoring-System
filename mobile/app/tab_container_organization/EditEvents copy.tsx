@@ -1,14 +1,6 @@
 // @ts-nocheck
 import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Dimensions, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -18,9 +10,6 @@ import { STYLES, COLORS } from "../styles/component_org_page";
 
 const { width } = Dimensions.get('window');
 
-/* ---------------------------------------------
-   Small Component: Dashed Placeholder Box
---------------------------------------------- */
 const DashedPlaceholder = ({ style, onPress }: { style?: any; onPress?: () => void }) => (
   <TouchableOpacity onPress={onPress}>
     <View style={[styles.dashedBox, style]}>
@@ -29,9 +18,6 @@ const DashedPlaceholder = ({ style, onPress }: { style?: any; onPress?: () => vo
   </TouchableOpacity>
 );
 
-/* ---------------------------------------------
-   Main Component
---------------------------------------------- */
 const EditEvents: React.FC = () => {
   const handleMainImagePress = () => {
     console.log('Main image placeholder pressed');
@@ -72,7 +58,6 @@ const EditEvents: React.FC = () => {
 
       <ScrollView contentContainerStyle={styles.container}>
         
-        {/* -------- Image Upload Section -------- */}
         <View style={styles.imageUploadArea}>
           <TouchableOpacity style={styles.mainImagePlaceholder} onPress={handleMainImagePress}>
             <MaterialCommunityIcons name="plus" size={30} color="#7F5AF0" />
@@ -89,10 +74,8 @@ const EditEvents: React.FC = () => {
           </View>
         </View>
 
-        {/* -------- Form Title -------- */}
         <Text style={styles.formSectionTitle}>Event Details</Text>
 
-        {/* Event Name */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Event Name<Text style={styles.required}>*</Text>
@@ -104,7 +87,6 @@ const EditEvents: React.FC = () => {
           />
         </View>
 
-        {/* Event Type */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Event Type<Text style={styles.required}>*</Text>
@@ -117,7 +99,6 @@ const EditEvents: React.FC = () => {
           />
         </View>
 
-        {/* Date / Time Picker */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Select Date and Time<Text style={styles.required}>*</Text>
@@ -139,7 +120,6 @@ const EditEvents: React.FC = () => {
           </View>
         </View>
 
-        {/* Description */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Event Description<Text style={styles.required}>*</Text>
@@ -155,7 +135,6 @@ const EditEvents: React.FC = () => {
 
       </ScrollView>
 
-      {/* -------- Floating Submit Button -------- */}
       <TouchableOpacity style={styles.publishButton}>
         <Text style={styles.publishButtonText}>Publish Event</Text>
         <MaterialCommunityIcons
@@ -171,9 +150,6 @@ const EditEvents: React.FC = () => {
 
 export default EditEvents;
 
-/* ---------------------------------------------
-   Styles (Merged)
---------------------------------------------- */
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -185,7 +161,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
 
-  /* ------ Header ------ */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -202,7 +177,6 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
 
-  /* ------ Image Upload ------ */
   imageUploadArea: {
     marginBottom: 30,
   },
@@ -241,7 +215,6 @@ const styles = StyleSheet.create({
     borderColor: '#F0E5FF',
   },
 
-  /* ------ Form ------ */
   formSectionTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -300,7 +273,6 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
 
-  /* ------ Floating Button ------ */
   publishButton: {
     position: 'absolute',
     bottom: 20,

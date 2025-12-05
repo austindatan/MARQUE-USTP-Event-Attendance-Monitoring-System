@@ -35,8 +35,6 @@ const Departments = ({ scrollY, studentDept }) => {
       fetchEvents(studentDept); 
     }
   }, [studentDept, fetchEvents]);
-
-  // --- Rendering Logic ---
   
   const renderEvents = () => {
     if (isLoading) {
@@ -62,8 +60,6 @@ const Departments = ({ scrollY, studentDept }) => {
           const dateDay = date.getDate();
           const dateMonth = date.toLocaleString('default', { month: 'short' });
           const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-          // Determine which EventDetails page to navigate to based on status
           const handleEventPress = () => {
             switch (ev.status) {
               case "Ongoing":

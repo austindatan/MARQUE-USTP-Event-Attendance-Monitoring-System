@@ -1,8 +1,7 @@
 // controllers/orgOfficerController.js
 
 const OrgOfficer = require('../models/Org_officer');
-const Organization = require('../models/Organization'); // Import your existing Organization model
-const JoinRequest = require('../models/JoinRequest');
+const Organization = require('../models/Organization');
 const mongoose = require('mongoose');
 
 // GET all organizations a student is a member of

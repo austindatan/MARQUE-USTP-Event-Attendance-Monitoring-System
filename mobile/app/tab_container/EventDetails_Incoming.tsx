@@ -1,25 +1,12 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  ImageBackground,
-  ActivityIndicator,
-  Alert, // Added for better error reporting
-} from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, ImageBackground, ActivityIndicator, Alert, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../styles/page_eventdetails";
-// 💡 IMPORTANT: Added expo-router imports
-import { useRouter, useLocalSearchParams } from "expo-router"; 
-// 💡 IMPORTANT: Added CLOUD_NAME import
-import { BASE_URL, CLOUD_NAME } from "../../config"; 
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { BASE_URL, CLOUD_NAME } from "../../config";
 
-// Helper function to fix Cloudinary URLs (adapted for consistency)
 const fixCloudinaryUrl = (url, cloudName) => {
   if (!url || url.startsWith("http")) {
     return url;
@@ -31,7 +18,6 @@ const fixCloudinaryUrl = (url, cloudName) => {
   return `https://res.cloudinary.com/${cloudName}/image/upload/${path}`;
 };
 
-
 const GoingAvatarStack = () => {
   const avatars = [
     { id: 1, source: require("../../assets/images/profile_pic.png"), zIndex: 3 },
@@ -42,7 +28,7 @@ const GoingAvatarStack = () => {
   return (
     <View style={styles.avatarStackContainer}>
       {avatars.map((avatar, index) => (
-        <Viewt
+        <View
           key={avatar.id}
           style={[
             styles.avatarContainer,
@@ -51,67 +37,59 @@ const GoingAvatarStack = () => {
           ]}
         >
           <Image source={avatar.source} style={styles.goingAvatar} />
-        </Viewt>
+        </View>
       ))}
     </View>
   );
 };
 
-// 💡 Refactored to use expo-router hooks
 const Event_Incoming = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  
-  // 🔥 FIX: Safely extract eventId, handling both string and string[]
+
   const rawEventId = params.eventId;
   const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
-  
+
   const STICKY_HEADER_HEIGHT = 90;
 
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
-  // TEMP STATIC USER ID (Replace this with real user context)
-  const [userId, setUserId] = useState("692402df4600376c2cea56eb"); 
+  const [userId, setUserId] = useState("692402df4600376c2cea56eb");
 
-  // 💡 Refactored to fetch a specific event by ID
   const fetchEventDetails = async (id) => {
     if (!id) {
-        setLoading(false);
-        return;
+      setLoading(false);
+      return;
     }
-    
+
     try {
       setLoading(true);
-      // Fetches details for the specific eventId
-      const res = await fetch(`${BASE_URL}/events/event/${id}`); 
-      
+      const res = await fetch(`${BASE_URL}/events/event/${id}`);
+
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`API Error: ${res.status} - ${errorText}`);
       }
-      
+
       const data = await res.json();
       const eventObj = data.event || data;
 
       if (!eventObj) {
-          Alert.alert("Error", "Event data not found in response.");
-          setLoading(false);
-          return;
+        Alert.alert("Error", "Event data not found in response.");
+        setLoading(false);
+        return;
       }
-      
-      // Apply Cloudinary fix to event image
+
       if (eventObj.event_image) {
         eventObj.event_image = fixCloudinaryUrl(eventObj.event_image, CLOUD_NAME);
       }
-      
-      // Apply Cloudinary fix to organizer pfp
+
       if (eventObj.organization_id?.pfp) {
         eventObj.organization_id.pfp = fixCloudinaryUrl(eventObj.organization_id.pfp, CLOUD_NAME);
       }
 
       setEventData(eventObj);
-
     } catch (error) {
       console.error("Error fetching event details:", error);
       Alert.alert("Network Error", `Failed to load event details. Error: ${error.message}`);
@@ -120,7 +98,6 @@ const Event_Incoming = () => {
     }
   };
 
-  // 🔹 Check initial follow status for organizer (Copied from Concluded for consistency)
   const checkFollowStatus = async (orgId) => {
     try {
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${userId}/ids`);
@@ -133,7 +110,6 @@ const Event_Incoming = () => {
     }
   };
 
-  // 🔹 Handle Follow/Unfollow toggle (Copied from Concluded for consistency)
   const handleFollowToggle = async () => {
     if (!eventData?.organization_id?._id || !userId) return;
     const orgId = eventData.organization_id._id;
@@ -141,7 +117,7 @@ const Event_Incoming = () => {
     const action = isFollowing ? "unfollow" : "follow";
 
     try {
-      setIsFollowing(!isFollowing); // optimistic UI
+      setIsFollowing(!isFollowing);
 
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
         method: "POST",
@@ -150,7 +126,7 @@ const Event_Incoming = () => {
       });
 
       if (!res.ok) {
-        setIsFollowing(isFollowing); // revert if error
+        setIsFollowing(isFollowing);
         Alert.alert("Error", `Failed to ${action} organization.`);
       }
     } catch (err) {
@@ -158,29 +134,25 @@ const Event_Incoming = () => {
     }
   };
 
-
   useEffect(() => {
     if (eventId) {
-        fetchEventDetails(eventId);
+      fetchEventDetails(eventId);
     } else {
-        setLoading(false);
+      setLoading(false);
     }
   }, [eventId]);
 
-  // Load follow status
   useEffect(() => {
     if (eventData?.organization_id?._id && userId) {
       checkFollowStatus(eventData.organization_id._id);
     }
   }, [eventData, userId]);
 
-
   const handleBack = () => {
     router.back();
   };
-  
+
   const handleRegister = () => {
-    // Implement your navigation or logic for the registration form here
     Alert.alert("Register", "Navigating to registration form...");
   };
 
@@ -196,17 +168,15 @@ const Event_Incoming = () => {
   if (!eventData) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <Text style={{fontSize: 16, textAlign: 'center'}}>Could not load event details for ID: {eventId}</Text>
+        <Text style={{ fontSize: 16, textAlign: 'center' }}>Could not load event details for ID: {eventId}</Text>
       </View>
     );
   }
-  
-  // DATE
+
   const eventDateObj = eventData.event_date
     ? new Date(eventData.event_date)
     : null;
 
-  // Format: "30 December, 2025"
   const eventDate = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", {
         day: "numeric",
@@ -215,12 +185,10 @@ const Event_Incoming = () => {
       })
     : "Date N/A";
 
-  // Get weekday: "Wednesday"
   const eventDay = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
     : "";
 
-  // TIME
   const startTime = eventData.start_time
     ? new Date(eventData.start_time).toLocaleTimeString("en-US", {
         hour: "2-digit",
@@ -237,7 +205,6 @@ const Event_Incoming = () => {
       })
     : null;
 
-  // FINAL TIME STRING
   let eventTimeFull = "Time N/A";
 
   if (eventDay && startTime && endTime) {
@@ -245,17 +212,15 @@ const Event_Incoming = () => {
   } else if (eventDay && startTime) {
     eventTimeFull = `${eventDay}, ${startTime}`;
   } else if (eventDay) {
-    eventTimeFull = eventDay; // Always show day even without time
+    eventTimeFull = eventDay;
   }
 
   const organizerPfpSource = eventData.organization_id?.pfp
     ? { uri: eventData.organization_id.pfp }
-    : require("../../assets/images/profile_pic.png"); // Fallback image
-
+    : require("../../assets/images/profile_pic.png");
 
   return (
     <View style={styles.container}>
-      {/* TOP NAV */}
       <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
         <LinearGradient
           colors={["rgba(45, 45, 45, 0.4)", "rgba(0, 0, 0, 0.2)", "rgba(255,255,255,0.1)"]}
@@ -283,9 +248,10 @@ const Event_Incoming = () => {
           style={[styles.headerImageBackground, { paddingTop: STICKY_HEADER_HEIGHT }]}
         />
 
-        <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{eventData.title || eventData.event_name}</Text>
+        <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">
+          {eventData.title || eventData.event_name}
+        </Text>
 
-        {/* DATE & TIME */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
             <Ionicons name="calendar" size={20} color="#0A0F51" />
@@ -297,7 +263,6 @@ const Event_Incoming = () => {
           </View>
         </View>
 
-        {/* LOCATION */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
             <Ionicons name="location" size={20} color="#0A0F51" />
@@ -315,7 +280,6 @@ const Event_Incoming = () => {
           {eventData.description}
         </Text>
 
-        {/* ORGANIZER */}
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image
@@ -323,13 +287,14 @@ const Event_Incoming = () => {
               style={styles.organizerLogo}
             />
             <View style={{ flex: 1 }}>
-              <Text style={styles.organizerName} style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">{eventData.organization_id?.org_name}</Text>
+              <Text style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">
+                {eventData.organization_id?.org_name}
+              </Text>
               <Text style={styles.organizerLabel}>Organizers</Text>
             </View>
           </View>
 
-          {/* FOLLOW BUTTON with logic from concluded event */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.followButton, isFollowing && { backgroundColor: "#ccc" }]}
             onPress={handleFollowToggle}
           >
@@ -341,12 +306,11 @@ const Event_Incoming = () => {
 
         <Text style={styles.organizerDesc}>
           {eventData.organization_id?.org_description || eventData.organization_id?.description || "No description provided."}
-        </Text>
+        </Text> 
 
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* FOOTER - REGISTER BUTTON */}
       <View style={styles.bottomButtonContainer}>
         <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
           <Text style={styles.registerText}>REGISTER NOW</Text>
