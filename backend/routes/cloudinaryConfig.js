@@ -47,9 +47,22 @@ const studentStorage = new CloudinaryStorage({
 });
 const uploadStudentImage = multer({ storage: studentStorage });
 
+const attendanceStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'MARQUE Events/PHOTOPROOF',
+    format: async () => 'jpg',
+    public_id: (req, file) => `photoproof-${Date.now()}`
+  }
+});
+
+const uploadPhotoproof = multer({ storage: attendanceStorage });
+
+
 module.exports = {
   uploadEventImages,
   uploadOrgImages,
   uploadStudentImage,
+  uploadPhotoproof,
   cloudinary
 };
