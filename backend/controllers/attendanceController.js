@@ -5,6 +5,7 @@ const Student = require("../models/Student");
 const User = require("../models/User");
 const Department = require("../models/Department");
 const Event = require("../models/Event"); // <--- ADD THIS LINE
+const { cloudinary } = require('../routes/cloudinaryConfig');
 
 
 /**
@@ -249,6 +250,54 @@ const searchAttendanceLogs = async (req, res) => {
 
 
 /* ============================================================
+    UPLOAD PHOTOPROOF and apply Cloudinary text overlay
+    Accepts multipart 'file' (uploaded by multer/cloudinary storage)
+    and optional 'watermarkText' in body. Returns watermarked URL.
+============================================================ */
+const uploadPhotoproof = async (req, res) => {
+  try {
+    const watermarkText = req.body?.watermarkText || '';
+
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const originalUrl = req.file.path;
+
+    // Use Cloudinary to create a watermarked version of the uploaded image.
+    // We re-upload the already-hosted image URL and apply a text overlay transformation.
+    const uploadOptions = {
+      folder: 'MARQUE Events/PHOTOPROOF_WATERMARKED',
+      public_id: `photoproof-wm-${Date.now()}`,
+      transformation: []
+    };
+
+    if (watermarkText && watermarkText.trim() !== '') {
+      uploadOptions.transformation.push({
+        overlay: {
+          font_family: 'Arial',
+          font_size: 36,
+          font_weight: 'bold',
+          text: watermarkText
+        },
+        gravity: 'south_west',
+        x: 20,
+        y: 20,
+        color: '#FFFFFF'
+      });
+    }
+
+    const result = await cloudinary.uploader.upload(originalUrl, uploadOptions);
+
+    return res.status(200).json({ message: 'Uploaded', url: result.secure_url });
+  } catch (err) {
+    console.error('UPLOAD PHOTOPROOF ERROR:', err);
+    return res.status(500).json({ message: 'Server Error', error: err.message });
+  }
+};
+
+
+/* ============================================================
     EXPORTS
 ============================================================ */
 module.exports = {
@@ -256,4 +305,5 @@ module.exports = {
   getAttendanceHistory,
   isEventWithin30Min,
   searchAttendanceLogs, // export Event model if needed for routes
+  uploadPhotoproof,
 };

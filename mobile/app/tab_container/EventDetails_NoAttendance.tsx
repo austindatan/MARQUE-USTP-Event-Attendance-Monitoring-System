@@ -201,7 +201,10 @@ const Event_NoAttendance = () => {
 
         {/* 🔹 Attendance Upload Section */}
         <View style={styles.infoColumn}>
-          <TouchableOpacity style={styles.infoBoxAttendance}>
+          <TouchableOpacity style={styles.infoBoxAttendance} onPress={() => router.push({
+            pathname: "tab_container/Photo_Proof",
+            params: { eventId }
+          })}>
             <Text style={styles.infoTextAtt}>
               Upload a photo of yourself at the event for verification. Make sure your face and surroundings of the venue are visible.
             </Text>
