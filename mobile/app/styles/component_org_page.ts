@@ -2,7 +2,6 @@ import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-// Color Palette
 export const COLORS = {
   primaryNavy: '#0c113b',
   accentBlue: '#2a7de1',
@@ -15,13 +14,11 @@ export const COLORS = {
 };
 
 export const STYLES = StyleSheet.create({
-  // Main Container
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  
-  // Header
+
   headerContainer: {
     height: 200,
     width: '100%',
@@ -49,8 +46,6 @@ export const STYLES = StyleSheet.create({
     fontWeight: '500',
     marginLeft: 10,
   },
-
-  // Profile Section
   profileSectionContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -96,15 +91,12 @@ export const STYLES = StyleSheet.create({
     alignItems: 'center',
     marginTop: 60,
   },
-
-  // Org Info
   orgTitle: {
     fontSize: 22,
     fontFamily: "DMSans-Bold",
     color: COLORS.textDark,
     marginBottom: 15,
   },
-
   socialRow: {
     flexDirection: 'row',
     gap: 10,
@@ -119,8 +111,6 @@ export const STYLES = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  // About Section
   sectionHeader: {
     fontSize: 16,
     color: '#444',
@@ -135,8 +125,6 @@ export const STYLES = StyleSheet.create({
     textAlign: 'justify',
     fontFamily: "DMSans-Medium",
   },
-
-  // Events Section
   eventsTitle: {
     textAlign: 'center',
     fontSize: 16,
@@ -149,8 +137,6 @@ export const STYLES = StyleSheet.create({
     backgroundColor: '#e0e0e0',
     marginBottom: 10,
   },
-
-  // OLD TAB STYLES (no longer used)
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: '#e6e8eb',
@@ -170,8 +156,6 @@ export const STYLES = StyleSheet.create({
   inactiveTabOld: {
     backgroundColor: 'transparent',
   },
-
-  // Event Card
   cardContainer: {
     width: '100%',
     height: 180,
@@ -221,10 +205,6 @@ export const STYLES = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-    
-  /* -------------------------------------------------
-  * NEW: Separated Tabs (Incoming / Concluded)
-  * ------------------------------------------------- */
   tabWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -232,11 +212,11 @@ export const STYLES = StyleSheet.create({
   },
   singleTab: {
     flex: 1,
-    paddingVertical: 12,   // controls tab height
+    paddingVertical: 12,
     marginHorizontal: 5,
-    borderRadius: 50,      // pill shape
+    borderRadius: 50,
     alignItems: 'center',
-    justifyContent: 'center', // vertically center text
+    justifyContent: 'center',
     minWidth: 120,
   },
   activeTab: {
@@ -266,11 +246,7 @@ export const STYLES = StyleSheet.create({
   right: 0,
   height: '50%',
   zIndex: 5,
-},
-
-  /* -------------------------------------------------
-   * NEW: Placeholder Content Block
-   * ------------------------------------------------- */
+  },
   contentPlaceholder: {
     paddingVertical: 15,
     alignItems: 'center',

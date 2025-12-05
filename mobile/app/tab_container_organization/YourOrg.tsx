@@ -28,7 +28,6 @@ const YourOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const fetchJoinedOrganizations = async () => {
     setLoading(true);
     try {
-      // ... Step 1 (Student Lookup) ...
       const storedStudentNumber = await AsyncStorage.getItem("student_number");
       if (!storedStudentNumber) {
         setError("User not logged in or student number not found.");
@@ -43,7 +42,6 @@ const YourOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
           return;
       }
 
-      // ... Step 2 (Membership Lookup) ...
       const orgsRes = await axios.get(`${BASE_URL}/api/memberships/student/${studentId}`);
       
       setJoinedOrgs(orgsRes.data);

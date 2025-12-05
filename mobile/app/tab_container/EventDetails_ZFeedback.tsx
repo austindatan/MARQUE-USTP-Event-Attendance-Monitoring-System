@@ -1,23 +1,12 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Image,
-  TextInput,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, TextInput, Alert, ActivityIndicator, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BASE_URL } from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 
-// 🔥🔥 FIXED — AUTH HELPER ADDED (YOU WERE MISSING THIS)
 const getAuthInfo = async () => {
   try {
     const token = await AsyncStorage.getItem("token");
@@ -27,7 +16,7 @@ const getAuthInfo = async () => {
     const decoded = jwtDecode(token);
 
     return {
-      userId: decoded.id, // Make sure your JWT payload has "id"
+      userId: decoded.id,
       token: token,
     };
   } catch (error) {
@@ -36,7 +25,6 @@ const getAuthInfo = async () => {
   }
 };
 
-// ⭐ Star Rating Component
 const RatingStars = ({ rating, setRating }) => {
   return (
     <View style={{ flexDirection: "row", marginTop: 6 }}>
@@ -56,9 +44,7 @@ const RatingStars = ({ rating, setRating }) => {
 
 const EventFeedback = () => {
   const router = useRouter();
-  // Pass the image URL through local params if you have it available when navigating
   const { eventId, eventName, eventImage: initialEventImage } = useLocalSearchParams(); 
-
   const [overall, setOverall] = useState(0);
   const [venue, setVenue] = useState(0);
   const [speaker, setSpeaker] = useState(0);
@@ -66,14 +52,9 @@ const EventFeedback = () => {
   const [comments, setComments] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [authInfo, setAuthInfo] = useState({ userId: null, token: null });
-  // 🔥 ADDED: State to hold the dynamic image URL
   const [eventImageUrl, setEventImageUrl] = useState(null);
-
-  // Fallback image source for require() format
   const FALLBACK_IMAGE = require("../../assets/images/marque/crtcg1.png");
 
-
-  // 🔥 NEW FUNCTION: Fetch event image
   const fetchEventImage = async () => {
     if (!eventId) return;
 
@@ -84,9 +65,6 @@ const EventFeedback = () => {
 
         if (eventObj && eventObj.event_image) {
             let imageUrl = eventObj.event_image;
-            
-            // CRITICAL: Construct the full URL if it's a Cloudinary public ID
-            // NOTE: You must ensure 'dhfgfpoav' is your correct Cloudinary cloud name.
             const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dhfgfpoav/image/upload/";
             if (!imageUrl.startsWith("http")) {
                 imageUrl = `${CLOUDINARY_BASE_URL}${imageUrl}`;
@@ -99,8 +77,6 @@ const EventFeedback = () => {
     }
   };
 
-
-  // 🔥 Load Auth Info AND Event Image
   useEffect(() => {
     const loadData = async () => {
       const info = await getAuthInfo();
@@ -114,20 +90,16 @@ const EventFeedback = () => {
         );
         return;
       }
-
-      // 1. Try to use the image passed via navigation params first
       if (initialEventImage) {
           setEventImageUrl(initialEventImage);
       }
       
-      // 2. Fallback: Fetch the event image from the API
       fetchEventImage();
     };
     loadData();
   }, [eventId]);
 
 
-  // 🔥 Submit Feedback
   const handleSubmit = async () => {
     if (overall === 0 || venue === 0 || speaker === 0 || experience === 0) {
       Alert.alert(
@@ -166,9 +138,8 @@ const EventFeedback = () => {
       });
 
       if (res.ok) {
-        // ⭐ FIX 1: Store status persistently and go back smoothly
         await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
-        router.back(); // Use back() instead of push()
+        router.back();
       } else {
         const errorData = await res.json();
 
@@ -177,9 +148,8 @@ const EventFeedback = () => {
             "Already Submitted",
             "You have already submitted feedback for this event."
           );
-          // ⭐ FIX 2: Store status persistently and go back smoothly
           await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
-          router.back(); // Use back() instead of push()
+          router.back();
         } else {
           Alert.alert(
             "Submission Failed",
@@ -200,7 +170,6 @@ const EventFeedback = () => {
 
   return (
     <View style={styles.container}>
-      {/* Navigation */}
       <View style={[styles.navBar, { zIndex: 10 }]}>
         <TouchableOpacity
           style={{ flexDirection: "row", alignItems: "center" }}
@@ -212,7 +181,6 @@ const EventFeedback = () => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* 🔥 FIXED: Use dynamic source. If eventImageUrl is present, use { uri: ... }, else use local require() fallback */}
         <Image
           source={eventImageUrl ? { uri: eventImageUrl } : FALLBACK_IMAGE}
           style={styles.headerImage}
@@ -258,7 +226,6 @@ const EventFeedback = () => {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Submit Button */}
       <View style={styles.bottomButtonContainer}>
         <TouchableOpacity
           style={styles.submitButton}
@@ -281,9 +248,7 @@ const EventFeedback = () => {
 
 export default EventFeedback;
 
-// ---------- Styles ----------
 const styles = StyleSheet.create({
-// ... (Styles remain unchanged) ...
   container: {
     flex: 1,
     backgroundColor: "#fff",

@@ -1,5 +1,3 @@
-// components_edit_event.ts
-// @ts-nocheck
 import { StyleSheet, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -12,33 +10,23 @@ const styles = StyleSheet.create({
 
   container: {
     paddingHorizontal: 20,
-    paddingBottom: 100, // Space for the floating button
+    paddingBottom: 100,
   },
-
-  // --- Header Styles ---
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 15,
     marginBottom: 10,
   },
-
-  backButton: {
-    // Optional: add padding for better tap target
-  },
-
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#000',
     marginLeft: 15,
   },
-
-  // --- Image Upload Area ---
   imageUploadArea: {
     marginBottom: 30,
   },
-
   mainImagePlaceholder: {
     height: width * 0.45,
     borderRadius: 15,
@@ -70,11 +58,10 @@ const styles = StyleSheet.create({
   },
 
   smallPlaceholder: {
-    width: (width - 40 - 15 * 3) / 4, // 4 items layout
+    width: (width - 40 - 15 * 3) / 4,
     borderColor: '#F0E5FF',
   },
 
-  // --- Form Section ---
   formSectionTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -133,7 +120,6 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
 
-  // --- Publish Button ---
   publishButton: {
     position: 'absolute',
     bottom: 20,

@@ -1,17 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  ImageBackground,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  StyleSheet,
-  TextInput,
-  Alert,
-} from 'react-native';
+import { View, Text, Image, ImageBackground, ScrollView, TouchableOpacity, StatusBar, StyleSheet, TextInput, Alert, } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styles from "../styles/page_eventdetails";
@@ -20,11 +9,236 @@ import { Ionicons } from "@expo/vector-icons";
 import { BASE_URL } from "../../config";
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from "expo-linear-gradient";
-
-// Import the modal
 import EditProfileModal from "../components/EditProfileModal";
 
-// --- COLORS DEFINITION ---
+const EditProfile = () => {
+  const router = useRouter();
+  const { orgId } = useLocalSearchParams();
+  const STICKY_HEADER_HEIGHT = 90;
+
+  const [orgName, setOrgName] = useState('');
+  const [description, setDescription] = useState('');
+  const [facebookLink, setFacebookLink] = useState('');
+  const [instagramLink, setInstagramLink] = useState('');
+  const [bannerUri, setBannerUri] = useState(PLACEHOLDER_ASSETS.bannerUri);
+  const [logoUri, setLogoUri] = useState(PLACEHOLDER_ASSETS.logoUri);
+
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/api/organizations/profile/${orgId}`);
+        const org = res.data.organization;
+
+        setOrgName(org.org_name);
+        setDescription(org.description);
+        setFacebookLink(org.fb_link || "");
+        setInstagramLink(org.ig_link || "");
+        setBannerUri(org.cover_photo ? { uri: org.cover_photo } : PLACEHOLDER_ASSETS.bannerUri);
+        setLogoUri(org.pfp ? { uri: org.pfp } : PLACEHOLDER_ASSETS.logoUri);
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+      }
+    };
+    if (orgId) loadProfile();
+  }, [orgId]);
+
+  const handleImagePick = async (setImageFunction, aspectRatio = [4, 3]) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: aspectRatio,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setImageFunction({ uri: result.assets[0].uri, local: true });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!orgName || !description) {
+      Alert.alert('Error', 'Organization Name and Description are required.');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("org_name", orgName);
+      formData.append("description", description);
+      formData.append("fb_link", facebookLink);
+      formData.append("ig_link", instagramLink);
+
+      if (logoUri.local) {
+        formData.append("pfp", {
+          uri: logoUri.uri,
+          name: `logo_${Date.now()}.png`,
+          type: "image/png",
+        });
+      }
+
+      if (bannerUri.local) {
+        formData.append("cover_photo", {
+          uri: bannerUri.uri,
+          name: `banner_${Date.now()}.png`,
+          type: "image/png",
+        });
+      }
+
+      await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      console.log("Data updates successfully.");
+
+      setShowModal(true);
+
+      setTimeout(() => {
+        setShowModal(false);
+        router.push({
+          pathname: "../tab_container_organization/Profile",
+          params: { orgId, refresh: Date.now().toString() }
+        });
+      }, 2000);
+
+    } catch (err) {
+      console.error("Error updating org:", err);
+      Alert.alert("Error", "Failed to update organization.");
+    }
+  };
+
+  return (
+    <View style={STYLES.container}>
+      <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
+        <LinearGradient
+          colors={[
+            "rgba(45,45,45,0.4)",
+            "rgba(0,0,0,0.2)",
+            "rgba(255,255,255,0.1)",
+          ]}
+          style={styles.gradientOverlay}
+        />
+        <View style={styles.navRowContent}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{ flexDirection: "row", alignItems: "center" }}
+          >
+            <Ionicons name="arrow-back" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        
+        <View style={STYLES.headerContainer}>
+          <ImageBackground source={bannerUri} style={STYLES.headerImageBackground}>
+            <View style={STYLES.bannerOverlay}>
+              <View style={STYLES.bannerContent}>
+                <View style={STYLES.navRow}>
+                  <View style={{ width: 60 }} />
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={STYLES.bannerCameraIcon}
+              onPress={() => handleImagePick(setBannerUri)}
+            >
+              <Image source={require("../../assets/images/marque/Camera1.png")}
+                style={{ width: 24, height: 24 }} />
+            </TouchableOpacity>
+          </ImageBackground>
+        </View>
+
+        <View style={STYLES.contentContainer}>
+          
+          <View style={STYLES.logoWrapper}>
+            <TouchableOpacity
+              style={STYLES.logoContainer}
+              onPress={() => handleImagePick(setLogoUri, [1, 1])}
+            >
+              <Image source={logoUri} style={STYLES.logoImage} />
+              <View style={STYLES.logoCameraOverlay}>
+                <Image
+                  source={require("../../assets/images/marque/Camera1.png")}
+                  style={{ width: 30, height: 30 }}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={STYLES.saveButton}
+            onPress={handleSave}
+            activeOpacity={0.8}
+          >
+            <Text style={STYLES.saveButtonText}>SAVE</Text>
+          </TouchableOpacity>
+
+          <Text style={STYLES.sectionHeader}>Organization Information</Text>
+
+          <Text style={STYLES.label}>
+            Organization Name<Text style={STYLES.requiredAsterisk}>*</Text>
+          </Text>
+          <TextInput
+            style={STYLES.textInput}
+            value={orgName}
+            onChangeText={setOrgName}
+            placeholder="Enter Organization Name"
+            placeholderTextColor={COLORS.placeholderText}
+          />
+
+          <Text style={STYLES.label}>
+            Description<Text style={STYLES.requiredAsterisk}>*</Text>
+          </Text>
+          <TextInput
+            style={[STYLES.textInput, STYLES.textArea]}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Enter a description for your organization"
+            placeholderTextColor={COLORS.placeholderText}
+            multiline
+          />
+
+          <Text style={STYLES.sectionHeaderSOC}>Social Media Links</Text>
+
+          <Text style={STYLES.label}>Facebook</Text>
+          <TextInput
+            style={STYLES.textInput}
+            value={facebookLink}
+            onChangeText={setFacebookLink}
+            placeholder="https://www.facebook.com/username"
+            placeholderTextColor={COLORS.placeholderText}
+          />
+
+          <Text style={STYLES.label}>Instagram</Text>
+          <TextInput
+            style={STYLES.textInput}
+            value={instagramLink}
+            onChangeText={setInstagramLink}
+            placeholder="https://www.instagram.com/username"
+            placeholderTextColor={COLORS.placeholderText}
+          />
+
+        </View>
+
+        <View style={{ height: 20 }} />
+      </ScrollView>
+
+      <EditProfileModal
+        visible={showModal}
+        title="Profile Updated!"
+        message="Your organization profile has been successfully updated."
+        onClose={() => setShowModal(false)}
+      />
+
+    </View>
+  );
+};
+
+export default EditProfile;
+
 const COLORS = {
   primaryDark: '#013C7B', 
   white: '#FFFFFF',
@@ -39,13 +253,11 @@ const COLORS = {
   socialSmallText: '#EAEAEA',
 };
 
-// --- ASSETS ---
 const PLACEHOLDER_ASSETS = {
   bannerUri: require("../../assets/images/marque/CoverPage.png"),
   logoUri: require("../../assets/images/marque/LogoImage.jpg"),
 };
 
-// --- STYLES ---
 const STYLES = StyleSheet.create({
   container: {
     flex: 1,
@@ -190,243 +402,3 @@ const STYLES = StyleSheet.create({
     textAlignVertical: 'top',
   },
 });
-
-// --- COMPONENT ---
-const EditProfile = () => {
-  const router = useRouter();
-  const { orgId } = useLocalSearchParams();
-  const STICKY_HEADER_HEIGHT = 90;
-
-  const [orgName, setOrgName] = useState('');
-  const [description, setDescription] = useState('');
-  const [facebookLink, setFacebookLink] = useState('');
-  const [instagramLink, setInstagramLink] = useState('');
-  const [bannerUri, setBannerUri] = useState(PLACEHOLDER_ASSETS.bannerUri);
-  const [logoUri, setLogoUri] = useState(PLACEHOLDER_ASSETS.logoUri);
-
-  // Modal State
-  const [showModal, setShowModal] = useState(false);
-
-  // Load existing data
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/api/organizations/profile/${orgId}`);
-        const org = res.data.organization;
-
-        setOrgName(org.org_name);
-        setDescription(org.description);
-        setFacebookLink(org.fb_link || "");
-        setInstagramLink(org.ig_link || "");
-        setBannerUri(org.cover_photo ? { uri: org.cover_photo } : PLACEHOLDER_ASSETS.bannerUri);
-        setLogoUri(org.pfp ? { uri: org.pfp } : PLACEHOLDER_ASSETS.logoUri);
-      } catch (error) {
-        console.error("Failed to load profile:", error);
-      }
-    };
-    if (orgId) loadProfile();
-  }, [orgId]);
-
-  const handleImagePick = async (setImageFunction, aspectRatio = [4, 3]) => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: aspectRatio,
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      setImageFunction({ uri: result.assets[0].uri, local: true });
-    }
-  };
-
-  const handleSave = async () => {
-    if (!orgName || !description) {
-      Alert.alert('Error', 'Organization Name and Description are required.');
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("org_name", orgName);
-      formData.append("description", description);
-      formData.append("fb_link", facebookLink);
-      formData.append("ig_link", instagramLink);
-
-      if (logoUri.local) {
-        formData.append("pfp", {
-          uri: logoUri.uri,
-          name: `logo_${Date.now()}.png`,
-          type: "image/png",
-        });
-      }
-
-      if (bannerUri.local) {
-        formData.append("cover_photo", {
-          uri: bannerUri.uri,
-          name: `banner_${Date.now()}.png`,
-          type: "image/png",
-        });
-      }
-
-      await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      console.log("Data updates successfully.");
-
-      // Show success modal
-      setShowModal(true);
-
-      // Auto-close + redirect after 2 seconds
-      setTimeout(() => {
-        setShowModal(false);
-        router.push({
-          pathname: "../tab_container_organization/Profile",
-          params: { orgId, refresh: Date.now().toString() }
-        });
-      }, 2000);
-
-    } catch (err) {
-      console.error("Error updating org:", err);
-      Alert.alert("Error", "Failed to update organization.");
-    }
-  };
-
-  return (
-    <View style={STYLES.container}>
-      <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
-        <LinearGradient
-          colors={[
-            "rgba(45,45,45,0.4)",
-            "rgba(0,0,0,0.2)",
-            "rgba(255,255,255,0.1)",
-          ]}
-          style={styles.gradientOverlay}
-        />
-        <View style={styles.navRowContent}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{ flexDirection: "row", alignItems: "center" }}
-          >
-            <Ionicons name="arrow-back" size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        
-        {/* Banner */}
-        <View style={STYLES.headerContainer}>
-          <ImageBackground source={bannerUri} style={STYLES.headerImageBackground}>
-            <View style={STYLES.bannerOverlay}>
-              <View style={STYLES.bannerContent}>
-                <View style={STYLES.navRow}>
-                  <View style={{ width: 60 }} />
-                </View>
-              </View>
-            </View>
-
-            {/* Banner Picker */}
-            <TouchableOpacity
-              style={STYLES.bannerCameraIcon}
-              onPress={() => handleImagePick(setBannerUri)}
-            >
-              <Image source={require("../../assets/images/marque/Camera1.png")}
-                style={{ width: 24, height: 24 }} />
-            </TouchableOpacity>
-          </ImageBackground>
-        </View>
-
-        {/* FORM SECTION */}
-        <View style={STYLES.contentContainer}>
-          
-          {/* Logo Picker */}
-          <View style={STYLES.logoWrapper}>
-            <TouchableOpacity
-              style={STYLES.logoContainer}
-              onPress={() => handleImagePick(setLogoUri, [1, 1])}
-            >
-              <Image source={logoUri} style={STYLES.logoImage} />
-              <View style={STYLES.logoCameraOverlay}>
-                <Image
-                  source={require("../../assets/images/marque/Camera1.png")}
-                  style={{ width: 30, height: 30 }}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* SAVE BUTTON */}
-          <TouchableOpacity
-            style={STYLES.saveButton}
-            onPress={handleSave}
-            activeOpacity={0.8}
-          >
-            <Text style={STYLES.saveButtonText}>SAVE</Text>
-          </TouchableOpacity>
-
-          {/* INPUTS */}
-          <Text style={STYLES.sectionHeader}>Organization Information</Text>
-
-          <Text style={STYLES.label}>
-            Organization Name<Text style={STYLES.requiredAsterisk}>*</Text>
-          </Text>
-          <TextInput
-            style={STYLES.textInput}
-            value={orgName}
-            onChangeText={setOrgName}
-            placeholder="Enter Organization Name"
-            placeholderTextColor={COLORS.placeholderText}
-          />
-
-          <Text style={STYLES.label}>
-            Description<Text style={STYLES.requiredAsterisk}>*</Text>
-          </Text>
-          <TextInput
-            style={[STYLES.textInput, STYLES.textArea]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Enter a description for your organization"
-            placeholderTextColor={COLORS.placeholderText}
-            multiline
-          />
-
-          <Text style={STYLES.sectionHeaderSOC}>Social Media Links</Text>
-
-          <Text style={STYLES.label}>Facebook</Text>
-          <TextInput
-            style={STYLES.textInput}
-            value={facebookLink}
-            onChangeText={setFacebookLink}
-            placeholder="https://www.facebook.com/username"
-            placeholderTextColor={COLORS.placeholderText}
-          />
-
-          <Text style={STYLES.label}>Instagram</Text>
-          <TextInput
-            style={STYLES.textInput}
-            value={instagramLink}
-            onChangeText={setInstagramLink}
-            placeholder="https://www.instagram.com/username"
-            placeholderTextColor={COLORS.placeholderText}
-          />
-
-        </View>
-
-        <View style={{ height: 20 }} />
-      </ScrollView>
-
-      {/* SUCCESS MODAL */}
-      <EditProfileModal
-        visible={showModal}
-        title="Profile Updated!"
-        message="Your organization profile has been successfully updated."
-        onClose={() => setShowModal(false)}
-      />
-
-    </View>
-  );
-};
-
-export default EditProfile;

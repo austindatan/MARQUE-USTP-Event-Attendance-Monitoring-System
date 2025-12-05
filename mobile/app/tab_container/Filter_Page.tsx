@@ -1,13 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, } from "react-native";
 import { useRouter } from "expo-router";
 import OrgChip from "../components/Org_Chip";
 import { BASE_URL } from "../../config";
@@ -23,7 +16,6 @@ const mapOrgData = (data) =>
 
 export default function Filter_Page() {
   const router = useRouter();
-
   const [selectedUnits, setSelectedUnits] = useState([]);
   const [selectedMothers, setSelectedMothers] = useState([]);
   const [units, setUnits] = useState([]);

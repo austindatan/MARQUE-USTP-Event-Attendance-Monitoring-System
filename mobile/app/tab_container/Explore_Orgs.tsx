@@ -5,7 +5,6 @@ import OrgLinear from "../components/Card_OrgsLinear";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
 
-// temporary for testing — replace later with actual logged in student ID
 const MOCK_STUDENT_ID = "692402df4600376c2cea56eb";
 
 const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
@@ -14,7 +13,6 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const [followedOrgIds, setFollowedOrgIds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Fetch all orgs
   const fetchOrganizations = async () => {
     try {
       const res = await fetch(`${BASE_URL}/exploreorgs/all`);
@@ -26,7 +24,6 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     }
   };
 
-  // 2. Fetch followed org IDs
   const fetchFollowedIds = async () => {
     if (!MOCK_STUDENT_ID) return;
 
@@ -42,7 +39,6 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     }
   };
 
-  // Combine fetch
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -53,7 +49,6 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     loadData();
   }, []);
 
-  // Follow / Unfollow
   const handleFollowToggle = async (orgId, isCurrentlyFollowed) => {
     if (!MOCK_STUDENT_ID) {
       Alert.alert("Authentication Required", "Please log in to follow organizations.");
@@ -79,7 +74,6 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         throw new Error(errorData.message || `Failed to ${action} organization`);
       }
 
-      // Update UI instantly
       if (isCurrentlyFollowed) {
         setFollowedOrgIds((prev) => prev.filter((id) => id !== orgId));
       } else {
@@ -91,7 +85,6 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     }
   };
 
-  // Scroll initial
   useEffect(() => {
     if (scrollRef.current && initialScroll > 0) {
       const t = setTimeout(() => {

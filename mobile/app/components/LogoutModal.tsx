@@ -3,7 +3,6 @@ import React from "react";
 import { Modal, View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import styles from "../styles/components_joinmodal";
 
-// Replace with your desired icon
 const LOGOUT_ICON = require("../../assets/images/marque/MARQUE_whitelogo.png");
 
 const LogoutModal = ({ visible, onClose, onConfirm }) => {
@@ -43,7 +42,6 @@ const LogoutModal = ({ visible, onClose, onConfirm }) => {
 
 export default LogoutModal;
 
-// --- Button Styles ---
 const buttonStyles = StyleSheet.create({
   buttonRow: {
     flexDirection: "row",
@@ -59,10 +57,10 @@ const buttonStyles = StyleSheet.create({
     marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: "#0a0f51", // yellow
+    backgroundColor: "#0a0f51",
   },
   confirmButton: {
-    backgroundColor: "#fecb20", // green
+    backgroundColor: "#fecb20",
   },
   cancelText: {
     color: "white",

@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  Dimensions,
-  ImageBackground,
-  StatusBar,
-} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, SafeAreaView, Dimensions, ImageBackground, StatusBar, } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -43,7 +33,7 @@ const Scanner: React.FC = () => {
   const handleOpenCamera = () => {
     router.push({
       pathname: '/tab_container_organization/Camera_State',
-      params: { eventId } // pass it forward
+      params: { eventId }
     });
   };
 
@@ -58,14 +48,12 @@ const Scanner: React.FC = () => {
       >
         <View style={styles.container}>
 
-          {/* Back Button */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
-          {/* QR Code */}
           <View style={styles.qrCodeContainer}>
             <Image
               source={QrCodePlaceholder}
@@ -74,12 +62,10 @@ const Scanner: React.FC = () => {
             />
           </View>
 
-          {/* Instructions */}
           <Text style={styles.instructionText}>
             Scan the participant's QR code{'\n'}clearly under good lighting{'\n'}to record attendance accurately.
           </Text>
 
-          {/* Open Camera / Scan Button */}
           <TouchableOpacity
             style={styles.scanButton}
             onPress={handleOpenCamera}
@@ -133,11 +119,11 @@ const styles = StyleSheet.create({
   instructionText: {
     color: '#FFFFFF',
     fontSize: 15,
-    lineHeight: 20, // reduced for smaller gap between lines
+    lineHeight: 20,
     textAlign: 'center',
     maxWidth: 300,
     marginBottom: 30,
-    fontWeight: 'bold', // bold text
+    fontWeight: 'bold',
   },
   scanButton: {
     backgroundColor: '#FFC837',

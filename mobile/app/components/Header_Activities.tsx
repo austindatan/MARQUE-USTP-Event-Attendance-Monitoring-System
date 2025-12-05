@@ -5,18 +5,13 @@ import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
 
-// scrollY prop is no longer used for animation
 const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) => {
   const router = useRouter();
-  // Removed: scrollY = scrollY instanceof Animated.Value ? scrollY : new Animated.Value(0);
-  // It's fine to keep the prop, but no need to initialize here if unused.
-
   const [activeTab, setActiveTab] = useState<"Back" | "Incoming" | "Concluded">("Incoming");
-
   const handleToggle = (tab: "Back" | "Incoming" | "Concluded") => {
     setActiveTab(tab);
     if (tab === "Back") {
-      router.back(); // handle back navigation
+      router.back();
     } else {
       onToggleChange(tab);
     }
@@ -33,7 +28,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         backgroundColor: "transparent",
       }}
     >
-      {/* Top Row (menu, logo, notifications) */}
       <View style={[styles.headerfirst, { paddingBottom: 0 }]}>
         <View style={styles.topRow}>
           <TouchableOpacity onPress={onMenuPress}>
@@ -54,7 +48,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         </View>
       </View>
 
-      {/* Search Row - Converted to standard <View> */}
       <View
         style={[
           styles.header,
@@ -62,26 +55,22 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
             paddingTop: 0,
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            // REMOVED: transform: [{ translateY: searchTranslateY }],
           },
         ]}
       >
-        <View // Replaced Animated.View with View and removed opacity style
+        <View
           style={styles.searchRow}
         />
       </View>
 
-      {/* Toggle Tabs - Converted to standard <View> */}
       <View
         style={[
           styles.toggleContainerEX,
           {
             backgroundColor: "transparent",
-            // REMOVED: transform: [{ translateY: toggleTranslateY }],
           },
         ]}
       >
-        {/* Back Button */}
         <TouchableOpacity
           style={activeTab === "Back" ? styles.activeButtonEX : styles.inactiveButtonEX}
           onPress={() => handleToggle("Back")}
@@ -93,7 +82,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
           />
         </TouchableOpacity>
 
-        {/* Incoming Tab */}
         <TouchableOpacity
           style={activeTab === "Incoming" ? styles.activeButtonEX : styles.inactiveButtonEX}
           onPress={() => handleToggle("Incoming")}
@@ -101,7 +89,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
           <Text style={styles.activeTextEX}>Incoming</Text>
         </TouchableOpacity>
 
-        {/* Concluded Tab */}
         <TouchableOpacity
           style={activeTab === "Concluded" ? styles.activeButtonEX : styles.inactiveButtonEX}
           onPress={() => handleToggle("Concluded")}

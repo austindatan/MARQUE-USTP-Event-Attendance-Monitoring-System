@@ -1,4 +1,3 @@
-// AddActivityButton.tsx
 import React from "react";
 import { StyleSheet, TouchableOpacity, View, GestureResponderEvent } from "react-native";
 

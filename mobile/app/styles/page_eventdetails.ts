@@ -333,8 +333,6 @@ const styles = StyleSheet.create({
     fontSize: rs(14),
     fontFamily: "DMSans-Medium",
   },
-
-  // Buttons
   buttonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

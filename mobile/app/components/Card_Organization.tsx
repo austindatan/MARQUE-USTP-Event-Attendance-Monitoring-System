@@ -1,5 +1,3 @@
-// Card_Organization.tsx (The corrected file)
-
 // @ts-nocheck
 import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
@@ -14,16 +12,15 @@ const OrgCardHighlighted = ({
   dateMonth,
   description,
   type,
-  onPress, // Ensure this prop is received
+  onPress,
 }) => {
   return (
     <TouchableOpacity
       style={styles.shadowWrapper}
-      onPress={onPress} // ✅ FIX: Pass the onPress prop here
+      onPress={onPress}
       activeOpacity={0.8}
     >
       <View style={styles.card}>
-        {/* Banner / Image */}
         {bannerImage && (
           <Image
             source={typeof bannerImage === "string" ? { uri: bannerImage } : bannerImage}
@@ -31,7 +28,6 @@ const OrgCardHighlighted = ({
           />
         )}
 
-        {/* DETAILS */}
         <View style={styles.details}>
           <View style={styles.orgDetails}>
             <Image
@@ -46,7 +42,7 @@ const OrgCardHighlighted = ({
           <Text style={styles.desc}>{description}</Text>
         </View>
       </View>
-    </TouchableOpacity> // The TouchableOpacity is now correctly using the onPress prop
+    </TouchableOpacity>
   );
 };
 

@@ -1,4 +1,3 @@
-// Concluded.tsx
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
@@ -17,7 +16,6 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Format date helpers
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -38,8 +36,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
     const d = new Date(dateStr);
     return d.toLocaleString(undefined, { month: "short" });
   };
-
-  // Fetch organization + concluded events
+  
   const fetchAllData = async () => {
     if (!organizationId) {
       setError("No organization ID provided");

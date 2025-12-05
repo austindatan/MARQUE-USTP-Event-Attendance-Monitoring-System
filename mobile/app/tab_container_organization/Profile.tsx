@@ -1,15 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  ImageBackground,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, StyleSheet, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -129,7 +120,6 @@ const ProfilePage = () => {
 
   return (
     <View style={styles.container}>
-      {/* TOP NAV */}
       <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
         <LinearGradient
           colors={[
@@ -150,7 +140,6 @@ const ProfilePage = () => {
         </View>
       </View>
 
-      {/* CONTENT */}
       <ScrollView showsVerticalScrollIndicator={false}>
         <ImageBackground
           source={
