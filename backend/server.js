@@ -8,6 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(express.urlencoded({ extended: true }));
 
 // Base route
 app.get("/", (req, res) => {
@@ -43,7 +44,7 @@ app.use("/exploreorgs", exploreorgRoutes);
 const followedorgsRoutes = require('./routes/followedorgRoutes');
 app.use('/api/followed-orgs', followedorgsRoutes);
 
-// Followed Organizations route
+// Bookmarks route
 const bookmarksRoutes = require('./routes/bookmarksRoutes');
 app.use('/api/bookmarks', bookmarksRoutes);
 
@@ -65,6 +66,10 @@ app.use("/api/feedback", feedbackRoutes);
 // Org Officer route
 const orgOfficerRoutes = require('./routes/orgOfficerRoutes');
 app.use('/api/memberships', orgOfficerRoutes);
+
+// Join request route
+const joinRequestRoutes = require('./routes/joinRequestRoutes');
+app.use('/api/join-request', joinRequestRoutes);
 
 
 // DB connection
