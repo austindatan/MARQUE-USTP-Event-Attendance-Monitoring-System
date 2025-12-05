@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const JoinRequestSchema = new mongoose.Schema(
     {
-        user_id: {
+        student_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+            ref: 'Student',
             required: true,
         },
         organization_id: {
