@@ -1,15 +1,13 @@
-// ScannerButton.tsx
 import React from "react";
 import { StyleSheet, TouchableOpacity, Image } from "react-native";
 
 interface ScannerButtonProps {
-  onPress?: () => void; // Add optional onPress prop
+  onPress?: () => void;
 }
 
 const ScannerButton: React.FC<ScannerButtonProps> = ({ onPress }) => {
   return (
     <TouchableOpacity style={styles.floatingButton} onPress={onPress}>
-      {/* Plus icon as image */}
       <Image
         source={require("../../assets/images/marque/ScannerButton.png")}
         style={styles.plusImage}
@@ -36,8 +34,8 @@ const styles = StyleSheet.create({
   },
 
   plusImage: {
-    width: 30,  // adjust to fit your design
-    height: 30, // adjust to fit your design
+    width: 30,
+    height: 30,
   },
 });
 

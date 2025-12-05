@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Switch,
-  TextInput,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, TextInput, ScrollView, Alert, } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PRIMARY_COLOR = '#0a0f4c';
@@ -21,14 +12,12 @@ interface SettingsScreenProps {
 const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const insets = useSafeAreaInsets();
   
-  // Mock State for Settings
   const [apiBaseUrl, setApiBaseUrl] = useState('https://your-api.com');
   const [scanDelay, setScanDelay] = useState('2000');
   const [vibrateOnScan, setVibrateOnScan] = useState(true);
   const [defaultEventId, setDefaultEventId] = useState('6923517772c7b61301a4e31f');
 
   const handleSave = () => {
-    // Logic to save settings (e.g., to AsyncStorage or global state)
     Alert.alert('Settings Saved', 'Your configuration has been updated.');
     onClose();
   };
@@ -40,7 +29,6 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Clear', style: 'destructive', onPress: () => {
-          // Logic to clear data
           Alert.alert('Done', 'Local cache cleared.');
         }},
       ]
@@ -58,7 +46,6 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
 
       <ScrollView contentContainerStyle={styles.content}>
         
-        {/* --- Network Settings --- */}
         <Text style={styles.sectionTitle}>Network & Event</Text>
         <View style={styles.settingGroup}>
           <Text style={styles.settingLabel}>API Base URL</Text>
@@ -79,7 +66,6 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
           />
         </View>
         
-        {/* --- Scanner Settings --- */}
         <Text style={styles.sectionTitle}>Scanner Behavior</Text>
         
         <View style={styles.settingGroup}>
@@ -102,7 +88,6 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
           />
         </View>
 
-        {/* --- Maintenance --- */}
         <Text style={styles.sectionTitle}>Data & Maintenance</Text>
         
         <TouchableOpacity style={styles.actionButton} onPress={handleClearCache}>
@@ -122,7 +107,6 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   );
 };
 
-// --- Settings Styles ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -196,7 +180,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   actionButton: {
-    backgroundColor: '#ef4444', // Red for caution/action
+    backgroundColor: '#ef4444',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',

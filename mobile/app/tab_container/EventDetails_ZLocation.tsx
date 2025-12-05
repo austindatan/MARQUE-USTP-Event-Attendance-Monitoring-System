@@ -1,15 +1,6 @@
 //@ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import {
-    View,
-    Image,
-    StyleSheet,
-    PanResponder,
-    Animated,
-    Dimensions,
-    TouchableOpacity,
-    Text,
-} from "react-native";
+import { View, Image, StyleSheet, PanResponder, Animated, Dimensions, TouchableOpacity, Text, } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import Header from "../components/Header_Normal";
 

@@ -1,22 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ActivityIndicator,
-  Alert,
-  Image,
-  Animated,
-  Easing,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ActivityIndicator, Alert, Image, Animated, Easing, } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { BASE_URL } from '../../config';
 
-// Placeholder for custom icons
 const ICON_PLACEHOLDER_PATH = require('../../assets/images/marque/Flip.png');
 
 const PRIMARY_COLOR = '#0a0f4c';
@@ -25,7 +13,7 @@ const QR_SIZE = 250;
 
 interface AttendanceCameraProps {
   onShowHistory: () => void;
-  eventId: string; // required now
+  eventId: string;
 }
 
 const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eventId }) => {
@@ -38,14 +26,12 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   const [loading, setLoading] = useState(false);
   const scannedRef = useRef(false);
 
-  // Safety guard: eventId must exist
   useEffect(() => {
     if (!eventId) {
       Alert.alert('Error', 'No event selected.');
     }
   }, [eventId]);
 
-  // Animations for yellow scanner line
   const scanAnim = useRef(new Animated.Value(0)).current;
   const glowAnim = useRef(new Animated.Value(0.5)).current;
 
@@ -76,7 +62,7 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   const toggleFlip = () => setIsFlipped(prev => !prev);
 
   const registerAttendance = async (studentNumber: string) => {
-  if (!eventId) return; // safeguard
+  if (!eventId) return;
 
   try {
     setLoading(true);
@@ -87,7 +73,6 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
       body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
     });
 
-    // Attempt to parse JSON safely
     let data: any = null;
     try {
       data = await response.json();
@@ -99,7 +84,6 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
       return;
     }
 
-    // Handle success or error from API
     if (response.ok) {
       Alert.alert(
         'Attendance Registered',
@@ -125,7 +109,6 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   setScanned(true);
 
   try {
-    // Parse QR code
     const parts = data.trim().split(/\s+/);
     if (parts.length < 3) throw new Error('Invalid QR format');
     const program = parts.pop();
@@ -140,7 +123,6 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
       body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
     });
 
-    // Safe JSON parsing
     let result: any = null;
     try {
       result = await response.json();
@@ -152,7 +134,6 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
       return;
     }
 
-    // Handle API success or error
     if (response.ok) {
       Alert.alert(
         'Attendance Registered',
@@ -161,7 +142,6 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
         ).toLocaleTimeString()}`
       );
     } else {
-      // Show server error message (like 30-minute restriction)
       Alert.alert('Error', result.message || 'Unable to register attendance');
     }
   } catch (error) {
@@ -204,24 +184,20 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
       >
-        {/* Top Overlay */}
         <View style={[styles.topOverlay, { paddingTop: insets.top }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Image source={require('../../assets/images/marque/arrow-left.png')} style={styles.bottomIconImage} />
           </TouchableOpacity>
         </View>
 
-        {/* QR Scan Area */}
         <View style={styles.scannerArea}>
           <View style={styles.scannerFocus}>
             <View style={styles.scannerFrame}>
-              {/* Rounded Corners */}
               <View style={[styles.corner, styles.topLeft]} />
               <View style={[styles.corner, styles.topRight]} />
               <View style={[styles.corner, styles.bottomLeft]} />
               <View style={[styles.corner, styles.bottomRight]} />
 
-              {/* Scanner Line BELOW corners */}
               <Animated.View
                 style={[
                   styles.scannerLine,
@@ -235,14 +211,12 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
           </View>
         </View>
 
-        {/* Loading Overlay */}
         {loading && (
           <View style={styles.successOverlay}>
             <ActivityIndicator size="large" color="#10b981" />
           </View>
         )}
 
-        {/* Bottom Floating Bar */}
         <View style={[styles.bottomBar, { bottom: (insets.bottom ? insets.bottom : 20) + 20 }]}>
           <View style={styles.leftIcons}>
             <TouchableOpacity style={styles.iconButton} onPress={toggleFlash}>
@@ -269,7 +243,6 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
           </View>
         </View>
 
-        {/* Center Floating Scan Button */}
         <TouchableOpacity style={styles.centerButton} onPress={() => {}}>
           <Image source={require('../../assets/images/marque/QRCode.png')} style={styles.centerIconImage} />
         </TouchableOpacity>
@@ -278,32 +251,110 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   );
 };
 
-// --- Styles ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'black' },
-  cameraContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
-  permissionText: { color: '#fff', fontSize: 16, textAlign: 'center', marginBottom: 20 },
-  permissionButton: { backgroundColor: '#6366f1', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  permissionButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  topOverlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 150, zIndex: 10, flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 15, paddingBottom: 20 },
-  backButton: { padding: 8, marginTop: 10 },
-  scannerArea: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scannerFocus: { width: QR_SIZE, height: QR_SIZE, justifyContent: 'center', alignItems: 'center' },
-  scannerFrame: { width: QR_SIZE, height: QR_SIZE, position: 'relative', overflow: 'hidden' }, // <--- changed from 'hidden' to 'visible'
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  permissionText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  permissionButton: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  permissionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  topOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 150,
+    zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 15,
+    paddingBottom: 20,
+  },
+  backButton: {
+    padding: 8,
+    marginTop: 10,
+  },
+  scannerArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scannerFocus: {
+    width: QR_SIZE,
+    height: QR_SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scannerFrame: {
+    width: QR_SIZE,
+    height: QR_SIZE,
+    position: 'relative',
+    overflow: 'hidden',
+  },
   corner: {
     position: 'absolute',
     width: 40,
     height: 40,
     borderColor: '#FFF',
     borderWidth: 5,
-    borderRadius: 2, // slightly rounded corners
-    zIndex: 1, // ensure corners are above scanner line
+    borderRadius: 2,
+    zIndex: 1,
   },
-  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
-  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
-  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
-  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
-  successOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(16, 185, 129, 0.5)', justifyContent: 'center', alignItems: 'center' },
+  topLeft: {
+    top: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+  },
+  topRight: {
+    top: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+  },
+  bottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+  },
+  bottomRight: {
+    bottom: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+  },
+  successOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(16, 185, 129, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   bottomBar: {
     position: 'absolute',
     left: 20,
@@ -322,10 +373,30 @@ const styles = StyleSheet.create({
     elevation: 10,
     zIndex: 5,
   },
-  leftIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 100 },
-  rightIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 100 },
-  iconButton: { alignItems: 'center', justifyContent: 'center', height: 60, width: '40%' },
-  iconText: { color: '#FFF', fontSize: 12, marginTop: 4, fontWeight: '600' },
+  leftIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: 100,
+  },
+  rightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: 100,
+  },
+  iconButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 60,
+    width: '40%',
+  },
+  iconText: {
+    color: '#FFF',
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: '600',
+  },
   centerButton: {
     position: 'absolute',
     bottom: 80,
@@ -344,8 +415,16 @@ const styles = StyleSheet.create({
     elevation: 10,
     zIndex: 20,
   },
-  bottomIconImage: { width: 20, height: 20, resizeMode: 'contain' },
-  centerIconImage: { width: 30, height: 30, resizeMode: 'contain' },
+  bottomIconImage: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
+  },
+  centerIconImage: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
+  },
   scannerLine: {
     position: 'absolute',
     top: 0,
@@ -358,7 +437,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 50,
     elevation: 30,
-    zIndex: 0, // ensure scanner line is below corners
+    zIndex: 0,
   },
 });
 

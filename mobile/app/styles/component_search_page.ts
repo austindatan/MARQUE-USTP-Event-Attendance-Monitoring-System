@@ -5,7 +5,6 @@ const styles = StyleSheet.create({
         flex: 1, 
         backgroundColor: "#fff" 
     },
-    
     headerContentWrapper: {
         flexDirection: 'row',       
         alignItems: 'center',       

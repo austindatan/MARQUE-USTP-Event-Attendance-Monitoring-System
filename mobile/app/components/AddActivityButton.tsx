@@ -1,4 +1,3 @@
-// AddActivityButton.tsx
 import React from "react";
 import { StyleSheet, TouchableOpacity, View, GestureResponderEvent } from "react-native";
 
@@ -9,18 +8,16 @@ interface Props {
 const AddActivityButton: React.FC<Props> = ({ onPress }) => {
   return (
     <TouchableOpacity style={styles.floatingButton} onPress={onPress}>
-      {/* Inner outlined circle */}
       <View style={styles.innerCircle} />
 
-      {/* Plus icon using two Views */}
       <View style={styles.plusHorizontal} />
       <View style={styles.plusVertical} />
     </TouchableOpacity>
   );
 };
 
-const plusSize = 23; // size of the plus
-const plusThickness = 4; // thickness of the lines
+const plusSize = 23;
+const plusThickness = 4;
 
 const styles = StyleSheet.create({
   floatingButton: {
@@ -52,22 +49,20 @@ const styles = StyleSheet.create({
     borderColor: "#0a0f51",
   },
 
-  // Horizontal part of plus
   plusHorizontal: {
     position: "absolute",
     width: plusSize,
     height: plusThickness,
     backgroundColor: "#0a0f51",
-    borderRadius: plusThickness / 2, // makes the ends rounded
+    borderRadius: plusThickness / 2,
   },
 
-  // Vertical part of plus
   plusVertical: {
     position: "absolute",
     width: plusThickness,
     height: plusSize,
     backgroundColor: "#0a0f51",
-    borderRadius: plusThickness / 2, // rounded ends
+    borderRadius: plusThickness / 2,
   },
 });
 

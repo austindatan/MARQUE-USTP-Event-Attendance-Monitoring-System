@@ -9,7 +9,6 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../../config";
 
-// Modal component
 import PasswordChangeModal from "../components/Profile_ChangePasswordModal";
 
 const ChangePasswordPage = () => {
@@ -20,12 +19,10 @@ const ChangePasswordPage = () => {
   const [confirmPass, setConfirmPass] = useState("");
   const [studentNumber, setStudentNumber] = useState(null);
 
-  // Modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
-  // Load student number
   useEffect(() => {
     const loadData = async () => {
       const sn = await AsyncStorage.getItem("student_number");
@@ -34,7 +31,6 @@ const ChangePasswordPage = () => {
     loadData();
   }, []);
 
-  // password strength
   const getPasswordStrength = (password) => {
     let score = 0;
     if (password.length >= 8) score++;
@@ -65,7 +61,6 @@ const ChangePasswordPage = () => {
 
   const isSaveDisabled = strengthScore < 2 || newPass !== confirmPass || !currentPass;
 
-  // submit password change
   const handleChangePassword = async () => {
     if (isSaveDisabled) {
       setModalTitle("Weak Password");
@@ -91,7 +86,7 @@ const ChangePasswordPage = () => {
       setNewPass("");
       setConfirmPass("");
 
-      setTimeout(() => router.back(), 2000); // go back after 2 seconds
+      setTimeout(() => router.back(), 2000);
     } catch (err) {
       console.log("❌ Change password error:", err);
       const msg = err.response?.data?.message || "Failed to change password. Try again.";
@@ -110,7 +105,6 @@ const ChangePasswordPage = () => {
         <Text style={styles.title}>Change Password</Text>
 
         <View style={styles.formCard}>
-          {/* CURRENT PASSWORD */}
           <View style={styles.inputGroup}>
             <Text style={styles.labelCh}>Current Password</Text>
             <TextInput
@@ -123,7 +117,6 @@ const ChangePasswordPage = () => {
             />
           </View>
 
-          {/* NEW PASSWORD */}
           <View style={styles.inputGroup}>
             <Text style={styles.labelCh}>New Password</Text>
             <TextInput
@@ -135,7 +128,6 @@ const ChangePasswordPage = () => {
               onChangeText={setNewPass}
             />
 
-            {/* Strength Meter */}
             {newPass.length > 0 && (
               <View style={{ marginTop: 8 }}>
                 <View
@@ -163,7 +155,6 @@ const ChangePasswordPage = () => {
             )}
           </View>
 
-          {/* CONFIRM PASSWORD */}
           <View style={styles.inputGroup2}>
             <Text style={styles.label2}>Confirm Password</Text>
             <TextInput
@@ -180,7 +171,6 @@ const ChangePasswordPage = () => {
           </View>
         </View>
 
-        {/* SAVE BUTTON */}
         <TouchableOpacity
           style={[
             styles.saveBtn,
@@ -194,7 +184,6 @@ const ChangePasswordPage = () => {
           <Text style={styles.saveBtnText}>Save Password</Text>
         </TouchableOpacity>
 
-        {/* BACK BUTTON */}
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={18} color="#0A0F51" />
           <Text style={styles.backText}>Back</Text>
@@ -203,7 +192,6 @@ const ChangePasswordPage = () => {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* Temporary modal */}
       <PasswordChangeModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}

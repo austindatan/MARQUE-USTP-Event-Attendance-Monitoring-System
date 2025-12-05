@@ -13,7 +13,6 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch all concluded events 
   const fetchConcludedEvents = async () => {
     setIsLoading(true);
     try {
@@ -75,7 +74,6 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
           const dateMonth = date.toLocaleString('default', { month: 'short' });
 
           const handleEventPress = () => {
-            // Navigate to EventDetails_Ongoing for concluded events
             router.push(`/tab_container/EventDetails_Concluded?eventId=${event._id}`);
           };
 

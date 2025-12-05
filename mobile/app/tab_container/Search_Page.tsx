@@ -1,15 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect, useCallback } from "react";
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
-  ActivityIndicator,
-  // ❌ REMOVED: Modal, 
-  // ❌ REMOVED: Switch, 
-} from "react-native";
-
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router"; 
 import { Ionicons } from "@expo/vector-icons";
 

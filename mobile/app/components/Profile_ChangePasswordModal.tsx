@@ -3,14 +3,13 @@ import React, { useEffect } from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";
 import styles from "../styles/components_joinmodal";
 
-// Replace with your desired icon
 const SUCCESS_ICON = require("../../assets/images/marque/MARQUE_whitelogo.png");
 
 const PasswordChangeModal = ({ visible, onClose, title, message }) => {
   useEffect(() => {
     if (visible) {
       const timer = setTimeout(() => {
-        onClose(); // auto-close after 2 seconds
+        onClose();
       }, 2000);
 
       return () => clearTimeout(timer);
