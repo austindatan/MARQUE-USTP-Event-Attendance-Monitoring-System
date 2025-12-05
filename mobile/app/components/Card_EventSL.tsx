@@ -24,7 +24,7 @@ const EventCardSL = ({ image, title, orgLogo, organization, dateDay, dateMonth, 
         </View>
 
         <View style={styles.details}>
-          <Text style={styles.eventTitle}>{title}</Text>
+          <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{title}</Text>
 
           <View style={styles.orgDetails}>
             <Image
