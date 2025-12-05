@@ -2,6 +2,7 @@
 
 const OrgOfficer = require('../models/Org_officer');
 const Organization = require('../models/Organization'); // Import your existing Organization model
+const JoinRequest = require('../models/JoinRequest');
 const mongoose = require('mongoose');
 
 // GET all organizations a student is a member of
@@ -34,3 +35,31 @@ exports.getJoinedOrganizations = async (req, res) => {
         res.status(500).json({ message: "Server error fetching joined organizations" });
     }
 };
+
+// Get organizations that the student has NOT joined yet
+exports.getAvailableOrganizations = async (req, res) => {
+    try {
+        const { studentId } = req.params;
+
+        if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+            return res.status(400).json({ message: "Invalid student ID" });
+        }
+
+        // 1. Find orgs the student has already joined
+        const joinedLinks = await OrgOfficer.find({ student_id: studentId }).select('org_id').lean();
+        const joinedOrgIds = joinedLinks.map(link => link.org_id);
+
+        // 2. Fetch organizations NOT in joinedOrgIds
+        const availableOrgs = await Organization.find({ 
+            _id: { $nin: joinedOrgIds } 
+        });
+
+        res.status(200).json(availableOrgs);
+
+    } catch (error) {
+        console.error("Error fetching available organizations:", error);
+        res.status(500).json({ message: "Server error fetching available organizations" });
+    }
+};
+
+
