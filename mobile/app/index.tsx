@@ -9,6 +9,7 @@ const Index = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      // router.replace("/tab_container_organization/EditEvents");
       router.replace("/login");
     }, 4000);
 
