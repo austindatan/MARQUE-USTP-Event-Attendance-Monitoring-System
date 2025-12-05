@@ -21,8 +21,8 @@ export default function CameraWithWatermark() {
   const [locationText, setLocationText] = useState("Getting location...");
   const [loading, setLoading] = useState(false);
 
-  const [flash, setFlash] = useState("off");      // ⭐ Flash Toggle
-  const [facing, setFacing] = useState("front");  // ⭐ Flip Camera
+  const [isTorchOn, setIsTorchOn] = useState(false); // ⭐ Torch/flash toggle
+  const [facing, setFacing] = useState("front");   // ⭐ Flip Camera
   const [preview, setPreview] = useState(null);   // ⭐ Retake Preview Screen
 
   const cameraRef = useRef(null);
@@ -60,32 +60,30 @@ export default function CameraWithWatermark() {
 
   // -------------------- FLASH TOGGLE --------------------
   const toggleFlash = () => {
-    setFlash((prev) => (prev === "off" ? "on" : "off"));
+    // Torch works only on back camera; switch to back if turning torch on
+    setIsTorchOn((prev) => {
+      const next = !prev;
+      if (next && facing === 'front') {
+        setFacing('back');
+      }
+      return next;
+    });
   };
 
   // -------------------- FLIP CAMERA --------------------
   const flipCamera = () => {
-    setFacing((prev) => (prev === "front" ? "back" : "front"));
-  };
-
-  // -------------------- GALLERY PICKER --------------------
-  const openGallery = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
+    setFacing((prev) => {
+      const next = prev === "front" ? "back" : "front";
+      // if switching to front camera, ensure torch is off
+      if (next === 'front') setIsTorchOn(false);
+      return next;
     });
-
-    if (!result.canceled) {
-      setPreview(result.assets[0].uri);
-    }
   };
 
   // -------------------- CAPTURE PHOTO --------------------
   const capturePhoto = async () => {
     try {
       setLoading(true);
-
-      await playShutterSound(); // 🔊 play shutter sound
 
       const photo = await cameraRef.current.takePictureAsync();
       setPreview(photo.uri); // go to preview screen
@@ -208,8 +206,8 @@ export default function CameraWithWatermark() {
       <CameraView
         ref={cameraRef}
         style={{ flex: 1 }}
-        flash={flash}
         facing={facing}
+        enableTorch={isTorchOn}
       />
 
       {/* DARK OVERLAY FOR WATERMARK */}
@@ -254,7 +252,7 @@ export default function CameraWithWatermark() {
         }}
       >
         <Ionicons
-          name={flash === "off" ? "flash-off-outline" : "flash-outline"}
+          name={isTorchOn ? "flash-outline" : "flash-off-outline"}
           size={26}
           color="white"
         />
@@ -273,18 +271,6 @@ export default function CameraWithWatermark() {
         }}
       >
         <Ionicons name="camera-reverse-outline" size={28} color="white" />
-      </TouchableOpacity>
-
-      {/* GALLERY BUTTON */}
-      <TouchableOpacity
-        onPress={openGallery}
-        style={{
-          position: "absolute",
-          bottom: 50,
-          left: 25,
-        }}
-      >
-        <Ionicons name="images-outline" size={40} color="white" />
       </TouchableOpacity>
 
       {/* CAPTURE BUTTON */}
