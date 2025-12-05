@@ -13,6 +13,19 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  // auto-redirect
+  useEffect(() => {
+    const checkLogin = async () => {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        console.log("Already logged in, redirecting...");
+        router.replace("/tabs/Events");
+      }
+    };
+    checkLogin();
+  }, []);
+
+  // Animation setup
   const logoY = useSharedValue(0);
   const formOpacity = useSharedValue(0);
   const formY = useSharedValue(40);
@@ -29,46 +42,48 @@ const Login = () => {
     transform: [{ translateY: formY.value }],
   }));
 
+  // LOGIN HANDLER
   const handleLogin = async () => {
-  setErrorMessage("");
+    setErrorMessage("");
 
-  if (!studentNumber || !password) {
-    setErrorMessage("Please fill in both Student ID and Password.");
-    return;
-  }
-
-  try {
-    const response = await fetch(`${BASE_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ student_number: studentNumber, password }),
-    });
-
-    let data;
-    const text = await response.text();
-    try {
-      data = JSON.parse(text);
-    } catch (err) {
-      console.error("Login response not JSON:", text);
-      setErrorMessage("Server returned invalid response.");
+    if (!studentNumber || !password) {
+      setErrorMessage("Please fill in both Student ID and Password.");
       return;
     }
 
-    if (response.ok) {
-      if (data.token) {
-        await AsyncStorage.setItem("token", data.token); // <--- ADD THIS LINE
+    try {
+      const response = await fetch(`${BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_number: studentNumber, password }),
+      });
+
+      const text = await response.text();
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.error("Login response not JSON:", text);
+        setErrorMessage("Server returned invalid response.");
+        return;
       }
-      
-      await AsyncStorage.setItem("student_number", studentNumber); 
-      router.push("/tabs/Events");   
-    } else {
-      setErrorMessage(data.message || "Invalid student ID or password.");
+
+      if (response.ok) {
+        // Save token and student number
+        if (data.token) {
+          await AsyncStorage.setItem("token", data.token);
+        }
+        await AsyncStorage.setItem("student_number", studentNumber);
+        router.replace("/tabs/Events");
+      } else {
+        setErrorMessage(data.message || "Invalid student ID or password.");
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
+      setErrorMessage("Could not connect to the server. Please try again.");
     }
-  } catch (error) {
-    console.error("Error logging in:", error);
-    setErrorMessage("Could not connect to the server. Please check your connection.");
-  }
-};
+  };
 
   return (
     <ImageBackground
@@ -91,6 +106,7 @@ const Login = () => {
             value={studentNumber}
             onChangeText={setStudentNumber}
           />
+
           <TextInput
             placeholder="Password"
             secureTextEntry
@@ -111,7 +127,8 @@ const Login = () => {
           </TouchableOpacity>
 
           <Text style={styles.footerText}>
-            Problem with your account? <Text style={{ textDecorationLine: "underline" }}>Contact us</Text>
+            Problem with your account?{" "}
+            <Text style={{ textDecorationLine: "underline" }}>Contact us</Text>
           </Text>
         </Animated.View>
       </View>

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import Header from "../components/Header_Normal";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,14 +9,21 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../../config";
 
+// Modal component
+import PasswordChangeModal from "../components/Profile_ChangePasswordModal";
+
 const ChangePasswordPage = () => {
   const router = useRouter();
 
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
-
   const [studentNumber, setStudentNumber] = useState(null);
+
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
 
   // Load student number
   useEffect(() => {
@@ -30,12 +37,10 @@ const ChangePasswordPage = () => {
   // password strength
   const getPasswordStrength = (password) => {
     let score = 0;
-
     if (password.length >= 8) score++;
     if (/[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
-
     return score;
   };
 
@@ -58,16 +63,14 @@ const ChangePasswordPage = () => {
   const strengthScore = getPasswordStrength(newPass);
   const strength = getStrengthLabel(strengthScore);
 
-  const isSaveDisabled =
-    strengthScore < 2 || newPass !== confirmPass || !currentPass;
+  const isSaveDisabled = strengthScore < 2 || newPass !== confirmPass || !currentPass;
 
   // submit password change
   const handleChangePassword = async () => {
     if (isSaveDisabled) {
-      Alert.alert(
-        "Weak Password",
-        "New password must be at least FAIR or higher."
-      );
+      setModalTitle("Weak Password");
+      setModalMessage("New password must be at least FAIR or higher.");
+      setModalVisible(true);
       return;
     }
 
@@ -80,21 +83,22 @@ const ChangePasswordPage = () => {
         }
       );
 
-      Alert.alert("Success", res.data.message);
+      setModalTitle("Success");
+      setModalMessage(res.data.message);
+      setModalVisible(true);
 
       setCurrentPass("");
       setNewPass("");
       setConfirmPass("");
 
-      router.back();
+      setTimeout(() => router.back(), 2000); // go back after 2 seconds
     } catch (err) {
       console.log("❌ Change password error:", err);
+      const msg = err.response?.data?.message || "Failed to change password. Try again.";
 
-      const msg =
-        err.response?.data?.message ||
-        "Failed to change password. Try again.";
-
-      Alert.alert("Error", msg);
+      setModalTitle("Error");
+      setModalMessage(msg);
+      setModalVisible(true);
     }
   };
 
@@ -134,7 +138,6 @@ const ChangePasswordPage = () => {
             {/* Strength Meter */}
             {newPass.length > 0 && (
               <View style={{ marginTop: 8 }}>
-                {/* BAR */}
                 <View
                   style={{
                     height: 8,
@@ -153,7 +156,6 @@ const ChangePasswordPage = () => {
                   />
                 </View>
 
-                {/* LABEL */}
                 <Text style={{ color: strength.color, fontWeight: "600" }}>
                   {strength.text}
                 </Text>
@@ -172,12 +174,8 @@ const ChangePasswordPage = () => {
               value={confirmPass}
               onChangeText={setConfirmPass}
             />
-
-            {/* Match Warning */}
             {confirmPass.length > 0 && newPass !== confirmPass && (
-              <Text style={{ color: "red", marginTop: 5 }}>
-                Passwords do not match.
-              </Text>
+              <Text style={{ color: "red", marginTop: 5 }}>Passwords do not match.</Text>
             )}
           </View>
         </View>
@@ -204,6 +202,14 @@ const ChangePasswordPage = () => {
 
         <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* Temporary modal */}
+      <PasswordChangeModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title={modalTitle}
+        message={modalMessage}
+      />
     </View>
   );
 };
