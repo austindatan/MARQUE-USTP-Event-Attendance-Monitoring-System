@@ -6,14 +6,13 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   Modal,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header_Profile";
 import EventCardSL from "../components/Card_EventAttendance";
 import SidebarMenu from "../components/SidebarMenu";
+import LogoutModal from "../components/LogoutModal"; // import modal
 import styles from "../styles/effects_profile";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,12 +24,14 @@ const ProfilePage = () => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
 
-  // states var
+  // states
   const [loading, setLoading] = useState(true);
   const [studentNumber, setStudentNumber] = useState(null);
-
   const [profile, setProfile] = useState(null);
   const [attendance, setAttendance] = useState([]);
+
+  // logout modal state
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   const toggleMenu = () => setMenuVisible((prev) => !prev);
 
@@ -66,15 +67,12 @@ const ProfilePage = () => {
     }
   };
 
-  // upload prof img
+  // upload profile image
   const uploadAvatar = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(
-          "Permission Required",
-          "Allow access to your photos to change your avatar."
-        );
+        alert("Allow access to your photos to change your avatar.");
         return;
       }
 
@@ -86,7 +84,6 @@ const ProfilePage = () => {
       if (result.canceled) return;
 
       const image = result.assets[0];
-
       const form = new FormData();
       form.append("profile_image", {
         uri: image.uri,
@@ -94,17 +91,17 @@ const ProfilePage = () => {
         type: "image/png",
       });
 
-      const res = await axios.post(
+      await axios.post(
         `${BASE_URL}/api/student/profile/${studentNumber}/upload-photo`,
         form,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      Alert.alert("Success", "Avatar updated!");
+      alert("Avatar updated!");
       loadProfile();
     } catch (err) {
       console.log("❌ Upload error:", err);
-      Alert.alert("Error", "Failed to upload avatar");
+      alert("Failed to upload avatar");
     }
   };
 
@@ -135,33 +132,23 @@ const ProfilePage = () => {
     );
   }
 
-  const handleLogout = async () => {
-  Alert.alert(
-    "Confirm Logout",
-    "Are you sure you want to logout?",
-    [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await axios.post(`${BASE_URL}/api/auth/logout`);
+  // show logout modal instead of automatic logout
+  const handleLogout = () => {
+    setLogoutModalVisible(true);
+  };
 
-            // Clear stored user login session
-            await AsyncStorage.removeItem("student_number");
-            await AsyncStorage.removeItem("username");
-            await AsyncStorage.removeItem("token");
-            router.replace("/login");
-          } catch (err) {
-            console.log("Logout error:", err);
-            Alert.alert("Error", "Failed to logout");
-          }
-        }
-      }
-    ]
-  );
-};
+  // called when user presses OK on logout modal
+  const confirmLogout = async () => {
+    try {
+      await axios.post(`${BASE_URL}/api/auth/logout`);
+      await AsyncStorage.clear();
+      setLogoutModalVisible(false);
+      router.replace("/login");
+    } catch (err) {
+      console.log("Logout error:", err);
+      setLogoutModalVisible(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -169,11 +156,8 @@ const ProfilePage = () => {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
-          {/* header */}
           <Image
-            source={{
-              uri: profile?.profile_image, 
-            }}
+            source={{ uri: profile?.profile_image }}
             style={styles.profileImage}
           />
 
@@ -185,7 +169,6 @@ const ProfilePage = () => {
           <Text style={styles.course}>{profile.department_name}</Text>
         </View>
 
-        {/* infos */}
         <View style={styles.infoBlock}>
           <View style={styles.row}>
             <Text style={styles.label}>Student ID</Text>
@@ -198,7 +181,6 @@ const ProfilePage = () => {
           </View>
         </View>
 
-        {/* attendance summary */}
         <Text style={styles.sectionTitle}>Attendance Summary</Text>
 
         <View style={styles.attendanceCard}>
@@ -207,18 +189,17 @@ const ProfilePage = () => {
               attendance.map((log) => {
                 const date = new Date(log.event?.date);
                 const day = date.getDate();
-                const month = date.toLocaleString("en-US", {
-                  month: "short",
-                });
+                const month = date.toLocaleString("en-US", { month: "short" });
 
-                const eventImageSource = log.event?.images?.length > 0 
-                ? { uri: log.event.images[0] } 
-                : { uri: 'placeholder-image-uri' };
+                const eventImageSource =
+                  log.event?.images?.length > 0
+                    ? { uri: log.event.images[0] }
+                    : { uri: "placeholder-image-uri" };
 
                 return (
                   <EventCardSL
                     key={log.attendance_log_id}
-                    image={eventImageSource} 
+                    image={eventImageSource}
                     title={log.event?.name || log.event?.event_name || "No Title"}
                     dateDay={day.toString()}
                     dateMonth={month.toUpperCase()}
@@ -233,25 +214,17 @@ const ProfilePage = () => {
           </View>
         </View>
 
-        {/* settings */}
         <Text style={styles.sectionTitle}>Settings</Text>
 
         <View style={styles.settingsBlock}>
-          {/* CHANGE AVATAR */}
-          <TouchableOpacity
-            style={styles.settingItem}
-            onPress={uploadAvatar}
-          >
+          <TouchableOpacity style={styles.settingItem} onPress={uploadAvatar}>
             <Ionicons name="create" size={20} color="#0A0F51" />
             <Text style={styles.settingLabel}>Change Avatar</Text>
           </TouchableOpacity>
 
-          {/* CHANGE PASSWORD */}
           <TouchableOpacity
             style={styles.settingItem}
-            onPress={() => {
-              router.push("/tab_container/Profile_ChangePassword");
-            }}
+            onPress={() => router.push("/tab_container/Profile_ChangePassword")}
           >
             <Ionicons name="lock-closed" size={20} color="#0A0F51" />
             <Text style={styles.settingLabel}>Change Password</Text>
@@ -280,6 +253,13 @@ const ProfilePage = () => {
       >
         <SidebarMenu isVisible={menuVisible} onClose={toggleMenu} />
       </Modal>
+
+      {/* LOGOUT MODAL */}
+      <LogoutModal
+        visible={logoutModalVisible}
+        onClose={() => setLogoutModalVisible(false)}
+        onConfirm={confirmLogout} // OK button triggers confirmLogout
+      />
     </View>
   );
 };
