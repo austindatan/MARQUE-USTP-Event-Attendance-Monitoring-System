@@ -1,9 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { 
-  View, Text, Image, TouchableOpacity, ScrollView, 
-  ImageBackground, ActivityIndicator, Alert
-} from "react-native";
+import {  View, Text, Image, TouchableOpacity, ScrollView,  ImageBackground, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../styles/page_eventdetails";
@@ -50,11 +47,10 @@ const Event_Ongoing = () => {
   const STICKY_HEADER_HEIGHT = 90;
   const [event, setEvent] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [userId, setUserId] = useState("692402df4600376c2cea56eb"); // TEMP STATIC USER ID
+  const [userId, setUserId] = useState("692402df4600376c2cea56eb");
 
   const handleBack = () => router.back();
 
-  // Fetch event + fix Cloudinary URLs
   const fetchEventDetails = async () => {
     try {
       const res = await fetch(`${BASE_URL}/events/event/${eventId}`);
@@ -77,7 +73,6 @@ const Event_Ongoing = () => {
     }
   };
 
-  // Check follow status
   const checkFollowStatus = async (orgId) => {
     try {
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${userId}/ids`);
@@ -90,14 +85,13 @@ const Event_Ongoing = () => {
     }
   };
 
-  // Toggle follow
   const handleFollowToggle = async () => {
     if (!event?.organization_id?._id) return;
     const orgId = event.organization_id._id;
     const action = isFollowing ? "unfollow" : "follow";
 
     try {
-      setIsFollowing(!isFollowing); // optimistic UI
+      setIsFollowing(!isFollowing);
 
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
         method: "POST",
@@ -106,7 +100,7 @@ const Event_Ongoing = () => {
       });
 
       if (!res.ok) {
-        setIsFollowing(isFollowing); // revert if error
+        setIsFollowing(isFollowing);
         Alert.alert("Error", `Failed to ${action} organization.`);
       }
     } catch (err) {
@@ -115,7 +109,6 @@ const Event_Ongoing = () => {
     }
   };
 
-  // Load event + follow status
   useEffect(() => {
     if (eventId) fetchEventDetails();
   }, [eventId]);
@@ -132,10 +125,8 @@ const Event_Ongoing = () => {
     );
   }
 
-  // DATE OBJECT
   const eventDateObj = event.start_date || event.event_date ? new Date(event.start_date || event.event_date) : null;
 
-  // Full date format: "30 December, 2025"
   const eventDateFormatted = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", {
         day: "numeric",
@@ -144,12 +135,10 @@ const Event_Ongoing = () => {
       })
     : "Date N/A";
 
-  // Weekday: "Wednesday"
   const eventDay = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
     : "";
 
-  // Time formatting
   const startTimeFormatted = event.start_time
     ? new Date(event.start_time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
     : null;
@@ -158,20 +147,18 @@ const Event_Ongoing = () => {
     ? new Date(event.end_time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
     : null;
 
-  // Final time string
   let eventTimeFull = "Time N/A";
   if (eventDay && startTimeFormatted && endTimeFormatted) {
     eventTimeFull = `${eventDay}, ${startTimeFormatted} - ${endTimeFormatted}`;
   } else if (eventDay && startTimeFormatted) {
     eventTimeFull = `${eventDay}, ${startTimeFormatted}`;
   } else if (eventDay) {
-    eventTimeFull = eventDay; // Show day even without time
+    eventTimeFull = eventDay;
   }
 
 
   return (
     <View style={styles.container}>
-      {/* TOP NAV */}
       <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
         <LinearGradient
           colors={["rgba(45,45,45,0.4)", "rgba(0,0,0,0.2)", "rgba(255,255,255,0.1)"]}
@@ -189,7 +176,6 @@ const Event_Ongoing = () => {
         </View>
       </View>
 
-      {/* CONTENT */}
       <ScrollView showsVerticalScrollIndicator={false}>
         <ImageBackground
           source={{ uri: event.event_image }}
@@ -204,7 +190,6 @@ const Event_Ongoing = () => {
           </View>
         </View>
 
-        {/* DATE & TIME */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
             <Ionicons name="calendar" size={20} color="#0A0F51" />
@@ -215,7 +200,6 @@ const Event_Ongoing = () => {
           </View>
         </View>
 
-        {/* VENUE */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
             <Ionicons name="location" size={20} color="#0A0F51" />
@@ -226,11 +210,9 @@ const Event_Ongoing = () => {
           </View>
         </View>
 
-        {/* ABOUT */}
         <Text style={styles.sectionTitle}>About Event</Text>
         <Text style={styles.aboutText}>{event.event_description || event.description}</Text>
 
-        {/* ORGANIZER */}
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image source={{ uri: event.organization_id?.pfp }} style={styles.organizerLogo} />

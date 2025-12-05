@@ -14,7 +14,6 @@ interface OrgChipProps {
     onPress: () => void;
 }
 
-
 export default function OrgChip({ item, isSelected, onPress }: OrgChipProps) {
     const isLogoValid = typeof item.logo === 'string' && item.logo.length > 0;
     const imageSource: ImageSourcePropType = isLogoValid 

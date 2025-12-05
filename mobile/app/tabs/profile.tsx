@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header_Profile";
 import EventCardSL from "../components/Card_EventAttendance";
 import SidebarMenu from "../components/SidebarMenu";
-import LogoutModal from "../components/LogoutModal"; // import modal
+import LogoutModal from "../components/LogoutModal";
 import styles from "../styles/effects_profile";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -24,24 +24,20 @@ const ProfilePage = () => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
 
-  // states
   const [loading, setLoading] = useState(true);
   const [studentNumber, setStudentNumber] = useState(null);
   const [profile, setProfile] = useState(null);
   const [attendance, setAttendance] = useState([]);
 
-  // logout modal state
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   const toggleMenu = () => setMenuVisible((prev) => !prev);
 
-  // fetch logged in user
   const loadStudentNumber = async () => {
     const sn = await AsyncStorage.getItem("student_number");
     setStudentNumber(sn);
   };
 
-  // fetch profile
   const loadProfile = async () => {
     if (!studentNumber) return;
     try {
@@ -54,7 +50,6 @@ const ProfilePage = () => {
     }
   };
 
-  // fetch attendance logs
   const loadAttendance = async () => {
     if (!studentNumber) return;
     try {
@@ -67,7 +62,6 @@ const ProfilePage = () => {
     }
   };
 
-  // upload profile image
   const uploadAvatar = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -132,12 +126,10 @@ const ProfilePage = () => {
     );
   }
 
-  // show logout modal instead of automatic logout
   const handleLogout = () => {
     setLogoutModalVisible(true);
   };
 
-  // called when user presses OK on logout modal
   const confirmLogout = async () => {
     try {
       await axios.post(`${BASE_URL}/api/auth/logout`);
@@ -244,7 +236,6 @@ const ProfilePage = () => {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* SIDE MENU */}
       <Modal
         animationType="fade"
         transparent
@@ -254,11 +245,10 @@ const ProfilePage = () => {
         <SidebarMenu isVisible={menuVisible} onClose={toggleMenu} />
       </Modal>
 
-      {/* LOGOUT MODAL */}
       <LogoutModal
         visible={logoutModalVisible}
         onClose={() => setLogoutModalVisible(false)}
-        onConfirm={confirmLogout} // OK button triggers confirmLogout
+        onConfirm={confirmLogout}
       />
     </View>
   );

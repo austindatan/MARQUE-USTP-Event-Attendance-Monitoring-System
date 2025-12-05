@@ -18,7 +18,6 @@ const JoinOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [studentId, setStudentId] = useState(null);
 
-  // Fetch student ID from AsyncStorage
   const fetchStudentId = async () => {
     try {
       const storedStudentNumber = await AsyncStorage.getItem("student_number");
@@ -31,7 +30,6 @@ const JoinOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     }
   };
 
-  // Fetch organizations student has not joined yet
   const fetchAvailableOrgs = async () => {
     if (!studentId) return;
     setLoading(true);
@@ -70,7 +68,7 @@ const JoinOrgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         orgId: selectedOrg._id
       });
       setModalVisible(false);
-      fetchAvailableOrgs(); // Refresh list
+      fetchAvailableOrgs();
     } catch (err) {
       console.error(err);
       setError("Failed to join organization");

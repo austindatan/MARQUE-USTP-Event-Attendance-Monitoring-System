@@ -1,9 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { 
-  View, Text, Image, TouchableOpacity, ScrollView, 
-  ImageBackground, Alert 
-} from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView,  ImageBackground, Alert  } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../styles/page_eventdetails";
@@ -50,11 +47,10 @@ const Event_NoAttendance = () => {
   const STICKY_HEADER_HEIGHT = 90;
   const [event, setEvent] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [userId, setUserId] = useState("692402df4600376c2cea56eb"); // TEMP STATIC USER ID
+  const [userId, setUserId] = useState("692402df4600376c2cea56eb");
 
   const handleBack = () => router.back();
 
-  // 🔹 Fetch event + fix Cloudinary URLs
   const fetchEventDetails = async () => {
     try {
       const res = await fetch(`${BASE_URL}/events/event/${eventId}`);
@@ -77,7 +73,6 @@ const Event_NoAttendance = () => {
     }
   };
 
-  // 🔹 Check follow status
   const checkFollowStatus = async (orgId) => {
     try {
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${userId}/ids`);
@@ -89,27 +84,25 @@ const Event_NoAttendance = () => {
     }
   };
 
-  // 🔹 Toggle follow
   const handleFollowToggle = async () => {
     if (!event?.organization_id?._id) return;
     const orgId = event.organization_id._id;
     const action = isFollowing ? "unfollow" : "follow";
 
     try {
-      setIsFollowing(!isFollowing); // optimistic UI
+      setIsFollowing(!isFollowing);
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, organizationId: orgId }),
       });
-      if (!res.ok) setIsFollowing(isFollowing); // revert if error
+      if (!res.ok) setIsFollowing(isFollowing);
     } catch (err) {
       setIsFollowing(isFollowing);
       console.error("Follow error:", err);
     }
   };
 
-  // 🔹 Load data
   useEffect(() => {
     if (eventId) fetchEventDetails();
   }, [eventId]);
@@ -126,10 +119,8 @@ const Event_NoAttendance = () => {
     );
   }
 
-  // DATE
   const eventDateObj = event.event_date ? new Date(event.event_date) : null;
 
-  // Format: "30 December, 2025"
   const eventDateFormatted = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", {
         day: "numeric",
@@ -138,12 +129,10 @@ const Event_NoAttendance = () => {
       })
     : "Date N/A";
 
-  // Get weekday: "Wednesday"
   const eventDay = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
     : "";
 
-  // TIME
   const startTime = event.start_time
     ? new Date(event.start_time).toLocaleTimeString("en-US", {
         hour: "2-digit",
@@ -160,7 +149,6 @@ const Event_NoAttendance = () => {
       })
     : null;
 
-  // FINAL TIME STRING
   let eventTimeFull = "Time N/A";
 
   if (eventDay && startTime && endTime) {
@@ -168,13 +156,12 @@ const Event_NoAttendance = () => {
   } else if (eventDay && startTime) {
     eventTimeFull = `${eventDay}, ${startTime}`;
   } else if (eventDay) {
-    eventTimeFull = eventDay; // Always show day even without time
+    eventTimeFull = eventDay;
   }
 
 
   return (
     <View style={styles.container}>
-      {/* TOP NAV */}
       <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
         <LinearGradient
           colors={["rgba(45,45,45,0.4)", "rgba(0,0,0,0.2)", "rgba(255,255,255,0.1)"]}
@@ -199,7 +186,6 @@ const Event_NoAttendance = () => {
 
         <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{event.event_title || event.event_name}</Text>
 
-        {/* 🔹 Attendance Upload Section */}
         <View style={styles.infoColumn}>
           <TouchableOpacity style={styles.infoBoxAttendance}>
             <Text style={styles.infoTextAtt}>
@@ -209,7 +195,6 @@ const Event_NoAttendance = () => {
           </TouchableOpacity>
         </View>
 
-        {/* DATE & TIME */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
             <Ionicons name="calendar" size={20} color="#0A0F51" />
@@ -220,7 +205,6 @@ const Event_NoAttendance = () => {
           </View>
         </View>
 
-        {/* VENUE */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
             <Ionicons name="location" size={20} color="#0A0F51" />
@@ -231,11 +215,9 @@ const Event_NoAttendance = () => {
           </View>
         </View>
 
-        {/* ABOUT */}
         <Text style={styles.sectionTitle}>About Event</Text>
         <Text style={styles.aboutText}>{event.event_description || event.description}</Text>
 
-        {/* ORGANIZER */}
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image source={{ uri: event.organization_id?.pfp }} style={styles.organizerLogo} />

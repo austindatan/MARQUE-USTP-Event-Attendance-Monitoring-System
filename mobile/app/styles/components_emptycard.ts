@@ -1,4 +1,3 @@
-import { Button } from "@react-navigation/elements";
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({

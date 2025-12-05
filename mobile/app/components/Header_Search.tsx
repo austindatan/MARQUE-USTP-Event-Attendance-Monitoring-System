@@ -1,13 +1,6 @@
 // @ts-nocheck
 import React, { useState } from "react";
-import {
-  View,
-  TouchableOpacity,
-  Image,
-  Text,
-  Animated,
-  TextInput,
-} from "react-native";
+import { View, TouchableOpacity, Image, Text, Animated, TextInput, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_search_header";
 import { useRouter } from "expo-router";

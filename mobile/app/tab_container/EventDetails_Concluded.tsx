@@ -15,10 +15,9 @@ const Event_Concluded = () => {
 
   const [event, setEvent] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [userId, setUserId] = useState("692402df4600376c2cea56eb"); // TEMP STATIC USER ID
+  const [userId, setUserId] = useState("692402df4600376c2cea56eb");
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
 
-  // 🔹 Fetch event + fix Cloudinary URLs
   const fetchEventDetails = async () => {
     try {
       const res = await fetch(`${BASE_URL}/events/event/${eventId}`);
@@ -27,13 +26,11 @@ const Event_Concluded = () => {
       const eventObj = data.event || data;
       if (!eventObj) return;
 
-      // EVENT IMAGE (single)
       if (eventObj.event_image && !eventObj.event_image.startsWith("http")) {
         const encoded = eventObj.event_image.replace(/ /g, "%20");
         eventObj.event_image = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${encoded}`;
       }
 
-      // EVENT IMAGES (multiple)
       if (Array.isArray(eventObj.event_images)) {
         eventObj.event_images = eventObj.event_images.map((img) => {
           if (!img) return null;
@@ -42,7 +39,6 @@ const Event_Concluded = () => {
         });
       }
 
-      // ORG PFP
       if (eventObj.organization_id?.pfp && !eventObj.organization_id.pfp.startsWith("http")) {
         eventObj.organization_id.pfp =
           `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${eventObj.organization_id.pfp.replace(/ /g, "%20")}`;
@@ -54,22 +50,17 @@ const Event_Concluded = () => {
     }
   };
 
-  // 🔹 Check feedback status
   const checkFeedbackStatus = async () => {
     if (!eventId || !userId) return;
-
-    // 1. Check local storage for persistent status (instant update after navigating back)
     try {
         const localStatus = await AsyncStorage.getItem(`feedback_status_${eventId}`);
         if (localStatus === 'submitted') {
             setHasSubmittedFeedback(true);
-            return; // Exit if found locally
+            return;
         }
     } catch (err) {
         console.error("Error checking local feedback status:", err);
     }
-
-    // 2. Fallback to API check
     try {
       const res = await fetch(`${BASE_URL}/api/feedback/status/${eventId}/${userId}`);
 
@@ -79,7 +70,6 @@ const Event_Concluded = () => {
       const submitted = data.hasSubmitted || false;
       setHasSubmittedFeedback(submitted);
 
-      // If API confirms, store it locally for faster subsequent loads
       if (submitted) {
           await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
       }
@@ -89,7 +79,6 @@ const Event_Concluded = () => {
     }
   };
 
-  // 🔹 Follow status
   const checkFollowStatus = async (orgId) => {
     try {
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${userId}/ids`);
@@ -102,7 +91,6 @@ const Event_Concluded = () => {
     }
   };
 
-  // 🔹 Toggle follow
   const handleFollowToggle = async () => {
     if (!event?.organization_id?._id) return;
     const orgId = event.organization_id._id;
@@ -110,7 +98,7 @@ const Event_Concluded = () => {
     const action = isFollowing ? "unfollow" : "follow";
 
     try {
-      setIsFollowing(!isFollowing); // optimistic UI
+      setIsFollowing(!isFollowing);
 
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
         method: "POST",
@@ -119,7 +107,7 @@ const Event_Concluded = () => {
       });
 
       if (!res.ok) {
-        setIsFollowing(isFollowing); // revert if error
+        setIsFollowing(isFollowing);
         Alert.alert("Error", `Failed to ${action} organization.`);
       }
     } catch (err) {
@@ -127,17 +115,15 @@ const Event_Concluded = () => {
     }
   };
 
-  // 🔹 Load data
   useFocusEffect(
     useCallback(() => {
       if (eventId) {
         fetchEventDetails();
         checkFeedbackStatus();
       }
-    }, [eventId]) // Re-run only if eventId changes
+    }, [eventId])
   );
 
-  // 🔹 Load follow status
   useEffect(() => {
     if (event?.organization_id?._id) {
       checkFollowStatus(event.organization_id._id);
@@ -152,10 +138,8 @@ const Event_Concluded = () => {
     );
   }
 
-  // DATE
   const eventDateObj = event.event_date ? new Date(event.event_date) : null;
 
-  // Format: "30 December, 2025"
   const eventDateFormatted = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", {
         day: "numeric",
@@ -164,12 +148,10 @@ const Event_Concluded = () => {
       })
     : "Date N/A";
 
-  // Get weekday: "Wednesday"
   const eventDay = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
     : "";
 
-  // TIME
   const startTime = event.start_time
     ? new Date(event.start_time).toLocaleTimeString("en-US", {
         hour: "2-digit",
@@ -186,7 +168,6 @@ const Event_Concluded = () => {
       })
     : null;
 
-  // FINAL TIME STRING
   let eventTimeFull = "Time N/A";
 
   if (eventDay && startTime && endTime) {
@@ -194,7 +175,7 @@ const Event_Concluded = () => {
   } else if (eventDay && startTime) {
     eventTimeFull = `${eventDay}, ${startTime}`;
   } else if (eventDay) {
-    eventTimeFull = eventDay; // Always show day even without time
+    eventTimeFull = eventDay;
   }
 
 
@@ -208,7 +189,6 @@ const Event_Concluded = () => {
 
   return (
     <View style={styles.container}>
-      {/* TOP NAV */}
       <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
         <LinearGradient
           colors={["rgba(45,45,45,0.4)", "rgba(0,0,0,0.2)", "rgba(255,255,255,0.1)"]}
@@ -226,7 +206,6 @@ const Event_Concluded = () => {
         </View>
       </View>
 
-      {/* CONTENT */}
       <ScrollView showsVerticalScrollIndicator={false}>
         <ImageBackground
           source={eventImageSource}
@@ -247,7 +226,6 @@ const Event_Concluded = () => {
             <Text style={styles.infoText}>This event has concluded.</Text>
           </TouchableOpacity>
 
-          {/* 🔥 FEEDBACK BUTTON FIXED */}
           {!hasSubmittedFeedback ? (
             <TouchableOpacity
               style={styles.infoBox}
@@ -264,7 +242,6 @@ const Event_Concluded = () => {
           )}
         </View>
 
-        {/* DATE & TIME */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
             <Ionicons name="calendar" size={20} color="#0A0F51" />
@@ -275,13 +252,12 @@ const Event_Concluded = () => {
           </View>
         </View>
 
-        {/* VENUE */}
         <TouchableOpacity
           style={styles.infoRow}
           onPress={() => {
             router.push({
               pathname: "/tab_container/EventDetails_ZLocation",
-              params: { markerId: 52 },  // <--- SEND MARKER ID HERE
+              params: { markerId: 52 },
             });
           }}
         >
@@ -295,11 +271,9 @@ const Event_Concluded = () => {
           </View>
         </TouchableOpacity>
 
-        {/* ABOUT */}
         <Text style={styles.sectionTitle}>About Event</Text>
         <Text style={styles.aboutText}>{event.description}</Text>
 
-        {/* ORGANIZER */}
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image source={organizerPfpSource} style={styles.organizerLogo} />

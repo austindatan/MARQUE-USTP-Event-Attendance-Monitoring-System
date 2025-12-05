@@ -12,7 +12,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch all upcoming events 
   const fetchAllEvents = async () => {
     setIsLoading(true);
     try {
@@ -85,7 +84,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
             </View>
           ) : events.length > 0 ? (
             events.map((event) => {
-              // Date and Time Formatting
               const date = new Date(event.event_date);
               const dateDay = date.getDate();
               const dateMonth = date.toLocaleString('default', { month: 'short' });
@@ -103,11 +101,8 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                 hour12: true,
               });
 
-              const timeVenueStr = `⏰ ${startTime} - ${endTime} | 📍 ${event.venue}`;
-
-              // --- Add onPress for each EventCard ---
+              const timeVenueStr = `${startTime} - ${endTime} | ${event.venue}`;
               const handleEventPress = () => {
-                // Since all are upcoming, go to NoAttendance
                 router.push(`/tab_container/EventDetails_Incoming?eventId=${event._id}`);
               };
 

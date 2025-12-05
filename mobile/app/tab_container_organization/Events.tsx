@@ -1,25 +1,13 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import {
-    View,
-    Text,
-    Image,
-    TouchableOpacity,
-    ScrollView,
-    ImageBackground,
-    ActivityIndicator,
-    Alert,
-    Platform,
-    SafeAreaView, // Added for bottom bar placement
-} from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons"; // Added MaterialCommunityIcons
+import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Platform, SafeAreaView, } from "react-native";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import styles from "../styles/page_eventdetails"; // Using styles from the first file
+import styles from "../styles/page_eventdetails";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL, CLOUD_NAME } from "../../config";
-import ScannerButton from '../components/ScannerButton'; // Added ScannerButton import
+import ScannerButton from '../components/ScannerButton';
 
-// Helper function to fix Cloudinary URLs
 const fixCloudinaryUrl = (url, cloudName) => {
     if (!url || url.startsWith("http")) {
         return url;
@@ -31,12 +19,10 @@ const fixCloudinaryUrl = (url, cloudName) => {
     return `https://res.cloudinary.com/${cloudName}/image/upload/${path}`;
 };
 
-// --- Main Component ---
 const Events = () => {
     const router = useRouter();
     const params = useLocalSearchParams();
 
-    // Safely extract eventId
     const rawEventId = params.eventId;
     const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
 
@@ -45,18 +31,15 @@ const Events = () => {
     const [eventData, setEventData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isFollowing, setIsFollowing] = useState(false);
-    // 💡 STATE MERGED from Second File for Scanner/Analytics logic
     const [eventActive, setEventActive] = useState(false);
     const [within30Min, setWithin30Min] = useState(false);
 
-    // TEMP STATIC USER ID (Replace this with real user context)
     const [userId, setUserId] = useState("692402df4600376c2cea56eb");
 
     const handleBack = () => {
         router.back();
     };
 
-    // --- Backend Logic Merged ---
     const fetchEventDetails = async (id) => {
         if (!id) {
             setLoading(false);
@@ -65,7 +48,6 @@ const Events = () => {
 
         try {
             setLoading(true);
-            // 1. Fetch event data
             const res = await fetch(`${BASE_URL}/events/event/${id}`);
 
             if (!res.ok) {
@@ -82,7 +64,6 @@ const Events = () => {
                 return;
             }
 
-            // Apply Cloudinary fix to images
             if (eventObj.event_image) {
                 eventObj.event_image = fixCloudinaryUrl(eventObj.event_image, CLOUD_NAME);
             }
@@ -92,7 +73,6 @@ const Events = () => {
 
             setEventData(eventObj);
 
-            // 2. Fetch status from backend (from Second File)
             const statusRes = await fetch(`${BASE_URL}/events/event-status/${eventObj._id}`);
             const statusData = await statusRes.json();
             setEventActive(statusData.isActive);
@@ -107,7 +87,6 @@ const Events = () => {
         }
     };
 
-    // 🔹 Check initial follow status for organizer (Copied from First File)
     const checkFollowStatus = async (orgId) => {
         try {
             const res = await fetch(`${BASE_URL}/api/followed-orgs/${userId}/ids`);
@@ -120,7 +99,6 @@ const Events = () => {
         }
     };
 
-    // 🔹 Handle Follow/Unfollow toggle (Copied from First File)
     const handleFollowToggle = async () => {
         if (!eventData?.organization_id?._id || !userId) return;
         const orgId = eventData.organization_id._id;
@@ -128,7 +106,7 @@ const Events = () => {
         const action = isFollowing ? "unfollow" : "follow";
 
         try {
-            setIsFollowing(!isFollowing); // optimistic UI
+            setIsFollowing(!isFollowing);
 
             const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
                 method: "POST",
@@ -137,14 +115,13 @@ const Events = () => {
             });
 
             if (!res.ok) {
-                setIsFollowing(isFollowing); // revert if error
+                setIsFollowing(isFollowing);
                 Alert.alert("Error", `Failed to ${action} organization.`);
             }
         } catch (err) {
             setIsFollowing(isFollowing);
         }
     };
-
 
     useEffect(() => {
         if (eventId) {
@@ -154,7 +131,6 @@ const Events = () => {
         }
     }, [eventId]);
 
-    // Load follow status
     useEffect(() => {
         if (eventData?.organization_id?._id && userId) {
             checkFollowStatus(eventData.organization_id._id);
@@ -179,7 +155,6 @@ const Events = () => {
         );
     }
 
-    // DATE & TIME Formatting (from First File)
     const eventDateObj = eventData.event_date ? new Date(eventData.event_date) : null;
     const eventDate = eventDateObj
         ? eventDateObj.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
@@ -204,13 +179,12 @@ const Events = () => {
 
     const organizerPfpSource = eventData.organization_id?.pfp
         ? { uri: eventData.organization_id.pfp }
-        : require("../../assets/images/profile_pic.png"); // Fallback image
+        : require("../../assets/images/profile_pic.png");
 
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <View style={styles.container}>
-                {/* TOP NAV */}
                 <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
                     <LinearGradient
                         colors={["rgba(45, 45, 45, 0.4)", "rgba(0, 0, 0, 0.2)", "rgba(255,255,255,0.1)"]}
@@ -240,7 +214,6 @@ const Events = () => {
 
                     <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{eventData.title || eventData.event_name}</Text>
 
-                    {/* DATE & TIME */}
                     <View style={styles.infoRow}>
                         <View style={styles.iconBox}>
                             <Ionicons name="calendar" size={20} color="#0A0F51" />
@@ -251,7 +224,6 @@ const Events = () => {
                         </View>
                     </View>
 
-                    {/* LOCATION */}
                     <View style={[styles.infoRow, { marginBottom: 10 }]}>
                         <View style={styles.iconBox}>
                             <Ionicons name="location" size={20} color="#0A0F51" />
@@ -262,11 +234,8 @@ const Events = () => {
                         </View>
                     </View>
 
-                    {/* ANALYTICS/ATTENDANCE BUTTONS ROW (From Second File) */}
                     <View style={styles.buttonsRow}>
-                        {/* Analytics Reports */}
                         <TouchableOpacity
-                            // Using styles from the first file's assumed structure, might need adjustment based on 'page_eventdetails'
                             style={[styles.actionButton, !eventActive && { opacity: 0.5, backgroundColor: '#ccc' }]} 
                             disabled={!eventActive}
                         >
@@ -278,7 +247,6 @@ const Events = () => {
 
                         <View style={{ width: 10 }} />
 
-                        {/* Attendance Spreadsheets */}
                         <TouchableOpacity
                             style={[styles.actionButton, !eventActive && { opacity: 0.5, backgroundColor: '#ccc' }]}
                             disabled={!eventActive}
@@ -290,13 +258,11 @@ const Events = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* ABOUT EVENT */}
                     <Text style={styles.sectionTitle}>About Event</Text>
                     <Text style={styles.aboutText}>
                         {eventData.description}
                     </Text>
 
-                    {/* ORGANIZER */}
                     <View style={styles.organizerCard}>
                         <View style={styles.organizerLeft}>
                             <Image
@@ -317,7 +283,6 @@ const Events = () => {
                     <View style={{ height: 100 }} />
                 </ScrollView>
             </View>
-            {/* FLOATING SCANNER BUTTON (From Second File) */}
             {eventActive && within30Min && (
                 <ScannerButton
                     onPress={() =>

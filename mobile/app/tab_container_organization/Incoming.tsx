@@ -24,7 +24,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // ---- DATE HELPERS ----
     const formatDate = (dateStr) => {
         if (!dateStr) return "";
         const d = new Date(dateStr);
@@ -44,7 +43,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         return new Date(dateStr).toLocaleString(undefined, { month: "short" });
     };
 
-    // ---- FETCH ORGANIZATION + INCOMING EVENTS ----
     const fetchAllData = async () => {
         if (!orgId) {
             setError("No organization ID found in route parameters.");
@@ -73,8 +71,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     useEffect(() => {
         fetchAllData();
     }, [orgId]);
-
-    // ---- RESTORE SCROLL POSITION ----
+-
     useEffect(() => {
         if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
             const t = setTimeout(() => {
@@ -105,7 +102,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         });
     };
 
-    // ---- LOADING ----
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
@@ -114,7 +110,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         );
     }
 
-    // ---- ERROR ----
     if (error || !organizationData) {
         return (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
@@ -128,7 +123,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         );
     }
 
-    // ---- FINAL UI ----
     const org = organizationData;
     const orgImageSource = org.pfp
         ? { uri: org.pfp }
@@ -155,7 +149,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                 </View>
 
                 <View style={appeffects.eventList}>
-                    {/* ORG CARD */}
                     <OrgCard
                         image={orgImageSource}
                         title={org.org_name}
@@ -168,8 +161,6 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                         onPress={handleOrgPress}
                         type="Organizers"
                     />
-
-                    {/* EVENTS LIST */}
                     {events.length > 0 ? (
                         events.map((ev) => {
                             const evImage =
