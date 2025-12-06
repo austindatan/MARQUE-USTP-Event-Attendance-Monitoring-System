@@ -116,10 +116,10 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
         <View style={appeffects.eventList}>
           {events.length > 0 ? (
             events.map((ev) => {
-              const evImage =
-                ev.event_images && ev.event_images.length > 0
-                  ? { uri: ev.event_images[0] }
-                  : require("../../assets/images/marque/crtcg1.png");
+              const evImage = ev.event_image
+                ? { uri: ev.event_image }
+                : require("../../assets/images/marque/crk.jpg");
+                
               return (
                 <EventCard
                   key={ev._id}
