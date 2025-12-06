@@ -108,10 +108,6 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }
                                 value={searchText}
                                 onChangeText={setSearchText}
                             />
-                            <TouchableOpacity style={styles.filtersButton}>
-                                <Image source={FILTER_IMAGE} style={styles.filterImage} resizeMode="contain" />
-                                <Text style={styles.filtersText}>Filters</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
 

@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#d3d3d3',
+    backgroundColor: '#0a0f51',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 12,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 12,
     fontWeight: '600',
-    color: '#090913ff',
+    color: '#ffffffff',
     fontFamily: 'DMSans-Bold',
     textAlign: 'left',
     lineHeight: 14,
