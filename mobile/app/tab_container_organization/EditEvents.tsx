@@ -1,87 +1,249 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, StyleSheet, TextInput, Modal } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Modal,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Icon from "react-native-vector-icons/Ionicons";
-import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "../../config";
-import EventCard from "../components/Card_Event";
+
 import Header from "../components/Header_Normal";
 import styles from "../styles/page_editevents";
-import { STYLES, COLORS } from "../styles/component_org_page";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { COLORS } from "../styles/component_org_page";
+
+const eventTypes = ["Event", "Sub-Event"];
+const venueOptions = [
+  "LRC",
+  "DRER Memorial Hall",
+  "Cafet Hall",
+  "ICT AVR",
+  "Building 28",
+  "PAT AVR",
+  "Building 5",
+  "Science Building",
+];
 
 const EditEvents = () => {
-  const [modalVisible, setModalVisible] = useState(false);
+  const router = useRouter();
+  const { eventId: event_id, orgId } = useLocalSearchParams();
+  const isEdit = !!event_id;
+
+  // FORM STATES
+  const [eventName, setEventName] = useState("");
   const [selectedEvent, setSelectedEvent] = useState("");
-  const [venueModalVisible, setVenueModalVisible] = useState(false);
   const [selectedVenue, setSelectedVenue] = useState("");
+  const [venueDetails, setVenueDetails] = useState("");
+  const [description, setDescription] = useState("");
+
+  const [eventImage, setEventImage] = useState(null); // {uri, local}
+  const [loadingEvent, setLoadingEvent] = useState(true);
+
+  // DATE/TIME PICKERS
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [startTime, setStartTime] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
+
   const [pickerVisible, setPickerVisible] = useState(false);
   const [pickerMode, setPickerMode] = useState("date");
   const [currentField, setCurrentField] = useState("");
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [startTime, setStartTime] = useState(null);
-  const [endTime, setEndTime] = useState(null);
 
-  const events = ["Main Event", "Side Event"];
-  const venue = ["LRC", "DRER Memorial Hall", "Cafet Hall", "ICT AVR", "Building 28", "PAT AVR", "Building 5", "Science Building"];
+  const [modalVisible, setModalVisible] = useState(false);
+  const [venueModalVisible, setVenueModalVisible] = useState(false);
 
+  // -------------------------------------------------------------
+  // 📌 LOAD EVENT IF EDITING
+  // -------------------------------------------------------------
+  useEffect(() => {
+    if (!isEdit) {
+      setLoadingEvent(false);
+      return;
+    }
+
+    const fetchEvent = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/events/${event_id}`);
+        const ev = res.data.event;
+
+        // Fill fields
+        setEventName(ev.event_name);
+        setSelectedEvent(ev.event_type || "");
+        setSelectedVenue(ev.venue || "");
+        setVenueDetails(ev.venue_details || "");
+        setDescription(ev.description || "");
+
+        // dates
+        setStartDate(ev.event_date ? new Date(ev.event_date) : new Date());
+        setEndDate(ev.event_date ? new Date(ev.event_date) : new Date());
+        setStartTime(ev.start_time ? new Date(ev.start_time) : new Date());
+        setEndTime(ev.end_time ? new Date(ev.end_time) : new Date());
+
+        // image
+        if (ev.event_image) {
+          setEventImage({ uri: ev.event_image });
+        }
+      } catch (err) {
+        console.error("❌ Error loading event", err);
+        Alert.alert("Error", "Failed to load event.");
+      } finally {
+        setLoadingEvent(false);
+      }
+    };
+
+    fetchEvent();
+  }, [event_id]);
+
+  // -------------------------------------------------------------
+  // 📌 IMAGE PICKER
+  // -------------------------------------------------------------
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setEventImage({ uri: result.assets[0].uri, local: true });
+    }
+  };
+
+  // -------------------------------------------------------------
+  // 📌 DATE/TIME PICKER CONTROL
+  // -------------------------------------------------------------
   const openPicker = (field, mode) => {
     setCurrentField(field);
     setPickerMode(mode);
     setPickerVisible(true);
   };
 
-  const format = (d) => (d ? d.toLocaleDateString() : "");
-
-  const formatTime = (d) =>
-    d ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-
-  const onPick = (event, selectedValue) => {
+  const onPick = (event, selected) => {
     setPickerVisible(false);
-    if (!selectedValue) return;
+    if (!selected) return;
 
-    if (currentField === "startDate") {
-      setStartDate(selectedValue);
-      setEndDate(selectedValue);
-    }
-
-    if (currentField === "endDate") {
-      setEndDate(selectedValue);
-    }
-
-    if (currentField === "startTime") {
-      setStartTime(selectedValue);
-      const autoEnd = new Date(selectedValue.getTime() + 60 * 60 * 1000);
-      setEndTime(autoEnd);
-    }
-
-    if (currentField === "endTime") {
-      setEndTime(selectedValue);
+    switch (currentField) {
+      case "startDate":
+        setStartDate(selected);
+        break;
+      case "endDate":
+        setEndDate(selected);
+        break;
+      case "startTime":
+        setStartTime(selected);
+        break;
+      case "endTime":
+        setEndTime(selected);
+        break;
     }
   };
+
+  const formatDate = (d) => d?.toLocaleDateString() || "";
+  const formatTime = (d) =>
+    d?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || "";
+
+  // -------------------------------------------------------------
+  // 📌 SAVE EVENT (ADD OR EDIT)
+  // -------------------------------------------------------------
+  const handleSave = async () => {
+    if (!eventName.trim() || !selectedEvent || !selectedVenue || !description.trim()) {
+      Alert.alert("Missing Fields", "Please fill all required fields.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("organization_id", orgId);
+    formData.append("event_name", eventName);
+    formData.append("event_type", selectedEvent);
+    formData.append("venue", selectedVenue);
+    formData.append("venue_details", venueDetails);
+    formData.append("description", description);
+
+    formData.append("event_date", startDate.toISOString());
+    formData.append("start_time", startTime.toISOString());
+    formData.append("end_time", endTime.toISOString());
+
+    // Attach new image only if user picked one
+    if (eventImage?.local) {
+      formData.append("event_image", {
+        uri: eventImage.uri,
+        name: `event-${Date.now()}.jpg`,
+        type: "image/jpeg",
+      });
+    }
+
+    try {
+      if (isEdit) {
+        await axios.put(`${BASE_URL}/events/${event_id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        Alert.alert("Updated", "Event updated successfully.");
+      } else {
+        await axios.post(`${BASE_URL}/events/create`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        Alert.alert("Created", "Event created successfully.");
+      }
+
+      router.back();
+    } catch (err) {
+      console.error("❌ Saving error:", err.response?.data || err);
+      Alert.alert("Error", "Failed to save event.");
+    }
+  };
+
+  // -------------------------------------------------------------
+  // 📌 UI RENDER
+  // -------------------------------------------------------------
+  if (loadingEvent) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#222762" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Header />
 
       <ScrollView contentContainerStyle={styles.containerEvents} showsVerticalScrollIndicator={false}>
+        {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity style={[styles.backButton, { flexDirection: "row", alignItems: "center" }]}>
+          <TouchableOpacity
+            style={[styles.backButton, { flexDirection: "row", alignItems: "center" }]}
+            onPress={() => router.back()}
+          >
             <Ionicons name="chevron-back" size={24} color="#000" />
-            <Text style={styles.headerTitle}>Add Event</Text>
+            <Text style={styles.headerTitle}>{isEdit ? "Edit Event" : "Add Event"}</Text>
           </TouchableOpacity>
         </View>
 
+        {/* IMAGE PICKER */}
         <View style={styles.imageUploadArea}>
-          <TouchableOpacity style={styles.mainImagePlaceholder}>
-            <Ionicons name="add-circle" size={24} color="#222762" />
+          <TouchableOpacity style={styles.mainImagePlaceholder} onPress={pickImage}>
+            {eventImage ? (
+              <Image
+                source={{ uri: eventImage.uri }}
+                style={{ width: "100%", height: "100%", borderRadius: 12 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons name="add-circle" size={32} color="#222762" />
+            )}
           </TouchableOpacity>
         </View>
 
+        {/* EVENT DETAILS */}
         <Text style={styles.formSectionTitle}>Event Details</Text>
 
         <View style={styles.inputGroup}>
@@ -92,104 +254,78 @@ const EditEvents = () => {
             style={styles.textInput}
             placeholder="Type your event name"
             placeholderTextColor="#C1C1C1"
+            value={eventName}
+            onChangeText={setEventName}
           />
         </View>
 
+        {/* EVENT TYPE */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Event Type<Text style={styles.required}> *</Text>
           </Text>
-
           <TouchableOpacity
             style={styles.dropdownInput}
             onPress={() => setModalVisible(true)}
-            activeOpacity={0.8}
           >
-            <Text 
-              style={[
-                styles.dropdownText,
-                !selectedEvent && { color: "#C1C1C1" }
-              ]}
-            >
+            <Text style={[styles.dropdownText, !selectedEvent && { color: "#C1C1C1" }]}>
               {selectedEvent || "Select event type"}
             </Text>
           </TouchableOpacity>
         </View>
 
+        {/* DATE + TIME */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>
-            Select Date and Time<Text style={styles.required}>*</Text>
-          </Text>
+          <Text style={styles.label}>Select Date and Time *</Text>
 
+          {/* DATE ROW */}
           <View style={styles.row}>
             <View style={styles.halfInput}>
               <TouchableOpacity
-                style={[styles.dateInputContainer, { paddingHorizontal: 20, justifyContent: "space-between" }]}
+                style={styles.dateInputContainer}
                 onPress={() => openPicker("startDate", "date")}
               >
-                <Text style={{fontFamily: "DMSans-Medium"}}>
-                  {format(startDate) ? (
-                    <Text style={{color: "black"}}>{format(startDate)}</Text>
-                  ) : (
-                    <Text style={{color: "#999"}}>Start date</Text>
-                  )}
-                </Text>
+                <Text>{formatDate(startDate) || "Start date"}</Text>
                 <Ionicons name="calendar-number" size={22} color="#999" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.halfInput}>
               <TouchableOpacity
-                style={[styles.dateInputContainer, { paddingHorizontal: 20, justifyContent: "space-between" }]}
+                style={styles.dateInputContainer}
                 onPress={() => openPicker("endDate", "date")}
               >
-                <Text style={{fontFamily: "DMSans-Medium"}}>
-                  {format(endDate) ? (
-                    <Text style={{color: "black"}}>{format(endDate)}</Text>
-                  ) : (
-                    <Text style={{color: "#999"}}>End Date</Text>
-                  )}
-                </Text>
+                <Text>{formatDate(endDate) || "End date"}</Text>
                 <Ionicons name="calendar-number" size={22} color="#999" />
               </TouchableOpacity>
             </View>
           </View>
 
+          {/* TIME ROW */}
           <View style={styles.row}>
             <View style={styles.halfInput}>
               <TouchableOpacity
-                style={[styles.dateInputContainer, { paddingHorizontal: 20, justifyContent: "space-between" }]}
+                style={styles.dateInputContainer}
                 onPress={() => openPicker("startTime", "time")}
               >
-                <Text style={{fontFamily: "DMSans-Medium"}}>
-                  {formatTime(startTime) ? (
-                    <Text style={{color: "black"}}>{formatTime(startTime)}</Text>
-                  ) : (
-                    <Text style={{color: "#999"}}>Start time</Text>
-                  )}
-                </Text>
+                <Text>{formatTime(startTime) || "Start time"}</Text>
                 <Ionicons name="time-outline" size={22} color="#999" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.halfInput}>
               <TouchableOpacity
-                style={[styles.dateInputContainer, { paddingHorizontal: 20, justifyContent: "space-between" }]}
+                style={styles.dateInputContainer}
                 onPress={() => openPicker("endTime", "time")}
               >
-                <Text style={{fontFamily: "DMSans-Medium"}}>
-                  {formatTime(endTime) ? (
-                    <Text style={{color: "black"}}>{formatTime(endTime)}</Text>
-                  ) : (
-                    <Text style={{color: "#999"}}>End time</Text>
-                  )}
-                </Text>
+                <Text>{formatTime(endTime) || "End time"}</Text>
                 <Ionicons name="time-outline" size={22} color="#999" />
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
+        {/* VENUE */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Venue & Location<Text style={styles.required}> *</Text>
@@ -198,67 +334,71 @@ const EditEvents = () => {
           <TouchableOpacity
             style={styles.dropdownInput}
             onPress={() => setVenueModalVisible(true)}
-            activeOpacity={0.8}
           >
-            <Text 
-              style={[
-                styles.dropdownText,
-                !selectedVenue && { color: "#C1C1C1" }
-              ]}
-            >
+            <Text style={[styles.dropdownText, !selectedVenue && { color: "#C1C1C1" }]}>
               {selectedVenue || "Select venue & location"}
             </Text>
           </TouchableOpacity>
         </View>
 
+        {/* VENUE DETAILS */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Event Description<Text style={styles.required}>*</Text></Text>
-            <TextInput
-              style={[styles.textInput, styles.descriptionInput, {height: 150}]}
-              placeholder="Type your event description..."
-              placeholderTextColor="#C1C1C1"
-              multiline
-              textAlignVertical="top"
-            />
+          <Text style={styles.label}>Venue Details</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Optional venue details..."
+            placeholderTextColor="#C1C1C1"
+            value={venueDetails}
+            onChangeText={setVenueDetails}
+          />
         </View>
 
-        <View style={{ height: 70 }} />
+        {/* DESCRIPTION */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Event Description *</Text>
+          <TextInput
+            style={[styles.textInput, styles.descriptionInput]}
+            placeholder="Type your event description..."
+            placeholderTextColor="#C1C1C1"
+            multiline
+            value={description}
+            onChangeText={setDescription}
+          />
+        </View>
+
+        <View style={{ height: 80 }} />
       </ScrollView>
 
+      {/* SAVE BUTTON */}
       <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity style={styles.registerButton}>
-          <Text style={styles.registerText}>Publish Event</Text>
+        <TouchableOpacity style={styles.registerButton} onPress={handleSave}>
+          <Text style={styles.registerText}>{isEdit ? "Update Event" : "Publish Event"}</Text>
           <Ionicons name="arrow-forward" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
 
+      {/* PICKERS */}
       {pickerVisible && (
-          <DateTimePicker
-            value={new Date()}
-            mode={pickerMode}
-            display="default"
-            onChange={onPick}
-          />
-        )}
+        <DateTimePicker
+          value={new Date()}
+          mode={pickerMode}
+          display="default"
+          onChange={onPick}
+        />
+      )}
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
-          activeOpacity={1} 
+      {/* EVENT TYPE MODAL */}
+      <Modal transparent visible={modalVisible}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
           onPress={() => setModalVisible(false)}
         />
-
         <View style={styles.modalSheet}>
           <Text style={styles.modalTitle}>Select Event</Text>
 
-          {events.map((item, index) => (
+          {eventTypes.map((item, i) => (
             <TouchableOpacity
-              key={index}
+              key={i}
               style={styles.modalItem}
               onPress={() => {
                 setSelectedEvent(item);
@@ -271,31 +411,25 @@ const EditEvents = () => {
         </View>
       </Modal>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={venueModalVisible}
-        onRequestClose={() => setVenueModalVisible(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
-          activeOpacity={1} 
+      {/* VENUE MODAL */}
+      <Modal transparent visible={venueModalVisible}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
           onPress={() => setVenueModalVisible(false)}
         />
-
         <View style={styles.modalSheet}>
-          <Text style={styles.modalTitle}>Select Venue & Location</Text>
+          <Text style={styles.modalTitle}>Select Venue</Text>
 
-          {venue.map((eventvl, index) => (
+          {venueOptions.map((v, i) => (
             <TouchableOpacity
-              key={index}
+              key={i}
               style={styles.modalItem}
               onPress={() => {
-                setSelectedVenue(eventvl);
+                setSelectedVenue(v);
                 setVenueModalVisible(false);
               }}
             >
-              <Text style={styles.modalItemText}>{eventvl}</Text>
+              <Text style={styles.modalItemText}>{v}</Text>
             </TouchableOpacity>
           ))}
         </View>

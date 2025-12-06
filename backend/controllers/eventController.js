@@ -8,24 +8,23 @@ import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
 
-
 const getEventsByDepartment = async (req, res) => {
   try {
     const { departmentId } = req.params;
 
     // Find organizations in this department
     const orgs = await Organization.find({ department_id: departmentId }).select("_id");
-    const orgIds = orgs.map(o => o._id);
+    const orgIds = orgs.map((o) => o._id);
 
     const now = new Date();
 
     // Find events whose end_time is in the future
     const events = await Event.find({
       organization_id: { $in: orgIds },
-      end_time: { $gte: now } // only upcoming events
+      end_time: { $gte: now }, // only upcoming events
     })
-    .populate('organization_id')
-    .sort({ event_date: 1 }); // 
+      .populate("organization_id")
+      .sort({ event_date: 1 });
 
     res.status(200).json(events);
   } catch (err) {
@@ -48,18 +47,17 @@ const getEventsByOrgType = async (req, res) => {
 
     const events = await Event.find({
       organization_id: { $in: orgIds },
-      end_time: { $gte: new Date() }
+      end_time: { $gte: new Date() },
     })
       .populate("organization_id")
       .sort({ event_date: 1 });
 
-    res.status(200).json({ events }); 
+    res.status(200).json({ events });
   } catch (err) {
     console.error("Error fetching events:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 const getFilteredEvents = async (req, res) => {
   try {
@@ -73,7 +71,7 @@ const getFilteredEvents = async (req, res) => {
       try {
         orgs = JSON.parse(orgs);
       } catch (err) {
-        orgs = orgs.split(',');
+        orgs = orgs.split(",");
       }
     }
 
@@ -87,10 +85,10 @@ const getFilteredEvents = async (req, res) => {
 
     const filteredEvents = await Event.find({
       organization_id: { $in: orgObjectIds },
-      end_time: { $gte: now } 
+      end_time: { $gte: now },
     })
       .sort({ event_date: 1 })
-      .populate('organization_id', 'org_name pfp description');
+      .populate("organization_id", "org_name pfp description");
 
     return res.status(200).json(filteredEvents);
   } catch (err) {
@@ -99,45 +97,39 @@ const getFilteredEvents = async (req, res) => {
   }
 };
 
-
-
 const getFollowedEvents = async (req, res) => {
-    try {
-        const { orgs } = req.query;
+  try {
+    const { orgs } = req.query;
 
-        if (!orgs) {
-            return res.status(200).json([]); 
-        }
-
-        const orgIdStrings = orgs.split(',');
-        const orgObjectIds = orgIdStrings
-            .filter(id => mongoose.Types.ObjectId.isValid(id.trim()))
-            .map(id => new mongoose.Types.ObjectId(id.trim()));
-
-        if (orgObjectIds.length === 0) {
-            return res.status(200).json([]); 
-        }
-
-        const events = await Event.find({
-            organization_id: { $in: orgObjectIds }
-        })
-        .sort({ event_date: 1 })
-        .populate('organization_id');
-
-        res.status(200).json(events);
-
-    } catch (err) {
-        console.error("Error fetching followed events:", err);
-        res.status(500).json({ message: "Server error fetching followed events" });
+    if (!orgs) {
+      return res.status(200).json([]);
     }
+
+    const orgIdStrings = orgs.split(",");
+    const orgObjectIds = orgIdStrings
+      .filter((id) => mongoose.Types.ObjectId.isValid(id.trim()))
+      .map((id) => new mongoose.Types.ObjectId(id.trim()));
+
+    if (orgObjectIds.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    const events = await Event.find({
+      organization_id: { $in: orgObjectIds },
+    })
+      .sort({ event_date: 1 })
+      .populate("organization_id");
+
+    res.status(200).json(events);
+  } catch (err) {
+    console.error("Error fetching followed events:", err);
+    res.status(500).json({ message: "Server error fetching followed events" });
+  }
 };
-
-
-
 
 const getAllUpcomingEvents = async (req, res) => {
   try {
-    const events = await Event.find({ event_date: { $gte: new Date() } }) 
+    const events = await Event.find({ event_date: { $gte: new Date() } })
       .populate("organization_id")
       .sort({ event_date: 1 });
 
@@ -150,9 +142,9 @@ const getAllUpcomingEvents = async (req, res) => {
 
 const getAllConcludedEvents = async (req, res) => {
   try {
-    const events = await Event.find({ end_time: { $lt: new Date() } }) 
+    const events = await Event.find({ end_time: { $lt: new Date() } })
       .populate("organization_id")
-      .sort({ event_date: -1 }); 
+      .sort({ event_date: -1 });
 
     res.status(200).json(events);
   } catch (err) {
@@ -163,28 +155,27 @@ const getAllConcludedEvents = async (req, res) => {
 
 // events/organization/:orgId/upcoming
 const getUpcomingEventsByOrganization = async (req, res) => {
-    try {
-        const { orgId } = req.params;
-        if (!orgId)
-            return res.status(400).json({ message: "Organization ID required" });
+  try {
+    const { orgId } = req.params;
+    if (!orgId) return res.status(400).json({ message: "Organization ID required" });
 
-        // FIX: Only rely on precise timestamps (end_time >= now)
-        const now = new Date(); 
+    // FIX: Only rely on precise timestamps (end_time >= now)
+    const now = new Date();
 
-        const events = await Event.find({
-            organization_id: orgId,
-            // 🎯 This is the fix: It ignores the simple 'event_date' field,
-            // ensuring the event shows up as long as it hasn't concluded.
-            end_time: { $gte: now }, 
-        })
-          .populate("organization_id")
-          .sort({ start_time: 1 });
+    const events = await Event.find({
+      organization_id: orgId,
+      // 🎯 This is the fix: It ignores the simple 'event_date' field,
+      // ensuring the event shows up as long as it hasn't concluded.
+      end_time: { $gte: now },
+    })
+      .populate("organization_id")
+      .sort({ start_time: 1 });
 
-        return res.status(200).json(events);
-    } catch (err) {
-        console.error("Error fetching organization upcoming events:", err);
-        return res.status(500).json({ message: "Server error fetching organization's upcoming events" });
-    }
+    return res.status(200).json(events);
+  } catch (err) {
+    console.error("Error fetching organization upcoming events:", err);
+    return res.status(500).json({ message: "Server error fetching organization's upcoming events" });
+  }
 };
 
 const getConcludedEventsByOrganization = async (req, res) => {
@@ -195,8 +186,8 @@ const getConcludedEventsByOrganization = async (req, res) => {
       organization_id: orgId,
       end_time: { $lt: new Date() }, // already ended
     })
-    .populate("organization_id")
-    .sort({ end_time: -1 }); // recent first
+      .populate("organization_id")
+      .sort({ end_time: -1 }); // recent first
 
     res.status(200).json(events);
   } catch (err) {
@@ -205,170 +196,49 @@ const getConcludedEventsByOrganization = async (req, res) => {
   }
 };
 
-
 const getEventsByFollowedOrgs = async (req, res) => {
-    const orgsString = req.query.orgs; 
-    
-    if (!orgsString) {
-        return res.status(200).json([]); 
-    }
-    
-    const orgIds = orgsString.split(','); 
+  const orgsString = req.query.orgs;
 
-    try {
-        const events = await Event.find({ 
-            organization_id: { $in: orgIds }, 
-        })
-        .populate('organization_id')
-        .sort({ event_date: 1 }); 
+  if (!orgsString) {
+    return res.status(200).json([]);
+  }
 
-        res.status(200).json(events);
-    } catch (err) {
-        console.error("Error fetching events by followed organizations:", err);
-        res.status(500).json({ message: "Server error" });
-    }
+  const orgIds = orgsString.split(",");
+
+  try {
+    const events = await Event.find({
+      organization_id: { $in: orgIds },
+    })
+      .populate("organization_id")
+      .sort({ event_date: 1 });
+
+    res.status(200).json(events);
+  } catch (err) {
+    console.error("Error fetching events by followed organizations:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 const getFollowedOrgEvents = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const followed = await FollowedOrgs.find({ user_id: userId })
-      .select("organization_id");
+    const followed = await FollowedOrgs.find({ user_id: userId }).select("organization_id");
 
-    const orgIds = followed.map(f => f.organization_id);
+    const orgIds = followed.map((f) => f.organization_id);
 
     if (orgIds.length === 0) {
       return res.status(200).json([]);
     }
 
     const events = await Event.find({
-      organization_id: { $in: orgIds }
+      organization_id: { $in: orgIds },
     }).populate("organization_id");
 
     res.status(200).json(events);
-
   } catch (err) {
     console.error("Error getting followed org events:", err);
     res.status(500).json({ message: "Server error" });
-  }
-};
-
-// =========================
-// ADD EVENT
-// =========================
-const addEvent = async (req, res) => {
-  try {
-    const {
-      organization_id,
-      event_name,
-      event_type,
-      description,
-      event_date,
-      start_time,
-      end_time,
-      venue,
-      is_mandatory
-    } = req.body;
-
-    // File upload paths (multiple images)
-    const images = req.body.event_images || [];
-
-    const newEvent = new Event({
-      organization_id,
-      event_name,
-      event_type,
-      description,
-      event_images: images,
-      event_date,
-      start_time,
-      end_time,
-      venue,
-      is_mandatory
-    });
-
-    await newEvent.save();
-
-    res.status(201).json({
-      message: "Event created successfully",
-      event: newEvent
-    });
-
-  } catch (error) {
-    console.error("Add Event Error:", error);
-    res.status(500).json({ message: "Server error adding event" });
-  }
-};
-
-// =========================
-// UPDATE EVENT
-// =========================
-const updateEvent = async (req, res) => {
-  try {
-    const eventId = req.params.id;
-
-    const {
-      organization_id,
-      event_name,
-      event_type,
-      description,
-      event_date,
-      start_time,
-      end_time,
-      venue,
-      is_mandatory,
-      keep_old_images // optional: ["img1.jpg", "img2.png"]
-    } = req.body;
-
-    const event = await Event.findById(eventId);
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
-    }
-
-    // Prepare new uploaded images
-    const newImages = req.body.event_images || []; 
-
-    let finalImages = req.body.keep_old_images || [];
-
-    // If user wants to keep old images
-    if (keep_old_images && Array.isArray(keep_old_images)) {
-      finalImages = [...keep_old_images];
-    }
-
-    // Add newly uploaded images
-    finalImages = [...finalImages, ...newImages];
-
-    // Delete old images that were removed
-    const removedImages =
-      event.event_images.filter(img => !finalImages.includes(img));
-
-    removedImages.forEach(imgPath => {
-      const fullPath = path.join(process.cwd(), imgPath);
-      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-    });
-
-    // Update fields
-    event.organization_id = organization_id ?? event.organization_id;
-    event.event_name = event_name ?? event.event_name;
-    event.event_type = event_type ?? event.event_type;
-    event.description = description ?? event.description;
-    event.event_date = event_date ?? event.event_date;
-    event.start_time = start_time ?? event.start_time;
-    event.end_time = end_time ?? event.end_time;
-    event.venue = venue ?? event.venue;
-    event.is_mandatory = is_mandatory ?? event.is_mandatory;
-    event.event_images = finalImages;
-
-    await event.save();
-
-    res.status(200).json({
-      message: "Event updated successfully",
-      event
-    });
-
-  } catch (error) {
-    console.error("Update Event Error:", error);
-    res.status(500).json({ message: "Server error updating event" });
   }
 };
 
@@ -386,9 +256,7 @@ const getOrgEventsByStatus = async (req, res) => {
       query.status = status;
     }
 
-    const events = await Event.find(query)
-      .populate("organization_id")
-      .sort({ event_date: 1 }); // earliest first
+    const events = await Event.find(query).populate("organization_id").sort({ event_date: 1 }); // earliest first
 
     res.status(200).json(events);
   } catch (error) {
@@ -398,63 +266,56 @@ const getOrgEventsByStatus = async (req, res) => {
 };
 
 const getOngoingFilter = () => {
-    const now = new Date();
-    
-    return {
-        start_time: { $lte: now },
-        end_time: { $gt: now } 
-    }; 
+  const now = new Date();
+
+  return {
+    start_time: { $lte: now },
+    end_time: { $gt: now },
+  };
 };
 
+const getOngoingEvents = async (req, res) => {
+  try {
+    const ongoingEvents = await Event.find(getOngoingFilter())
+      .populate("organization_id", "org_name pfp")
+      .sort({ event_date: 1 });
 
-const getOngoingEvents = async (req, res) => { 
-    try {
-        const ongoingEvents = await Event.find(getOngoingFilter())
-            .populate('organization_id', 'org_name pfp') 
-            .sort({ event_date: 1 });
-        
-        return res.status(200).json(ongoingEvents);
-    } catch (error) {
-        console.error("Error fetching ongoing events:", error);
-        return res.status(500).json({ message: "Server error fetching ongoing events." });
-    }
+    return res.status(200).json(ongoingEvents);
+  } catch (error) {
+    console.error("Error fetching ongoing events:", error);
+    return res.status(500).json({ message: "Server error fetching ongoing events." });
+  }
 };
-
 
 const searchEvents = async (req, res) => {
-    const { query } = req.query; 
+  const { query } = req.query;
 
-    if (!query || query.trim() === "") {
-        return getOngoingEvents(req, res); 
-    }
+  if (!query || query.trim() === "") {
+    return getOngoingEvents(req, res);
+  }
 
-    try {
-        const searchRegex = new RegExp(query, 'i');
-        
-        const searchConditions = {
-            $or: [
-                { event_name: searchRegex },
-                { description: searchRegex },
-            ],
-            ...getOngoingFilter() 
-        };
+  try {
+    const searchRegex = new RegExp(query, "i");
 
-        const searchResults = await Event.find(searchConditions)
-            .populate('organization_id', 'org_name pfp')
-            .sort({ event_date: 1 });
+    const searchConditions = {
+      $or: [{ event_name: searchRegex }, { description: searchRegex }],
+      ...getOngoingFilter(),
+    };
 
-        return res.status(200).json(searchResults);
+    const searchResults = await Event.find(searchConditions)
+      .populate("organization_id", "org_name pfp")
+      .sort({ event_date: 1 });
 
-    } catch (error) {
-        console.error("Error searching events:", error);
-        return res.status(500).json({ message: "Server error during search." });
-    }
+    return res.status(200).json(searchResults);
+  } catch (error) {
+    console.error("Error searching events:", error);
+    return res.status(500).json({ message: "Server error during search." });
+  }
 };
 
 const getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id)
-      .populate("organization_id", "org_name pfp description");
+    const event = await Event.findById(req.params.id).populate("organization_id", "org_name pfp description");
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -519,9 +380,7 @@ const getEventStatus = async (req, res) => {
     const isActive = now >= startTime && now <= endTime;
 
     // Within 30 minutes of start time
-    const within30Min =
-      now >= startTime &&
-      now <= new Date(startTime.getTime() + 30 * 60 * 1000);
+    const within30Min = now >= startTime && now <= new Date(startTime.getTime() + 30 * 60 * 1000);
 
     return res.json({
       isActive,
@@ -533,7 +392,132 @@ const getEventStatus = async (req, res) => {
   }
 };
 
+// ===============================
+// CREATE EVENT (FIXED)
+// ===============================
+const createEvent = async (req, res) => {
+  try {
+    // ⭐ FIX 1: Destructure all fields from req.body (sent via FormData)
+    const {
+      organization_id,
+      event_name,
+      event_type,
+      venue,
+      venue_details,
+      description,
+      event_date, // Raw date string from client
+      start_time, // Raw time string from client
+      end_time, // Raw time string from client
+    } = req.body;
 
+    // ⭐ FIX 2: Access the single file object on req.file
+    const event_image_url = req.file ? req.file.path || req.file.secure_url : null;
 
+    // ⭐ FIX 3: Convert client-side ISO strings back to UTC Date objects
+    // The client sends full ISO strings (date + time) for each field.
+    const eventDateUTC = new Date(event_date);
+    const startTimeUTC = new Date(start_time);
+    const endTimeUTC = new Date(end_time);
 
-export { getEventsByDepartment, getAllUpcomingEvents, getAllConcludedEvents, getEventsByFollowedOrgs, getFollowedOrgEvents, addEvent, updateEvent, getOrgEventsByStatus, getOngoingFilter, getOngoingEvents, searchEvents, getEventsByOrgType, getFilteredEvents, getFollowedEvents, getEventById, getUpcomingEventsByOrganization, getConcludedEventsByOrganization, isEventActive, isEventWithin30Min, getEventStatus };
+    const newEvent = new Event({
+      organization_id,
+      event_name,
+      event_type,
+      description,
+      venue,
+      venue_details,
+      event_image: event_image_url,
+      event_date: eventDateUTC,
+      start_time: startTimeUTC,
+      end_time: endTimeUTC,
+    });
+
+    const savedEvent = await newEvent.save();
+    res.status(201).json({ message: "Event created successfully", event: savedEvent });
+  } catch (err) {
+    console.error("Error creating event:", err); // Log the full error
+    res.status(500).json({ message: "Server error creating event", details: err.message });
+  }
+};
+
+// ===============================
+// UPDATE EVENT (FIXED)
+// ===============================
+const updateEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    // ⭐ FIX 1: Destructure all fields from req.body
+    const {
+      organization_id, // Keep, even if not updated, for context
+      event_name,
+      event_type,
+      description,
+      venue,
+      venue_details,
+      is_mandatory,
+      event_date,
+      start_time,
+      end_time,
+    } = req.body;
+
+    // ⭐ FIX 2: Access the single file object on req.file
+    const new_event_image_url = req.file ? req.file.path || req.file.secure_url : undefined; // keep undefined if no new image was uploaded
+
+    // ⭐ FIX 3: Convert client-side ISO strings back to UTC Date objects
+    const eventDateUTC = new Date(event_date);
+    const startTimeUTC = new Date(start_time);
+    const endTimeUTC = new Date(end_time);
+
+    const updateData = {
+      event_name,
+      event_type,
+      description,
+      venue,
+      venue_details,
+      is_mandatory,
+      // Date and time updates
+      event_date: eventDateUTC,
+      start_time: startTimeUTC,
+      end_time: endTimeUTC,
+    };
+
+    // Only update event_image if a new image was uploaded
+    if (new_event_image_url !== undefined) {
+      updateData.event_image = new_event_image_url;
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(eventId, updateData, { new: true, runValidators: true });
+
+    if (!updatedEvent) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.status(200).json({ message: "Event updated successfully", event: updatedEvent });
+  } catch (err) {
+    console.error("Error updating event:", err);
+    res.status(500).json({ message: "Server error updating event", details: err.message });
+  }
+};
+
+export {
+  getEventsByDepartment,
+  getAllUpcomingEvents,
+  getAllConcludedEvents,
+  getEventsByFollowedOrgs,
+  getFollowedOrgEvents,
+  createEvent,
+  updateEvent,
+  getOrgEventsByStatus,
+  getOngoingFilter,
+  getOngoingEvents,
+  searchEvents,
+  getEventsByOrgType,
+  getFilteredEvents,
+  getFollowedEvents,
+  getEventById,
+  getUpcomingEventsByOrganization,
+  getConcludedEventsByOrganization,
+  isEventActive,
+  isEventWithin30Min,
+  getEventStatus,
+};
