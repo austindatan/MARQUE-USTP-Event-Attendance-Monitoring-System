@@ -91,6 +91,9 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
               style={styles.searchInput}
             />
           </View>
+
+          <TouchableOpacity style={styles.filterButton}>
+          </TouchableOpacity>
         </Animated.View>
       </Animated.View>
 

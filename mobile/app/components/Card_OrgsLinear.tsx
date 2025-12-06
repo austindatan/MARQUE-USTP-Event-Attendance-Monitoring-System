@@ -8,10 +8,11 @@ const OrgLinear = ({
   organization = "", 
   text = "", 
   isFollowed = false, 
-  onToggleFollow 
+  onToggleFollow,
+  onPress
 }) => {
   return (
-    <TouchableOpacity activeOpacity={0.6} style={styles.card}>
+    <TouchableOpacity activeOpacity={0.6} style={styles.card} onPress={onPress}>
 
       <View style={styles.row}>
         <Image
