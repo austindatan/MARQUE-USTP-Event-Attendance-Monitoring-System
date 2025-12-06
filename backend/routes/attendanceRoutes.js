@@ -14,4 +14,7 @@ router.post(
 	attendanceController.uploadPhotoproof
 );
 
+// DOWNLOAD PDF of attendance logs
+router.get("/export/:event_id", attendanceController.exportAttendancePDF);
+
 module.exports = router;

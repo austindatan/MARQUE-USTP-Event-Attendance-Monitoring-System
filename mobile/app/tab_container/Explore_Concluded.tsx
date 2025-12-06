@@ -74,7 +74,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
           const dateMonth = date.toLocaleString('default', { month: 'short' });
 
           const handleEventPress = () => {
-            router.push(`/tab_container/EventDetails_Concluded?eventId=${event._id}`);
+            router.push(`/tab_container/EventDetails_Unified?eventId=${event._id}`);
           };
 
           return (

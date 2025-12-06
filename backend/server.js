@@ -44,10 +44,6 @@ app.use("/exploreorgs", exploreorgRoutes);
 const followedorgsRoutes = require('./routes/followedorgRoutes');
 app.use('/api/followed-orgs', followedorgsRoutes);
 
-// Bookmarks route
-const bookmarksRoutes = require('./routes/bookmarksRoutes');
-app.use('/api/bookmarks', bookmarksRoutes);
-
 // Organization route
 const organizationRoutes = require('./routes/organizationRoutes');
 app.use('/api/organizations', organizationRoutes);
@@ -71,6 +67,9 @@ app.use('/api/memberships', orgOfficerRoutes);
 const joinRequestRoutes = require('./routes/joinRequestRoutes');
 app.use('/api/join-request', joinRequestRoutes);
 
+// Bookmark
+const bookmarkRoutes = require('./routes/bookmarkRoutes');
+app.use("/api/bookmarks", bookmarkRoutes);
 
 // DB connection
 mongoose
