@@ -1,16 +1,6 @@
 // @ts-nocheck
-
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  ImageBackground,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
@@ -19,7 +9,6 @@ import styles from "../styles/page_eventdetails";
 import { BASE_URL, CLOUD_NAME } from "../../config";
 import axios from "axios";
 
-// --- Helper Functions ---
 const fixCloudinaryUrl = (url, cloudName) => {
   if (!url || url.startsWith("http")) return url;
   const path = url.replace(/ /g, "%20");
@@ -41,7 +30,6 @@ const determineEventStatus = (eventData) => {
   return 'concluded';
 };
 
-// --- Component ---
 const EventDetails_Unified = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -56,7 +44,6 @@ const EventDetails_Unified = () => {
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
   const [userId, setUserId] = useState("692402df4600376c2cea56eb"); // Mock user ID
 
-  // --- Bookmarks ---
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(true);
 
@@ -72,7 +59,7 @@ const EventDetails_Unified = () => {
       const res = await axios.get(`${BASE_URL}/api/bookmarks/check/${student_number}/${eventId}`);
       setIsBookmarked(res.data.isBookmarked);
     } catch (err) {
-      console.error("❌ Error checking bookmark status:", err.message);
+      console.error("Error checking bookmark status:", err.message);
     } finally {
       setBookmarkLoading(false);
     }
@@ -97,7 +84,7 @@ const EventDetails_Unified = () => {
       setIsBookmarked(actionToAdd);
     } catch (err) {
       const errorMessage = err.response?.data?.message || `Failed to ${actionToAdd ? 'add' : 'remove'} bookmark.`;
-      console.error(`❌ Bookmark Toggle Error: ${errorMessage}`, err);
+      console.error(`Bookmark Toggle Error: ${errorMessage}`, err);
       Alert.alert("Action Failed", errorMessage);
       checkBookmarkStatus();
     } finally {
@@ -105,7 +92,6 @@ const EventDetails_Unified = () => {
     }
   };
 
-  // --- Fetch Event Details ---
   const fetchEventDetails = async (id) => {
     if (!id) {
       setLoading(false);
@@ -121,7 +107,6 @@ const EventDetails_Unified = () => {
         Alert.alert("Error", "Event data not found in response.");
         return;
       }
-      // Fix Cloudinary URLs
       if (eventObj.event_image) eventObj.event_image = fixCloudinaryUrl(eventObj.event_image, CLOUD_NAME);
       if (eventObj.organization_id?.pfp) eventObj.organization_id.pfp = fixCloudinaryUrl(eventObj.organization_id.pfp, CLOUD_NAME);
       if (Array.isArray(eventObj.event_images)) eventObj.event_images = eventObj.event_images.map(img => fixCloudinaryUrl(img, CLOUD_NAME));
@@ -139,7 +124,6 @@ const EventDetails_Unified = () => {
     }
   };
 
-  // --- Follow ---
   const checkFollowStatus = async (orgId) => {
     try {
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${userId}/ids`);
@@ -168,7 +152,6 @@ const EventDetails_Unified = () => {
     }
   };
 
-  // --- Feedback ---
   const checkFeedbackStatus = async () => {
     if (!eventId || !userId) return;
     try {
@@ -188,13 +171,12 @@ const EventDetails_Unified = () => {
     } catch (err) { console.error(err); }
   };
 
-  // --- Effects ---
   useFocusEffect(
     useCallback(() => {
       if (eventId) {
         fetchEventDetails(eventId);
         checkFeedbackStatus();
-        checkBookmarkStatus(); // 👈 bookmarks check
+        checkBookmarkStatus();
       } else setLoading(false);
     }, [eventId])
   );
@@ -203,7 +185,6 @@ const EventDetails_Unified = () => {
     if (eventData?.organization_id?._id && userId) checkFollowStatus(eventData.organization_id._id);
   }, [eventData, userId]);
 
-  // --- Pre-render ---
   if (loading) return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <ActivityIndicator size="large" color="#0A0F51" />
@@ -217,7 +198,6 @@ const EventDetails_Unified = () => {
     </View>
   );
 
-  // --- Date/Time ---
   const eventDateObj = eventData.event_date ? new Date(eventData.event_date) : null;
   const eventDate = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
@@ -247,7 +227,6 @@ const EventDetails_Unified = () => {
   const handleBack = () => router.back();
   const handleRegister = () => Alert.alert("Register", "Navigating to registration form...");
 
-  // --- Render ---
   return (
     <View style={styles.container}>
       <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
@@ -281,7 +260,6 @@ const EventDetails_Unified = () => {
           ]}
         />
         <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{eventData.title || eventData.event_name}</Text>
-        {/* Status-specific content */}
         {eventStatus === 'concluded' && (
           <View style={styles.infoColumn}>
             {eventData.attendanceRecorded && (
@@ -306,7 +284,7 @@ const EventDetails_Unified = () => {
             )}
           </View>
         )}
-        {/* Date & Location */}
+
         <View style={styles.infoRow}>
           <View style={styles.iconBox}><Ionicons name="calendar" size={20} color="#0A0F51" /></View>
           <View><Text style={styles.infoPrimary}>{eventDate}</Text><Text style={styles.infoSecondary}>{eventTimeFull}</Text></View>
@@ -321,7 +299,6 @@ const EventDetails_Unified = () => {
         <Text style={styles.sectionTitle}>About Event</Text>
         <Text style={styles.aboutText}>{eventData.description || eventData.event_description}</Text>
 
-        {/* Organizer */}
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image source={organizerPfpSource} style={styles.organizerLogo} />

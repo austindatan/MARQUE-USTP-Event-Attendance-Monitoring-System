@@ -1,6 +1,3 @@
-//const Event = require("../models/Event");
-//const Organization = require("../models/Organization");
-//const FollowedOrgs = require("../models/Followed_org");
 import Event from "../models/Event.js";
 import Organization from "../models/Organization.js";
 import FollowedOrgs from "../models/Followed_org.js";
@@ -392,12 +389,8 @@ const getEventStatus = async (req, res) => {
   }
 };
 
-// ===============================
-// CREATE EVENT (FIXED)
-// ===============================
 const createEvent = async (req, res) => {
   try {
-    // ⭐ FIX 1: Destructure all fields from req.body (sent via FormData)
     const {
       organization_id,
       event_name,
@@ -405,16 +398,13 @@ const createEvent = async (req, res) => {
       venue,
       venue_details,
       description,
-      event_date, // Raw date string from client
-      start_time, // Raw time string from client
-      end_time, // Raw time string from client
+      event_date,
+      start_time,
+      end_time,
     } = req.body;
 
-    // ⭐ FIX 2: Access the single file object on req.file
     const event_image_url = req.file ? req.file.path || req.file.secure_url : null;
 
-    // ⭐ FIX 3: Convert client-side ISO strings back to UTC Date objects
-    // The client sends full ISO strings (date + time) for each field.
     const eventDateUTC = new Date(event_date);
     const startTimeUTC = new Date(start_time);
     const endTimeUTC = new Date(end_time);
@@ -435,20 +425,16 @@ const createEvent = async (req, res) => {
     const savedEvent = await newEvent.save();
     res.status(201).json({ message: "Event created successfully", event: savedEvent });
   } catch (err) {
-    console.error("Error creating event:", err); // Log the full error
+    console.error("Error creating event:", err);
     res.status(500).json({ message: "Server error creating event", details: err.message });
   }
 };
 
-// ===============================
-// UPDATE EVENT (FIXED)
-// ===============================
 const updateEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
-    // ⭐ FIX 1: Destructure all fields from req.body
     const {
-      organization_id, // Keep, even if not updated, for context
+      organization_id,
       event_name,
       event_type,
       description,
@@ -460,10 +446,8 @@ const updateEvent = async (req, res) => {
       end_time,
     } = req.body;
 
-    // ⭐ FIX 2: Access the single file object on req.file
-    const new_event_image_url = req.file ? req.file.path || req.file.secure_url : undefined; // keep undefined if no new image was uploaded
+    const new_event_image_url = req.file ? req.file.path || req.file.secure_url : undefined;
 
-    // ⭐ FIX 3: Convert client-side ISO strings back to UTC Date objects
     const eventDateUTC = new Date(event_date);
     const startTimeUTC = new Date(start_time);
     const endTimeUTC = new Date(end_time);
@@ -475,13 +459,11 @@ const updateEvent = async (req, res) => {
       venue,
       venue_details,
       is_mandatory,
-      // Date and time updates
       event_date: eventDateUTC,
       start_time: startTimeUTC,
       end_time: endTimeUTC,
     };
 
-    // Only update event_image if a new image was uploaded
     if (new_event_image_url !== undefined) {
       updateData.event_image = new_event_image_url;
     }
