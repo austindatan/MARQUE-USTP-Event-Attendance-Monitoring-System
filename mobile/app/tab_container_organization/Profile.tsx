@@ -1,6 +1,15 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, StyleSheet, } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  ImageBackground,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -10,6 +19,9 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "../../config";
 import EventCard from "../components/Card_Event";
 import axios from "axios";
+
+// ⭐ ADDED IMPORT (same as Activities.tsx)
+import AddActivityButton from "../components/AddActivityButton";
 
 type EventTabType = "Incoming" | "Concluded";
 
@@ -59,7 +71,9 @@ const ProfilePage = () => {
     }
     return {
       dateDay: date.getDate().toString(),
-      dateMonth: date.toLocaleString("en-US", { month: "short" }).toUpperCase(),
+      dateMonth: date.toLocaleString("en-US", {
+        month: "short",
+      }).toUpperCase(),
       orgDate: date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
@@ -71,7 +85,9 @@ const ProfilePage = () => {
   const fetchOrgProfile = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${BASE_URL}/api/organizations/profile/${orgId}`);
+      const response = await axios.get(
+        `${BASE_URL}/api/organizations/profile/${orgId}`
+      );
       setProfileData(response.data);
       setError(null);
     } catch (err) {
@@ -88,7 +104,12 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <View style={[STYLES.container, { justifyContent: "center", alignItems: "center" }]}>
+      <View
+        style={[
+          STYLES.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color={COLORS.primaryNavy} />
       </View>
     );
@@ -102,11 +123,23 @@ const ProfilePage = () => {
           { justifyContent: "center", alignItems: "center", padding: 20 },
         ]}
       >
-        <Text style={{ color: "red", fontSize: 18, marginBottom: 10, textAlign: "center" }}>
+        <Text
+          style={{
+            color: "red",
+            fontSize: 18,
+            marginBottom: 10,
+            textAlign: "center",
+          }}
+        >
           {error || "Organization data not available."}
         </Text>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ color: COLORS.primaryNavy, textDecorationLine: "underline" }}>
+          <Text
+            style={{
+              color: COLORS.primaryNavy,
+              textDecorationLine: "underline",
+            }}
+          >
             Go Back
           </Text>
         </TouchableOpacity>
@@ -120,7 +153,9 @@ const ProfilePage = () => {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
+      <View
+        style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}
+      >
         <LinearGradient
           colors={[
             "rgba(45,45,45,0.4)",
@@ -135,7 +170,13 @@ const ProfilePage = () => {
             style={{ flexDirection: "row", alignItems: "center" }}
           >
             <Ionicons name="arrow-back" size={18} color="#fff" />
-            <Text style={[styles.navTextORG, { color: "#fff" }]} numberOfLines={2} ellipsizeMode="tail">{org.org_name}</Text>
+            <Text
+              style={[styles.navTextORG, { color: "#fff" }]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {org.org_name}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -147,7 +188,10 @@ const ProfilePage = () => {
               ? { uri: `${org.cover_photo}?refresh=${refresh || ""}` }
               : require("../../assets/images/marque/CoverPage.png")
           }
-          style={[styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]}
+          style={[
+            styles.headerImageBackgroundCon,
+            { paddingTop: STICKY_HEADER_HEIGHT },
+          ]}
         />
 
         <View style={STYLES.profileSectionContainer}>
@@ -202,14 +246,18 @@ const ProfilePage = () => {
             <TouchableOpacity
               style={[
                 tabStyles.singleTab,
-                activeTab === "Incoming" ? tabStyles.activeTab : tabStyles.inactiveTab,
+                activeTab === "Incoming"
+                  ? tabStyles.activeTab
+                  : tabStyles.inactiveTab,
               ]}
               onPress={() => setActiveTab("Incoming")}
             >
               <Text
                 style={[
                   tabStyles.tabText,
-                  activeTab === "Incoming" ? tabStyles.activeTabText : tabStyles.inactiveTabText,
+                  activeTab === "Incoming"
+                    ? tabStyles.activeTabText
+                    : tabStyles.inactiveTabText,
                 ]}
               >
                 Incoming ({incomingEvents.length})
@@ -219,14 +267,18 @@ const ProfilePage = () => {
             <TouchableOpacity
               style={[
                 tabStyles.singleTab,
-                activeTab === "Concluded" ? tabStyles.activeTab : tabStyles.inactiveTab,
+                activeTab === "Concluded"
+                  ? tabStyles.activeTab
+                  : tabStyles.inactiveTab,
               ]}
               onPress={() => setActiveTab("Concluded")}
             >
               <Text
                 style={[
                   tabStyles.tabText,
-                  activeTab === "Concluded" ? tabStyles.activeTabText : tabStyles.inactiveTabText,
+                  activeTab === "Concluded"
+                    ? tabStyles.activeTabText
+                    : tabStyles.inactiveTabText,
                 ]}
               >
                 Concluded ({concludedEvents.length})
@@ -238,7 +290,9 @@ const ProfilePage = () => {
             <View>
               {incomingEvents.length > 0 ? (
                 incomingEvents.map((event) => {
-                  const { dateDay, dateMonth, orgDate } = formatDateForCard(event.date);
+                  const { dateDay, dateMonth, orgDate } = formatDateForCard(
+                    event.date
+                  );
                   return (
                     <EventCard
                       key={event._id}
@@ -249,7 +303,9 @@ const ProfilePage = () => {
                       }
                       title={event.title}
                       orgLogo={
-                        org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")
+                        org.pfp
+                          ? { uri: org.pfp }
+                          : require("../../assets/images/marque/LogoImage.jpg")
                       }
                       organization={org.org_name}
                       orgDate={orgDate}
@@ -260,7 +316,9 @@ const ProfilePage = () => {
                   );
                 })
               ) : (
-                <Text style={tabStyles.noEventsText}>No upcoming events found.</Text>
+                <Text style={tabStyles.noEventsText}>
+                  No upcoming events found.
+                </Text>
               )}
             </View>
           )}
@@ -269,7 +327,9 @@ const ProfilePage = () => {
             <View>
               {concludedEvents.length > 0 ? (
                 concludedEvents.map((event) => {
-                  const { dateDay, dateMonth, orgDate } = formatDateForCard(event.date);
+                  const { dateDay, dateMonth, orgDate } = formatDateForCard(
+                    event.date
+                  );
                   return (
                     <EventCard
                       key={event._id}
@@ -280,7 +340,9 @@ const ProfilePage = () => {
                       }
                       title={event.title}
                       orgLogo={
-                        org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")
+                        org.pfp
+                          ? { uri: org.pfp }
+                          : require("../../assets/images/marque/LogoImage.jpg")
                       }
                       organization={org.org_name}
                       orgDate={orgDate}
@@ -291,12 +353,24 @@ const ProfilePage = () => {
                   );
                 })
               ) : (
-                <Text style={tabStyles.noEventsText}>No concluded events found.</Text>
+                <Text style={tabStyles.noEventsText}>
+                  No concluded events found.
+                </Text>
               )}
             </View>
           )}
         </View>
       </ScrollView>
+
+      {/* ⭐ Floating Button (same as Activities.tsx) */}
+      <AddActivityButton
+        onPress={() =>
+          router.push({
+            pathname: "/tab_container_organization/EditEvents",
+            params: { orgId: org._id },
+          })
+        }
+      />
     </View>
   );
 };
