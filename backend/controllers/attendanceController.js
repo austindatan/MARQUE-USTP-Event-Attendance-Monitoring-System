@@ -21,8 +21,7 @@ const isEventWithin30Min = (event) => {
     const now = new Date();
     const startTime = new Date(event.start_time);
     
-    // Calculate the time 60 minutes after the event started
-    const cutoffTime = new Date(startTime.getTime() + 60 * 60000); // 60 minutes in milliseconds
+    const cutoffTime = new Date(startTime.getTime() + 60 * 60000); 
 
     // The event must have started (now >= start_time) 
     // AND it must be before the 60-minute cutoff (now <= cutoff_time)
@@ -32,9 +31,6 @@ const isEventWithin30Min = (event) => {
     return hasStarted && isWithinCutoff;
 };
 
-/* ============================================================
-    REGISTER ATTENDANCE
-============================================================ */
 const registerAttendance = async (req, res) => {
   try {
     const { event_id, student_number } = req.body;
@@ -112,9 +108,6 @@ const registerAttendance = async (req, res) => {
   }
 };
 
-/* ============================================================
-    HELPER: FORMAT UTC → LOCAL PH (MM-DD-YYYY & h:mm A)
-============================================================ */
 function formatLocalDateTime(utcDate) {
     const date = new Date(utcDate);
 
@@ -147,9 +140,6 @@ function formatLocalDateTime(utcDate) {
     return { formattedDate, formattedTime };
 }
 
-/* ============================================================
-    GET ATTENDANCE HISTORY (with PH local time)
-============================================================ */
 const getAttendanceHistory = async (req, res) => {
     try {
         let { event_id } = req.params;
@@ -157,8 +147,6 @@ const getAttendanceHistory = async (req, res) => {
         if (!event_id) {
             return res.status(400).json({ message: "Missing required field: event_id" });
         }
-
-        // Trim to avoid ObjectId cast errors
         event_id = event_id.trim();
 
         // Find all attendance logs for this event
@@ -194,9 +182,6 @@ const getAttendanceHistory = async (req, res) => {
     }
 };
 
-/* ============================================================
-    SEARCH ATTENDANCE LOGS BY NAME OR STUDENT NUMBER
-============================================================ */
 const searchAttendanceLogs = async (req, res) => {
   try {
     const { event_id } = req.params;
@@ -249,11 +234,7 @@ const searchAttendanceLogs = async (req, res) => {
 };
 
 
-/* ============================================================
-    UPLOAD PHOTOPROOF and apply Cloudinary text overlay
-    Accepts multipart 'file' (uploaded by multer/cloudinary storage)
-    and optional 'watermarkText' in body. Returns watermarked URL.
-============================================================ */
+
 const uploadPhotoproof = async (req, res) => {
   try {
     const watermarkText = req.body?.watermarkText || '';
