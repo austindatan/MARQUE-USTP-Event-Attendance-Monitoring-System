@@ -34,7 +34,7 @@ const EventCard = ({ image, title, orgLogo, organization, orgDate, dateDay, date
             </View>
           </View>
 
-          <Text style={styles.desc}>
+          <Text style={styles.desc} numberOfLines={2} ellipsizeMode="tail">
             {description}
           </Text>
         </View>
