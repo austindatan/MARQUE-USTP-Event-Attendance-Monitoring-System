@@ -4,8 +4,7 @@ const Student = require("../models/Student");
 const mongoose = require('mongoose'); 
 
 // ===========================
-// GET BOOKMARKS
-// (Used by Bookmark_Page.tsx)
+// GET BOOKMARKS (Fixed)
 // ===========================
 exports.getBookmarks = async (req, res) => {
   try {
@@ -21,15 +20,19 @@ exports.getBookmarks = async (req, res) => {
       .populate({
         path: "event_id",
         // Ensure Organization ID is populated for the card details
-        select: "event_name event_date event_image venue organization_id", 
+        select: "event_name event_date event_image event_images organization_id", 
         populate: {
             path: 'organization_id',
-            select: 'name' // Only fetch the organization name
+            // ⭐️ FIX: Select 'org_name' for the name and 'pfp' for the logo
+            select: 'org_name pfp' 
         }
       })
       .sort({ createdAt: -1 }); // Added sorting from the second controller
 
-    res.json(bookmarks);
+    // Optional: Filter out bookmarks where event_id is null (deleted events)
+    const validBookmarks = bookmarks.filter(b => b.event_id !== null);
+
+    res.json(validBookmarks);
   } catch (err) {
     console.error("Error fetching bookmarks:", err.message, err.stack);
     res.status(500).json({ message: "Server error" });
