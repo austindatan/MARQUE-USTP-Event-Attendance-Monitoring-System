@@ -126,6 +126,8 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         <View style={appeffects.eventListEX}>
           {renderConcludedEvents()}
         </View>
+
+        <View style={{ height: 40 }} />
       </Animated.ScrollView>
     </Animated.View>
   );
