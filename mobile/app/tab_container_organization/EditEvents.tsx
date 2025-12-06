@@ -1,16 +1,6 @@
 ﻿// @ts-nocheck
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
-  Modal,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, TextInput, Modal, ActivityIndicator, Alert, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -23,33 +13,21 @@ import styles from "../styles/page_editevents";
 import { COLORS } from "../styles/component_org_page";
 
 const eventTypes = ["Event", "Sub-Event"];
-const venueOptions = [
-  "LRC",
-  "DRER Memorial Hall",
-  "Cafet Hall",
-  "ICT AVR",
-  "Building 28",
-  "PAT AVR",
-  "Building 5",
-  "Science Building",
-];
+const venueOptions = [ "LRC", "DRER Memorial Hall", "Cafet Hall", "ICT AVR", "Building 28", "PAT AVR", "Building 5", "Science Building", ];
 
 const EditEvents = () => {
   const router = useRouter();
   const { eventId: event_id, orgId } = useLocalSearchParams();
   const isEdit = !!event_id;
 
-  // FORM STATES
   const [eventName, setEventName] = useState("");
   const [selectedEvent, setSelectedEvent] = useState("");
   const [selectedVenue, setSelectedVenue] = useState("");
   const [venueDetails, setVenueDetails] = useState("");
   const [description, setDescription] = useState("");
 
-  const [eventImage, setEventImage] = useState(null); // {uri, local}
+  const [eventImage, setEventImage] = useState(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
-
-  // DATE/TIME PICKERS
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date());
@@ -62,9 +40,6 @@ const EditEvents = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [venueModalVisible, setVenueModalVisible] = useState(false);
 
-  // -------------------------------------------------------------
-  // 📌 LOAD EVENT IF EDITING
-  // -------------------------------------------------------------
   useEffect(() => {
     if (!isEdit) {
       setLoadingEvent(false);
@@ -78,33 +53,29 @@ const EditEvents = () => {
 
         console.log("EVENT RESPONSE:", res.data);
 
-
-        if (!ev || !ev.event_name) { // 👈 **CRITICAL FIX: Check if ev is truthy AND has required field**
+        if (!ev || !ev.event_name) {
           console.error("Event data is missing or incomplete:", ev);
           Alert.alert("Error", "Event data could not be loaded. Please check the ID.");
           setLoadingEvent(false);
           return;
         }
         
-        // Fill fields
         setEventName(ev.event_name);
         setSelectedEvent(ev.event_type || "");
         setSelectedVenue(ev.venue || "");
         setVenueDetails(ev.venue_details || "");
         setDescription(ev.description || "");
 
-        // dates
         setStartDate(ev.event_date ? new Date(ev.event_date) : new Date());
         setEndDate(ev.event_date ? new Date(ev.event_date) : new Date());
         setStartTime(ev.start_time ? new Date(ev.start_time) : new Date());
         setEndTime(ev.end_time ? new Date(ev.end_time) : new Date());
 
-        // image
         if (ev.event_image) {
           setEventImage({ uri: ev.event_image });
         }
       } catch (err) {
-        console.error("❌ Error loading event", err);
+        console.error("Error loading event", err);
         Alert.alert("Error", "Failed to load event.");
       } finally {
         setLoadingEvent(false);
@@ -114,9 +85,6 @@ const EditEvents = () => {
     fetchEvent();
   }, [event_id]);
 
-  // -------------------------------------------------------------
-  // 📌 IMAGE PICKER
-  // -------------------------------------------------------------
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -128,9 +96,6 @@ const EditEvents = () => {
     }
   };
 
-  // -------------------------------------------------------------
-  // 📌 DATE/TIME PICKER CONTROL
-  // -------------------------------------------------------------
   const openPicker = (field, mode) => {
     setCurrentField(field);
     setPickerMode(mode);
@@ -161,9 +126,6 @@ const EditEvents = () => {
   const formatTime = (d) =>
     d?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || "";
 
-  // -------------------------------------------------------------
-  // 📌 SAVE EVENT (ADD OR EDIT)
-  // -------------------------------------------------------------
   const handleSave = async () => {
     if (!eventName.trim() || !selectedEvent || !selectedVenue || !description.trim()) {
       Alert.alert("Missing Fields", "Please fill all required fields.");
@@ -182,7 +144,6 @@ const EditEvents = () => {
     formData.append("start_time", startTime.toISOString());
     formData.append("end_time", endTime.toISOString());
 
-    // Attach new image only if user picked one
     if (eventImage?.local) {
       formData.append("event_image", {
         uri: eventImage.uri,
@@ -206,14 +167,11 @@ const EditEvents = () => {
 
       router.back();
     } catch (err) {
-      console.error("❌ Saving error:", err.response?.data || err);
+      console.error("Saving error:", err.response?.data || err);
       Alert.alert("Error", "Failed to save event.");
     }
   };
 
-  // -------------------------------------------------------------
-  // 📌 UI RENDER
-  // -------------------------------------------------------------
   if (loadingEvent) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -227,7 +185,6 @@ const EditEvents = () => {
       <Header />
 
       <ScrollView contentContainerStyle={styles.containerEvents} showsVerticalScrollIndicator={false}>
-        {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity
             style={[styles.backButton, { flexDirection: "row", alignItems: "center" }]}
@@ -238,7 +195,6 @@ const EditEvents = () => {
           </TouchableOpacity>
         </View>
 
-        {/* IMAGE PICKER */}
         <View style={styles.imageUploadArea}>
           <TouchableOpacity style={styles.mainImagePlaceholder} onPress={pickImage}>
             {eventImage ? (
@@ -253,7 +209,6 @@ const EditEvents = () => {
           </TouchableOpacity>
         </View>
 
-        {/* EVENT DETAILS */}
         <Text style={styles.formSectionTitle}>Event Details</Text>
 
         <View style={styles.inputGroup}>
@@ -269,7 +224,6 @@ const EditEvents = () => {
           />
         </View>
 
-        {/* EVENT TYPE */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Event Type<Text style={styles.required}> *</Text>
@@ -284,11 +238,9 @@ const EditEvents = () => {
           </TouchableOpacity>
         </View>
 
-        {/* DATE + TIME */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Select Date and Time *</Text>
 
-          {/* DATE ROW */}
           <View style={styles.row}>
             <View style={styles.halfInput}>
               <TouchableOpacity
@@ -311,7 +263,6 @@ const EditEvents = () => {
             </View>
           </View>
 
-          {/* TIME ROW */}
           <View style={styles.row}>
             <View style={styles.halfInput}>
               <TouchableOpacity
@@ -335,7 +286,6 @@ const EditEvents = () => {
           </View>
         </View>
 
-        {/* VENUE */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Venue & Location<Text style={styles.required}> *</Text>
@@ -351,7 +301,6 @@ const EditEvents = () => {
           </TouchableOpacity>
         </View>
 
-        {/* VENUE DETAILS */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Venue Details</Text>
           <TextInput
@@ -363,7 +312,6 @@ const EditEvents = () => {
           />
         </View>
 
-        {/* DESCRIPTION */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Event Description *</Text>
           <TextInput
@@ -379,7 +327,6 @@ const EditEvents = () => {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* SAVE BUTTON */}
       <View style={styles.bottomButtonContainer}>
         <TouchableOpacity style={styles.registerButton} onPress={handleSave}>
           <Text style={styles.registerText}>{isEdit ? "Update Event" : "Publish Event"}</Text>
@@ -387,7 +334,6 @@ const EditEvents = () => {
         </TouchableOpacity>
       </View>
 
-      {/* PICKERS */}
       {pickerVisible && (
         <DateTimePicker
           value={new Date()}
@@ -397,7 +343,6 @@ const EditEvents = () => {
         />
       )}
 
-      {/* EVENT TYPE MODAL */}
       <Modal transparent visible={modalVisible}>
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -421,7 +366,6 @@ const EditEvents = () => {
         </View>
       </Modal>
 
-      {/* VENUE MODAL */}
       <Modal transparent visible={venueModalVisible}>
         <TouchableOpacity
           style={styles.modalOverlay}
