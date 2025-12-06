@@ -8,7 +8,7 @@ const {
     getAllConcludedEvents, 
     getEventsByFollowedOrgs, 
     getFollowedOrgEvents, 
-    addEvent, 
+    createEvent, 
     updateEvent, 
     getOrgEventsByStatus, 
     getOngoingEvents,
@@ -22,8 +22,7 @@ const {
 } = eventController;
 
 
-const { uploadEventImages } = require("../middleware/upload");
-
+const { uploadEventImages } = require('./cloudinaryConfig');
 
 router.get('/search', eventController.searchEvents);
 router.get('/ongoing', getOngoingEvents);
@@ -35,17 +34,18 @@ router.get("/all/concluded", getAllConcludedEvents);
 router.get('/organization/:orgId/upcoming', eventController.getUpcomingEventsByOrganization);
 router.get('/organization/:orgId/concluded', eventController.getConcludedEventsByOrganization);
 
+// Change .array(...) to .single('event_image')
+router.post('/create', uploadEventImages.single('event_image'), createEvent); 
+router.put('/:eventId', uploadEventImages.single('event_image'), updateEvent);
+
 // Optional: Check if event is active and/or within first 30 minutes
 router.get('/event-status/:id', eventController.getEventStatus);
 
 // NEW ROUTE – MUST BE ABOVE departmentId
-router.get("/event/:id", eventController.getEventById);
+router.get("/event/:id", eventController.getEventById); //also used for edit event
 
 router.get("/followed", getEventsByFollowedOrgs);
 router.get("/following/:userId", getFollowedOrgEvents);
-
-router.post("/add", uploadEventImages.array("event_images", 10), addEvent);
-router.put("/update/:id", uploadEventImages.array("event_images", 10), updateEvent);
 
 router.get("/details/:organizationId", getOrgEventsByStatus);
 router.get("/by-org-type/:orgType", getEventsByOrgType);

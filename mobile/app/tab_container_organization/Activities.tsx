@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useRef, useState } from "react";
-import { View, Animated, Modal, ImageBackground } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { View, Animated, Modal } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Header from "../components/Header_Activities";
 import Incoming from "./Incoming";
 import Concluded from "./Concluded";
@@ -12,7 +12,9 @@ import appeffects from "../styles/effects_app";
 type TabName = "Incoming" | "Concluded";
 
 const Activities = () => {
+  const router = useRouter(); // <<< ADDED
   const { orgId } = useLocalSearchParams();
+
   const [activeTab, setActiveTab] = useState<TabName>("Incoming");
 
   const incomingScrollY = useRef(new Animated.Value(0)).current;
@@ -35,7 +37,8 @@ const Activities = () => {
   const handleTabChange = (newTab: TabName) => {
     setActiveTab(newTab);
 
-    const scrollValue = newTab === "Incoming" ? incomingScrollY : concludedScrollY;
+    const scrollValue =
+      newTab === "Incoming" ? incomingScrollY : concludedScrollY;
     const lastScrollPos = tabScrollPositions[newTab] || 0;
     scrollValue.setValue(lastScrollPos);
   };
@@ -60,9 +63,10 @@ const Activities = () => {
 
   return (
     <View style={[appeffects.container, { flex: 1 }]}>
-      <Header onMenuPress={toggleMenu}
-              scrollY={activeProps.scrollY}
-              onToggleChange={handleTabChange}
+      <Header
+        onMenuPress={toggleMenu}
+        scrollY={activeProps.scrollY}
+        onToggleChange={handleTabChange}
       />
 
       {activeTab === "Incoming" && (
@@ -72,7 +76,15 @@ const Activities = () => {
         <Concluded key="Concluded" {...activeProps} organizationId={orgId} />
       )}
 
-      <AddActivityButton />
+      {/* ROUTED BUTTON */}
+      <AddActivityButton
+        onPress={() =>
+          router.push({
+            pathname: "/tab_container_organization/EditEvents",
+            params: { orgId },
+          })
+        }
+      />
 
       <Modal
         transparent
