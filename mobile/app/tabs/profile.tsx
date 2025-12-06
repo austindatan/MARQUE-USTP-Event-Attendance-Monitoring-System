@@ -199,7 +199,7 @@ const ProfilePage = () => {
                 );
               })
             ) : (
-              <Text style={{ color: "#000", padding: 10 }}>
+              <Text style={{ color: "#fff", padding: 10, fontFamily: "DMSans-Medium" }}>
                 No attendance logs found.
               </Text>
             )}
