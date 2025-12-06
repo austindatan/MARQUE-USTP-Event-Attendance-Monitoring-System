@@ -160,6 +160,7 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         scrollEventThrottle={16}
       >
         <View style={appeffects.eventListORG}>{renderOrganizations()}</View>
+        <View style={{ height: 15 }} />
       </Animated.ScrollView>
     </Animated.View>
   );
