@@ -20,7 +20,7 @@ const ScannerButton: React.FC<ScannerButtonProps> = ({ onPress }) => {
 const styles = StyleSheet.create({
   floatingButton: {
     position: "absolute",
-    bottom: 110,
+    bottom: 30,
     right: 25,
     zIndex: 10,
     width: 60,

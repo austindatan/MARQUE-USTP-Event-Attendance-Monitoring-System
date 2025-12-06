@@ -233,7 +233,7 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
           <View style={styles.rightIcons}>
             <TouchableOpacity style={styles.iconButton} onPress={() => {}}>
               <Image source={require('../../assets/images/marque/Settings.png')} style={styles.bottomIconImage} />
-              <Text style={styles.iconText}>Settings</Text>
+              <Text style={styles.iconText}>Setting</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.iconButton} onPress={onShowHistory}>
