@@ -73,9 +73,19 @@ const EditEvents = () => {
 
     const fetchEvent = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/events/${event_id}`);
-        const ev = res.data.event;
+        const res = await axios.get(`${BASE_URL}/events/event/${event_id}`);
+        const ev = res.data.event || res.data; 
 
+        console.log("EVENT RESPONSE:", res.data);
+
+
+        if (!ev || !ev.event_name) { // 👈 **CRITICAL FIX: Check if ev is truthy AND has required field**
+          console.error("Event data is missing or incomplete:", ev);
+          Alert.alert("Error", "Event data could not be loaded. Please check the ID.");
+          setLoadingEvent(false);
+          return;
+        }
+        
         // Fill fields
         setEventName(ev.event_name);
         setSelectedEvent(ev.event_type || "");
