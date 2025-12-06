@@ -296,6 +296,134 @@ const uploadPhotoproof = async (req, res) => {
   }
 };
 
+/* ============================================================
+    EXPORT ATTENDANCE LOGS AS PDF
+============================================================ */
+const PDFDocument = require("pdfkit");
+const path = require("path");
+
+const exportAttendancePDF = async (req, res) => {
+  try {
+    const { event_id } = req.params;
+
+    if (!event_id) {
+      return res.status(400).json({ message: "Missing event_id" });
+    }
+
+    // Fetch event
+    const event = await Event.findById(event_id);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Fetch logs
+    const logs = await AttendanceLog.find({ event_id }).populate("user_id");
+
+    // Format logs
+    const formatted = await Promise.all(
+      logs.map(async (log) => {
+        const student = await Student.findOne({
+          users_id: log.user_id._id,
+        }).populate("department_id", "department_code"); // <-- POPULATE ONLY CODE
+
+        const { formattedDate, formattedTime } = formatLocalDateTime(
+          log.time_in
+        );
+
+        return {
+          name: `${log.user_id.firstname} ${log.user_id.lastname}`,
+          student_number: student?.student_number || "",
+          department: student?.department_id?.department_code || "N/A", // <-- CODE is here
+          time: formattedTime,
+          date: formattedDate,
+          status: log.status,
+        };
+      })
+    );
+
+    // Prepare PDF
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+
+    // Set headers for browser download
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="attendance_${event.event_name}.pdf"`
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    doc.pipe(res);
+
+    /* HEADER */
+    doc
+      .fontSize(20)
+      .text("Attendance Report", { align: "center" })
+      .moveDown(1);
+
+    doc.fontSize(14).text(`Event: ${event.event_name}`);
+    doc.text(`Date: ${new Date(event.event_date).toDateString()}`);
+    doc.moveDown(1);
+
+    const startX = 40; // Left Margin
+    const endX = 550; // Right side limit (A4 width - margin)
+    let currentY = doc.y; // Track the current Y position
+
+    // Define column positions and widths (total width is 510)
+    const columns = [
+        { title: "Student No.", x: startX, width: 90 },
+        { title: "Name", x: startX + 95, width: 140 },
+        { title: "Dept.", x: startX + 240, width: 100 },
+        { title: "Time In", x: startX + 345, width: 70 },
+        { title: "Status", x: startX + 420, width: 70 },
+    ];
+
+    /* TABLE HEADER */
+    doc.fontSize(12).font("Helvetica-Bold");
+
+    columns.forEach((col) => {
+        doc.text(col.title, col.x, currentY, { width: col.width, align: "left" });
+    });
+
+    doc.moveDown(0.2);
+    currentY = doc.y; // Update Y after header text
+    
+    // Separator line
+    doc.moveTo(startX, currentY).lineTo(endX, currentY).stroke();
+    doc.moveDown(0.3);
+
+    /* TABLE ROWS */
+    doc.fontSize(10).font("Helvetica");
+
+    formatted.forEach((row) => {
+        currentY = doc.y; // Start position for the new row
+
+        // Student No.
+        doc.text(row.student_number, columns[0].x, currentY, { width: columns[0].width, align: "left" });
+
+        // Name (This is the longest field, use it to determine row height)
+        // We use doc.text() and capture the resulting height
+        const nameHeight = doc.text(row.name, columns[1].x, currentY, { width: columns[1].width, align: "left", continued: false }).currentLineHeight();
+
+        // Dept.
+        doc.text(row.department, columns[2].x, currentY, { width: columns[2].width, align: "left" });
+
+        // Time In
+        doc.text(row.time, columns[3].x, currentY, { width: columns[3].width, align: "left" });
+
+        // Status
+        doc.text(row.status, columns[4].x, currentY, { width: columns[4].width, align: "left" });
+
+        // Move cursor down by the required height (plus a small buffer)
+        doc.y = currentY + nameHeight + 5; 
+    });
+
+    doc.end();
+  } catch (error) {
+    console.error("PDF EXPORT ERROR:", error);
+    res.status(500).json({ message: "Server error generating PDF" });
+  }
+};
+
+
 
 /* ============================================================
     EXPORTS
@@ -306,4 +434,5 @@ module.exports = {
   isEventWithin30Min,
   searchAttendanceLogs, // export Event model if needed for routes
   uploadPhotoproof,
+  exportAttendancePDF,
 };

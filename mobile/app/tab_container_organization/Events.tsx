@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Platform, SafeAreaView, } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Platform, SafeAreaView, Linking } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../styles/page_eventdetails";
@@ -181,6 +181,8 @@ const Events = () => {
         ? { uri: eventData.organization_id.pfp }
         : require("../../assets/images/profile_pic.png");
 
+    const isDownloadEnabled = eventData.status === "Concluded";
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -235,26 +237,35 @@ const Events = () => {
                     </View>
 
                     <View style={styles.buttonsRow}>
-                        <TouchableOpacity
-                            style={[styles.actionButton, !eventActive && { opacity: 0.5, backgroundColor: '#ccc' }]} 
-                            disabled={!eventActive}
-                        >
-                            <Ionicons name="download" size={30} color="#090913ff" />
-                            <Text style={styles.actionButtonText}>
-                                Analytics{'\n'}Reports
-                            </Text>
-                        </TouchableOpacity>
-
+                    
                         <View style={{ width: 10 }} />
 
                         <TouchableOpacity
-                            style={[styles.actionButton, !eventActive && { opacity: 0.5, backgroundColor: '#ccc' }]}
-                            disabled={!eventActive}
+                        style={[
+                            styles.actionButton,
+                            !isDownloadEnabled && { opacity: 0.5 } 
+                        ]}
+                        // Disable active feedback when button is disabled
+                        activeOpacity={isDownloadEnabled ? 0.8 : 1}
+                        onPress={() => {
+                            if (isDownloadEnabled) {
+                                const url = `${BASE_URL}/api/attendance/export/${eventId}`;
+                                console.log("Attempting download:", url);
+                                Linking.openURL(url).catch((err) => {
+                                    console.error("Failed to open URL for download:", err);
+                                    Alert.alert("Download Error", "Could not start the download. Check your connection or the server.");
+                                });
+                            } else {
+                                // Provide user feedback when button is pressed while disabled
+                                Alert.alert(
+                                    "Feature Unavailable", 
+                                    `Attendance download is only available after the event has been Concluded. Current status: ${eventData.status}.`
+                                );
+                            }
+                        }}
                         >
-                            <Ionicons name="download" size={30} color="#090913ff" />
-                            <Text style={styles.actionButtonText}>
-                                Attendance{'\n'}Spreadsheets
-                            </Text>
+                            <Ionicons name="download" size={30} color="#ffffffff" />
+                            <Text style={styles.actionButtonText}>Attendance Spreadsheets</Text>
                         </TouchableOpacity>
                     </View>
 

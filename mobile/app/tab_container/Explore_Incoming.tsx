@@ -103,7 +103,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
 
               const timeVenueStr = `${startTime} - ${endTime} | ${event.venue}`;
               const handleEventPress = () => {
-                router.push(`/tab_container/EventDetails_Incoming?eventId=${event._id}`);
+                router.push(`/tab_container/EventDetails_Unified?eventId=${event._id}`);
               };
 
               return (
