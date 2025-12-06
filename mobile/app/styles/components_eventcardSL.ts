@@ -88,11 +88,12 @@ const styles = StyleSheet.create({
 
   dateMonth: {
     color: "#0C1445",
-    fontSize: WP(2.5),
+    fontSize: WP(2.2),
     fontWeight: "600",
     fontFamily: "Inter",
     marginVertical: 0, 
     lineHeight: WP(2) * 1.1,
+    textTransform: 'uppercase',
   },
 
   details: {
