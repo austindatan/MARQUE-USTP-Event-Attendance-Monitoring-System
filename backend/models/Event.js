@@ -8,9 +8,9 @@ const eventSchema = new mongoose.Schema(
       required: true,
     },
     event_name: { type: String, required: true },
-    event_type: { type: String, enum: ["Seminar", "General Assembly", "Orientation", "Training", "Food Distribution"] },
+    event_type: { type: String, enum: ["Event", "Sub-Event"] },
     description: { type: String, required: true },
-    event_images: [{ type: String }], // can be URL or file path
+    event_image: { type: String }, // can be URL or file path
     event_date: { type: Date, required: true },
     start_time: { type: Date, required: true }, // includes time
     end_time: { type: Date, required: true },   // includes time
