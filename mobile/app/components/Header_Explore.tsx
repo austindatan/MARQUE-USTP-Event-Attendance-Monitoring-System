@@ -93,10 +93,6 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
           </View>
 
           <TouchableOpacity style={styles.filterButton}>
-            <View style={styles.filterB}>
-              <Ionicons name="filter" size={14} color="#222762" />
-            </View>
-            <Text style={styles.filterText}>Filters</Text>
           </TouchableOpacity>
         </Animated.View>
       </Animated.View>
