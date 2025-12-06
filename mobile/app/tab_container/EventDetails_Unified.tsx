@@ -381,9 +381,6 @@ const EventDetails_Unified = () => {
     return null;
   };
 
-
-  // --- Main Render ---
-
   return (
     <View style={styles.container}>
       <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
@@ -489,8 +486,6 @@ const EventDetails_Unified = () => {
 
         <View style={{ height: 80 }} />
       </ScrollView>
-
-      {renderBottomButton()}
     </View>
   );
 };
