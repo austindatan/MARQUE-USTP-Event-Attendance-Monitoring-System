@@ -156,14 +156,12 @@ const getUpcomingEventsByOrganization = async (req, res) => {
     const { orgId } = req.params;
     if (!orgId) return res.status(400).json({ message: "Organization ID required" });
 
-    // FIX: Only rely on precise timestamps (end_time >= now)
     const now = new Date();
 
     const events = await Event.find({
       organization_id: orgId,
-      // 🎯 This is the fix: It ignores the simple 'event_date' field,
-      // ensuring the event shows up as long as it hasn't concluded.
-      end_time: { $gte: now },
+      end_time: { $gte: now }, // hasn't ended
+      status: { $ne: "Cancelled" } // exclude cancelled
     })
       .populate("organization_id")
       .sort({ start_time: 1 });
@@ -181,17 +179,21 @@ const getConcludedEventsByOrganization = async (req, res) => {
 
     const events = await Event.find({
       organization_id: orgId,
-      end_time: { $lt: new Date() }, // already ended
+      $or: [
+        { end_time: { $lt: new Date() } }, // already ended
+        { status: "Cancelled" }            // cancelled events
+      ]
     })
       .populate("organization_id")
       .sort({ end_time: -1 }); // recent first
 
     res.status(200).json(events);
   } catch (err) {
-    console.error("Error fetching concluded events:", err);
-    res.status(500).json({ message: "Server error fetching concluded events" });
+    console.error("Error fetching concluded/cancelled events:", err);
+    res.status(500).json({ message: "Server error fetching concluded/cancelled events" });
   }
 };
+
 
 const getEventsByFollowedOrgs = async (req, res) => {
   const orgsString = req.query.orgs;
@@ -481,6 +483,54 @@ const updateEvent = async (req, res) => {
   }
 };
 
+// CANCEL EVENT
+const cancelEvent = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        event.status = "Cancelled";
+        await event.save();
+
+        return res.json({
+            message: "Event cancelled successfully",
+            status: event.status
+        });
+    } catch (error) {
+        console.error("Cancel event error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+// RESUME EVENT
+const resumeEvent = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        event.status = "Upcoming";
+        await event.save();
+
+        return res.json({
+            message: "Event resumed successfully",
+            status: event.status
+        });
+    } catch (error) {
+        console.error("Resume event error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+
+
 export {
   getEventsByDepartment,
   getAllUpcomingEvents,
@@ -502,4 +552,6 @@ export {
   isEventActive,
   isEventWithin30Min,
   getEventStatus,
+  cancelEvent,
+  resumeEvent,
 };
