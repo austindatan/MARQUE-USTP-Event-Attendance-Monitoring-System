@@ -5,10 +5,101 @@ const Student = require("../models/Student");
 const User = require("../models/User");
 const Department = require("../models/Department");
 const College = require("../models/College");
+const OrgOfficer = require("../models/Org_officer.js");
 
 console.log("✅ student.js router loaded");
 
-// Fetch student_number
+router.get("/all", async (req, res) => {
+    // 'all' for standard students (no role), 'roles' for students with roles
+    const { filter } = req.query; 
+    console.log(`🔍 Route hit: /api/student/users/all with filter: ${filter}`);
+
+    try {
+      const safeImage = (img) =>
+        typeof img === "string" && img.trim() !== "" 
+            ? { uri: img } 
+            : require("../../assets/images/marque/crk.jpg");
+
+        // --- 1. Fetch ALL Org Officer records to identify students with roles ---
+        const managers = await OrgOfficer.find({})
+            .populate("org_id", "org_name pfp") // Get organization name and logo
+            .lean();
+
+        // Create a quick map from Student ID to Role data
+        const studentIdToRole = managers.reduce((map, manager) => {
+            map[manager.student_id.toString()] = {
+                orgName: manager.org_id.org_name,
+                orgLogo: manager.org_id.pfp,
+                position: manager.role, // The 'role' field in Org_officer is the position
+            };
+            return map;
+        }, {});
+
+        // --- 2. Fetch ALL Student records and populate ALL linked data ---
+        const students = await Student.find({})
+            .populate("users_id", "firstname lastname email profile_image") // User Details
+            .populate({
+                path: "department_id",
+                select: "department_name department_code",
+                populate: { path: "college_id", select: "college_name college_code" }, // College Details
+            })
+            .lean();
+
+        // --- 3. Process and Filter the combined data ---
+        const detailedUsers = students
+            .map(student => {
+                const user = student.users_id;
+                const department = student.department_id;
+                const role = studentIdToRole[student._id.toString()];
+                const hasRole = !!role;
+
+                const baseUser = {
+                    id: student._id, // Use Student ID for key and editing
+                    studentId: student.student_number,
+                    name: `${user?.firstname || ''} ${user?.lastname || ''}`,
+                    email: user?.email || '',
+                    studentImage: user?.profile_image || "",
+                    
+                    // Academic Info (Department & Course)
+                    department: department?.college_id?.college_name || department?.department_name || "N/A", // Use College Name for department prop
+                    course: department?.department_name || "N/A", // Use Department Name for course prop
+                    
+                    hasRole: hasRole,
+                    orgName: null,
+                    orgLogo: "",
+                    position: null,
+                };
+
+                // Add role details if found
+                if (hasRole) {
+                    baseUser.orgName = role.orgName;
+                    baseUser.orgLogo = role.orgLogo;
+                    baseUser.position = role.position;
+                }
+
+                return baseUser;
+            })
+            .filter(user => {
+                if (filter === 'roles') {
+                    // Filter: Students w/ Roles
+                    return user.hasRole;
+                }
+                if (filter === 'all') {
+                    // Filter: Standard Students (no role)
+                    return !user.hasRole;
+                }
+                return true; // Should not happen if frontend logic is sound, but returns all if no filter
+            });
+
+        console.log(`Successfully fetched ${detailedUsers.length} users for filter: ${filter}.`);
+        res.json(detailedUsers);
+
+    } catch (error) {
+        console.error("❌ Error fetching all users for admin:", error);
+        res.status(500).json({ message: "Error fetching user list", error: error.message });
+    }
+});
+
 router.get("/id/:student_number", async (req, res) => {
   const student_number = req.params.student_number;
   console.log("🔍 Route hit: /api/student/id/:student_number =", student_number);
@@ -116,6 +207,5 @@ router.get("/:username", async (req, res) => {
     res.status(500).json({ message: "Error", error: error.message });
   }
 });
-
 
 module.exports = router;

@@ -1,0 +1,45 @@
+// @ts-nocheck
+import React from "react";
+import { View, Text, Image, TouchableOpacity } from "react-native";
+import styles from "../styles/components_eventcardhorizontal";
+
+const EventCard = ({ image, title, orgLogo, organization, orgDate, dateDay, dateMonth, description, onPress}) => {
+  return (
+    <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
+    <View style={styles.shadowWrapper}>
+      <View style={styles.card}>
+        
+        {/* LEFT SIDE: Image Container */}
+        <View style={styles.imageContainer}> 
+          <Image
+            source={typeof image === "string" ? { uri: image } : image}
+            style={styles.eventPoster}
+          />
+
+          <View style={styles.dateTag}>
+            <Text style={styles.dateDay}>{dateDay}</Text>
+            <Text style={styles.dateMonth}>{dateMonth}</Text>
+          </View>
+        </View>
+
+        <View style={styles.details}>
+          <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{title}</Text>
+
+          <View style={styles.orgDetails}>
+            <Image
+              source={typeof orgLogo === "string" ? { uri: orgLogo } : orgLogo}
+              style={styles.organizationLogo}
+            />
+            <View style={styles.orgRow}>
+              <Text style={styles.orgText} numberOfLines={1} ellipsizeMode="tail">{organization}</Text>
+              <Text style={styles.subText}>{orgDate}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+    </TouchableOpacity>
+  );
+};
+
+export default EventCard;
