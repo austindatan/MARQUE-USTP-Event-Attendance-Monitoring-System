@@ -249,7 +249,7 @@ const Events = () => {
                         activeOpacity={isDownloadEnabled ? 0.8 : 1}
                         onPress={() => {
                             if (isDownloadEnabled) {
-                                const url = `${BASE_URL}/api/attendance/export/${eventId}`;
+                                const url = `${BASE_URL}/events/attendance/export/${eventId}`;
                                 console.log("Attempting download:", url);
                                 Linking.openURL(url).catch((err) => {
                                     console.error("Failed to open URL for download:", err);
