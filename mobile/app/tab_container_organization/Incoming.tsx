@@ -54,7 +54,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         try {
             const [orgRes, eventsRes] = await Promise.all([
                 axios.get(`${BASE_URL}/api/organizations/${orgId}`),
-                axios.get(`${BASE_URL}/api/organization/${orgId}/upcoming`),
+                axios.get(`${BASE_URL}/events/organization/${orgId}/upcoming`),
             ]);
 
             setOrganizationData(orgRes.data);

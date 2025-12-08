@@ -30,7 +30,6 @@ app.use('/api/student', studentProfileRoutes);
 // Event route  
 const eventRoutes = require("./routes/eventRoutes");
 app.use("/events", eventRoutes);
-app.use('/api', eventRoutes);
 
 // Attendance route
 const attendanceRoutes = require("./routes/attendanceRoutes");
@@ -52,9 +51,6 @@ app.use('/api/organizations', organizationRoutes);
 //const userRoutes = require("./routes/userRoutes"); 
 //app.use("/api/users", userRoutes); 
 
-const authRoutes = require("./routes/auth");
-app.use("/api/auth", authRoutes);
-
 // Feedback route
 const feedbackRoutes = require("./routes/feedbackRoutes");
 app.use("/api/feedback", feedbackRoutes);
@@ -73,7 +69,7 @@ app.use("/api/bookmarks", bookmarkRoutes);
 
 // DB connection
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB is connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
