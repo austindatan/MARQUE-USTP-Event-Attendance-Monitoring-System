@@ -16,9 +16,14 @@ const Login = () => {
   useEffect(() => {
     const checkLogin = async () => {
       const token = await AsyncStorage.getItem("token");
+      const userRole = await AsyncStorage.getItem("userRole");
       if (token) {
         console.log("Already logged in, redirecting...");
-        router.replace("/tabs/Events");
+        if (userRole === "Manager") {
+          router.replace("/tabs_admin/Dashboard");
+        } else {
+          router.replace("/tabs/Events");
+        }
       }
     };
     checkLogin();
@@ -70,8 +75,20 @@ const Login = () => {
         if (data.token) {
           await AsyncStorage.setItem("token", data.token);
         }
+        if (data.user && data.user.role) {
+          await AsyncStorage.setItem("userRole", data.user.role);
+        }
         await AsyncStorage.setItem("student_number", studentNumber);
-        router.replace("/tabs/Events");
+
+        // Role-based redirection
+        const userRole = data.user.role;
+        if (userRole === "Manager") {
+          router.replace("/tabs_admin/Dashboard");
+        } else if (userRole === "Committee") {
+          router.replace("/tabs_organization/Teams");
+        } else {
+          router.replace("/tabs/Events");
+        }
       } else {
         setErrorMessage(data.message || "Invalid student ID or password.");
       }
