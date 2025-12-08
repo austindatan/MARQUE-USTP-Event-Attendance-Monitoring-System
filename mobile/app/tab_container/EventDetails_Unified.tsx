@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
@@ -24,7 +24,7 @@ const determineEventStatus = (eventData) => {
   const endTime = eventData.end_time ? new Date(eventData.end_time) : null;
   const requiresManualAttendance = eventData.requiresManualAttendance;
 
-  if (eventData.status === "Cancelled") return "cancelled"; // <--- NEW
+  if (eventData.status === "Cancelled") return "cancelled"; 
   if (now < eventDate) return 'upcoming';
   else if (endTime && now > endTime) return 'concluded';
   else if (now >= eventDate) return requiresManualAttendance ? 'no-attendance' : 'ongoing';
@@ -48,22 +48,17 @@ const EventDetails_Unified = () => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(true);
 
+  /** ================= BOOKMARKS ================= */
   const checkBookmarkStatus = async () => {
     if (!eventId) return;
     setBookmarkLoading(true);
     const student_number = await AsyncStorage.getItem("student_number");
-    if (!student_number) {
-      setBookmarkLoading(false);
-      return;
-    }
+    if (!student_number) { setBookmarkLoading(false); return; }
     try {
       const res = await axios.get(`${BASE_URL}/api/bookmarks/check/${student_number}/${eventId}`);
       setIsBookmarked(res.data.isBookmarked);
-    } catch (err) {
-      console.error("Error checking bookmark status:", err.message);
-    } finally {
-      setBookmarkLoading(false);
-    }
+    } catch (err) { console.error("Error checking bookmark status:", err.message); }
+    finally { setBookmarkLoading(false); }
   };
 
   const handleBookmarkToggle = async () => {
@@ -71,43 +66,30 @@ const EventDetails_Unified = () => {
     const actionToAdd = !isBookmarked;
     setBookmarkLoading(true);
     const student_number = await AsyncStorage.getItem("student_number");
-    if (!student_number) {
-      Alert.alert("Error", "Student login information not found.");
-      setBookmarkLoading(false);
-      return;
-    }
+    if (!student_number) { Alert.alert("Error", "Student login info not found."); setBookmarkLoading(false); return; }
     try {
-      if (!actionToAdd) {
-        await axios.delete(`${BASE_URL}/api/bookmarks/${student_number}/${eventId}`);
-      } else {
-        await axios.post(`${BASE_URL}/api/bookmarks/${student_number}`, { event_id: eventId });
-      }
+      if (!actionToAdd) await axios.delete(`${BASE_URL}/api/bookmarks/${student_number}/${eventId}`);
+      else await axios.post(`${BASE_URL}/api/bookmarks/${student_number}`, { event_id: eventId });
       setIsBookmarked(actionToAdd);
     } catch (err) {
       const errorMessage = err.response?.data?.message || `Failed to ${actionToAdd ? 'add' : 'remove'} bookmark.`;
       console.error(`Bookmark Toggle Error: ${errorMessage}`, err);
       Alert.alert("Action Failed", errorMessage);
       checkBookmarkStatus();
-    } finally {
-      setBookmarkLoading(false);
-    }
+    } finally { setBookmarkLoading(false); }
   };
 
+  /** ================= FETCH EVENT ================= */
   const fetchEventDetails = async (id) => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+    if (!id) { setLoading(false); return; }
     try {
       setLoading(true);
       const res = await fetch(`${BASE_URL}/events/event/${id}`);
       if (!res.ok) throw new Error(`API Error: ${res.status}`);
       const data = await res.json();
       const eventObj = data.event || data;
-      if (!eventObj) {
-        Alert.alert("Error", "Event data not found in response.");
-        return;
-      }
+      if (!eventObj) { Alert.alert("Error", "Event data not found."); return; }
+
       if (eventObj.event_image) eventObj.event_image = fixCloudinaryUrl(eventObj.event_image, CLOUD_NAME);
       if (eventObj.organization_id?.pfp) eventObj.organization_id.pfp = fixCloudinaryUrl(eventObj.organization_id.pfp, CLOUD_NAME);
       if (Array.isArray(eventObj.event_images)) eventObj.event_images = eventObj.event_images.map(img => fixCloudinaryUrl(img, CLOUD_NAME));
@@ -120,20 +102,17 @@ const EventDetails_Unified = () => {
     } catch (error) {
       console.error("Error fetching event details:", error);
       Alert.alert("Network Error", `Failed to load event details. Error: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
+  /** ================= FOLLOW ================= */
   const checkFollowStatus = async (orgId) => {
     try {
       const res = await fetch(`${BASE_URL}/api/followed-orgs/${userId}/ids`);
       if (!res.ok) return;
       const ids = await res.json();
       setIsFollowing(ids.includes(orgId));
-    } catch (err) {
-      console.error("Error checking follow:", err);
-    }
+    } catch (err) { console.error("Error checking follow:", err); }
   };
 
   const handleFollowToggle = async () => {
@@ -148,19 +127,15 @@ const EventDetails_Unified = () => {
         body: JSON.stringify({ userId, organizationId: orgId }),
       });
       if (!res.ok) setIsFollowing(isFollowing);
-    } catch (err) {
-      setIsFollowing(isFollowing);
-    }
+    } catch (err) { setIsFollowing(isFollowing); }
   };
 
+  /** ================= FEEDBACK ================= */
   const checkFeedbackStatus = async () => {
     if (!eventId || !userId) return;
     try {
       const localStatus = await AsyncStorage.getItem(`feedback_status_${eventId}`);
-      if (localStatus === 'submitted') {
-        setHasSubmittedFeedback(true);
-        return;
-      }
+      if (localStatus === 'submitted') { setHasSubmittedFeedback(true); return; }
     } catch (err) { console.error(err); }
     try {
       const res = await fetch(`${BASE_URL}/api/feedback/status/${eventId}/${userId}`);
@@ -172,15 +147,14 @@ const EventDetails_Unified = () => {
     } catch (err) { console.error(err); }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      if (eventId) {
-        fetchEventDetails(eventId);
-        checkFeedbackStatus();
-        checkBookmarkStatus();
-      } else setLoading(false);
-    }, [eventId])
-  );
+  /** ================= FOCUS EFFECT ================= */
+  useFocusEffect(useCallback(() => {
+    if (eventId) {
+      fetchEventDetails(eventId);
+      checkFeedbackStatus();
+      checkBookmarkStatus();
+    } else setLoading(false);
+  }, [eventId]));
 
   useEffect(() => {
     if (eventData?.organization_id?._id && userId) checkFollowStatus(eventData.organization_id._id);
@@ -226,10 +200,10 @@ const EventDetails_Unified = () => {
     : require("../../assets/images/profile_pic.png");
 
   const handleBack = () => router.back();
-  const handleRegister = () => Alert.alert("Register", "Navigating to registration form...");
 
   return (
     <View style={styles.container}>
+      {/* ================= STICKY NAV ================= */}
       <View style={[styles.stickyNavContainer, { height: STICKY_HEADER_HEIGHT }]}>
         <LinearGradient
           colors={["rgba(45, 45, 45, 0.4)", "rgba(0, 0, 0, 0.2)", "rgba(255,255,255,0.1)"]}
@@ -241,24 +215,18 @@ const EventDetails_Unified = () => {
             <Ionicons name="arrow-back" size={18} color="#fff" />
             <Text style={[styles.navText, { color: "#fff" }]}>{eventData.title || eventData.event_name}</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.bookmarkBtn}
-            onPress={handleBookmarkToggle}
-            disabled={bookmarkLoading}
-          >
+          <TouchableOpacity style={styles.bookmarkBtn} onPress={handleBookmarkToggle} disabled={bookmarkLoading}>
             <Ionicons name={isBookmarked ? "bookmark" : "bookmark-outline"} size={24} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ImageBackground
-          source={eventImageSource}
-          style={[styles.headerImageBackground, eventStatus !== 'upcoming' && styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]}
-        />
+        <ImageBackground source={eventImageSource} style={[styles.headerImageBackground, eventStatus !== 'upcoming' && styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]} />
+
         <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{eventData.title || eventData.event_name}</Text>
 
-        {/* ================= CANCELLED OVERLAY ================= */}
+        {/* ================= CANCELLED ================= */}
         {eventStatus === "cancelled" && (
           <View style={{
             position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
@@ -270,7 +238,30 @@ const EventDetails_Unified = () => {
           </View>
         )}
 
-        {/* ... rest of your UI unchanged ... */}
+        {/* ================= CONCLUDED + FEEDBACK ================= */}
+        {eventStatus === 'concluded' && (
+          <View style={styles.infoColumn}>
+            {eventData.attendanceRecorded && (
+              <View style={[styles.infoBox, { marginBottom: 10 }]}>
+                <Text style={styles.infoText}>Your attendance has been recorded. Thank you!</Text>
+              </View>
+            )}
+            <View style={[styles.infoBox, { marginBottom: 10 }]}>
+              <Text style={styles.infoText}>This event has **concluded**.</Text>
+            </View>
+            {!hasSubmittedFeedback ? (
+              <TouchableOpacity style={styles.infoBox} onPress={() => router.push(`/tab_container/EventDetails_ZFeedback?eventId=${eventData._id}`)}>
+                <Text style={styles.infoText}>Please answer the feedback survey.</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.infoBox, { backgroundColor: "#e8e8e8" }]}>
+                <Text style={[styles.infoText, { color: "gray" }]}>You already submitted feedback. Thank you!</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* ================= EVENT INFO ================= */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}><Ionicons name="calendar" size={20} color="#0A0F51" /></View>
           <View><Text style={styles.infoPrimary}>{eventDate}</Text><Text style={styles.infoSecondary}>{eventTimeFull}</Text></View>
@@ -285,6 +276,7 @@ const EventDetails_Unified = () => {
         <Text style={styles.sectionTitle}>About Event</Text>
         <Text style={styles.aboutText}>{eventData.description || eventData.event_description}</Text>
 
+        {/* ================= ORGANIZER ================= */}
         <View style={styles.organizerCard}>
           <View style={styles.organizerLeft}>
             <Image source={organizerPfpSource} style={styles.organizerLogo} />
@@ -298,6 +290,7 @@ const EventDetails_Unified = () => {
           </TouchableOpacity>
         </View>
         <Text style={styles.organizerDesc}>{eventData.organization_id?.org_description || eventData.organization_id?.description || "No description provided."}</Text>
+
         <View style={{ height: 80 }} />
       </ScrollView>
     </View>
