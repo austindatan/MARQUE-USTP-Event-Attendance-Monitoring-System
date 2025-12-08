@@ -24,6 +24,7 @@ const determineEventStatus = (eventData) => {
   const endTime = eventData.end_time ? new Date(eventData.end_time) : null;
   const requiresManualAttendance = eventData.requiresManualAttendance;
 
+  if (eventData.status === "Cancelled") return "cancelled"; // <--- NEW
   if (now < eventDate) return 'upcoming';
   else if (endTime && now > endTime) return 'concluded';
   else if (now >= eventDate) return requiresManualAttendance ? 'no-attendance' : 'ongoing';
@@ -253,38 +254,23 @@ const EventDetails_Unified = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         <ImageBackground
           source={eventImageSource}
-          style={[
-            styles.headerImageBackground,
-            eventStatus !== 'upcoming' && styles.headerImageBackgroundCon,
-            { paddingTop: STICKY_HEADER_HEIGHT }
-          ]}
+          style={[styles.headerImageBackground, eventStatus !== 'upcoming' && styles.headerImageBackgroundCon, { paddingTop: STICKY_HEADER_HEIGHT }]}
         />
         <Text style={styles.eventTitle} numberOfLines={2} ellipsizeMode="tail">{eventData.title || eventData.event_name}</Text>
-        {eventStatus === 'concluded' && (
-          <View style={styles.infoColumn}>
-            {eventData.attendanceRecorded && (
-              <View style={[styles.infoBox, { marginBottom: 10 }]}>
-                <Text style={styles.infoText}>Your attendance has been recorded. Thank you!</Text>
-              </View>
-            )}
-            <View style={[styles.infoBox, { marginBottom: 10 }]}>
-              <Text style={styles.infoText}>This event has **concluded**.</Text>
-            </View>
-            {!hasSubmittedFeedback ? (
-              <TouchableOpacity
-                style={styles.infoBox}
-                onPress={() => router.push(`/tab_container/EventDetails_ZFeedback?eventId=${eventData._id}`)}
-              >
-                <Text style={styles.infoText}>Please answer the feedback survey.</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={[styles.infoBox, { backgroundColor: "#e8e8e8" }]}>
-                <Text style={[styles.infoText, { color: "gray" }]}>You already submitted feedback. Thank you!</Text>
-              </View>
-            )}
+
+        {/* ================= CANCELLED OVERLAY ================= */}
+        {eventStatus === "cancelled" && (
+          <View style={{
+            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center", zIndex: 999
+          }}>
+            <Text style={{ color: "#fff", fontSize: 28, fontWeight: "bold", textAlign: "center", paddingHorizontal: 20 }}>
+              This Event Has Been Cancelled
+            </Text>
           </View>
         )}
 
+        {/* ... rest of your UI unchanged ... */}
         <View style={styles.infoRow}>
           <View style={styles.iconBox}><Ionicons name="calendar" size={20} color="#0A0F51" /></View>
           <View><Text style={styles.infoPrimary}>{eventDate}</Text><Text style={styles.infoSecondary}>{eventTimeFull}</Text></View>

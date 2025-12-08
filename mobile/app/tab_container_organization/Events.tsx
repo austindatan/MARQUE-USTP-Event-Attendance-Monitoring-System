@@ -36,6 +36,10 @@ const Events = () => {
 
     const [userId, setUserId] = useState("692402df4600376c2cea56eb");
 
+    // ===== Added states for cancel/resume =====
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showCancelledOverlay, setShowCancelledOverlay] = useState(false);
+
     const handleBack = () => {
         router.back();
     };
@@ -72,6 +76,13 @@ const Events = () => {
             }
 
             setEventData(eventObj);
+
+            // ===== Check if event is cancelled =====
+            if (eventObj.status === "Cancelled") {
+                setShowCancelledOverlay(true);
+            } else {
+                setShowCancelledOverlay(false);
+            }
 
             const statusRes = await fetch(`${BASE_URL}/events/event-status/${eventObj._id}`);
             const statusData = await statusRes.json();
@@ -120,6 +131,39 @@ const Events = () => {
             }
         } catch (err) {
             setIsFollowing(isFollowing);
+        }
+    };
+
+    // ===== Cancel/Resume Handler =====
+    const handleCancelOrResume = async () => {
+        if (!eventData) return;
+
+        const endpoint =
+            eventData.status === "Cancelled"
+                ? `${BASE_URL}/events/resume/${eventId}`
+                : `${BASE_URL}/events/cancel/${eventId}`;
+
+        try {
+            const res = await fetch(endpoint, { method: "PUT" });
+            const result = await res.json();
+
+            if (!res.ok) {
+                Alert.alert("Error", "Failed to update event status.");
+                return;
+            }
+
+            setShowCancelModal(false);
+
+            setEventData({ ...eventData, status: result.status });
+
+            if (result.status === "Cancelled") {
+                setShowCancelledOverlay(true);
+            } else {
+                setShowCancelledOverlay(false);
+            }
+        } catch (err) {
+            console.error(err);
+            Alert.alert("Error", "Failed to update event status.");
         }
     };
 
@@ -245,7 +289,6 @@ const Events = () => {
                             styles.actionButton,
                             !isDownloadEnabled && { opacity: 0.5 } 
                         ]}
-                        // Disable active feedback when button is disabled
                         activeOpacity={isDownloadEnabled ? 0.8 : 1}
                         onPress={() => {
                             if (isDownloadEnabled) {
@@ -256,7 +299,6 @@ const Events = () => {
                                     Alert.alert("Download Error", "Could not start the download. Check your connection or the server.");
                                 });
                             } else {
-                                // Provide user feedback when button is pressed while disabled
                                 Alert.alert(
                                     "Feature Unavailable", 
                                     `Attendance download is only available after the event has been Concluded. Current status: ${eventData.status}.`
@@ -303,6 +345,63 @@ const Events = () => {
                         })
                     }
                 />
+            )}
+
+            {/* ===== Cancel / Resume Event Button ===== */}
+            <TouchableOpacity
+                style={{
+                    position: "absolute",
+                    bottom: 25,
+                    left: 20,
+                    right: 20,
+                    backgroundColor: eventData.status === "Cancelled" ? "#0A0F51" : "#ff4d4d",
+                    paddingVertical: 15,
+                    borderRadius: 12,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 999,
+                    elevation: 10,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                }}
+                onPress={() => setShowCancelModal(true)}
+            >
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                    {eventData.status === "Cancelled" ? "Resume Event" : "Cancel Event"}
+                </Text>
+            </TouchableOpacity>
+
+            {/* ===== Confirmation Modal ===== */}
+            {showCancelModal && (
+                <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+                    <View style={{ width: "80%", backgroundColor: "#fff", padding: 20, borderRadius: 15 }}>
+                        <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+                            {eventData.status === "Cancelled" ? "Resume Event?" : "Cancel Event?"}
+                        </Text>
+                        <Text style={{ marginBottom: 20 }}>
+                            {eventData.status === "Cancelled" ? "Are you sure you want to resume this event?" : "Are you sure you want to cancel this event?"}
+                        </Text>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                            <TouchableOpacity onPress={() => setShowCancelModal(false)}>
+                                <Text style={{ color: "#555", fontSize: 16 }}>No</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleCancelOrResume}>
+                                <Text style={{ color: "#B40000", fontSize: 16 }}>Yes</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            )}
+
+            {/* ===== Cancelled Overlay ===== */}
+            {showCancelledOverlay && (
+                <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center", zIndex: 900 }}>
+                    <Text style={{ color: "#fff", fontSize: 26, fontWeight: "bold", textAlign: "center" }}>
+                        This Event Has Been Cancelled
+                    </Text>
+                </View>
             )}
         </SafeAreaView>
     );
