@@ -13,7 +13,15 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
     borderBottomRightRadius: 15,
   },
-
+  sidebarContainerAdmin: {
+    width: "70%",
+    height: "100%",
+    backgroundColor: "#fff",
+    paddingTop: 50, 
+    paddingHorizontal: 20,
+    borderTopRightRadius: 15,
+    borderBottomRightRadius: 15,
+  },
   profileContainer: {
     marginBottom: 20,
     paddingBottom: 15,

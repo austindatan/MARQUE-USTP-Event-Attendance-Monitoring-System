@@ -1,13 +1,13 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { Link, router } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { BASE_URL } from '../../config';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/page_admin_dashboard";
 import LogoutModal from "../components/LogoutModal";
 import { Ionicons } from '@expo/vector-icons';
-import Header from '../components/Header_Admin';
+import Header from '../components/Header_Normal';
 
 interface AdminData {
     firstname: string;
@@ -17,6 +17,7 @@ interface AdminData {
   }
 
 const AdminDashboard = () => {
+    const router = useRouter();
     const [adminData, setAdminData] = useState<AdminData | null>(null);
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
@@ -52,7 +53,7 @@ const AdminDashboard = () => {
     return (
         <View style={styles.container}>
             <Header title="Admin Dashboard" />
-            <View style={styles.content}>
+            <View style={styles.contentDashboard}>
                 <View style={styles.profileContainer}>
                     <Image
                         source={{ uri: adminData?.profile_image}}
@@ -69,7 +70,7 @@ const AdminDashboard = () => {
                 <View style={styles.adminContainer}>
                     <TouchableOpacity
                         style={styles.adminButton}
-                        onPress={() => setLogoutModalVisible(true)}
+                        onPress={() => router.push("/tabs_admin/ManageEvents")}
                     >
                         <Ionicons name="calendar-outline" size={24} color="#0A0F51" />
                         <Text style={styles.adminText}>Events</Text>
@@ -80,7 +81,7 @@ const AdminDashboard = () => {
                 <View style={styles.adminContainer}>
                     <TouchableOpacity
                         style={styles.adminButton}
-                        onPress={() => setLogoutModalVisible(true)}
+                        onPress={() => router.push("/tabs_admin/ManageOrganizations")}
                     >
                         <Ionicons name="briefcase-outline" size={24} color="#0A0F51" />
                         <Text style={styles.adminText}>Organizations</Text>
@@ -91,7 +92,7 @@ const AdminDashboard = () => {
                 <View style={styles.adminContainer}>
                     <TouchableOpacity
                         style={styles.adminButton}
-                        onPress={() => setLogoutModalVisible(true)}
+                        onPress={() => router.push("/tabs_admin/ManageUsers")}
                     >
                         <Ionicons name="people-outline" size={24} color="#0A0F51" />
                         <Text style={styles.adminText}>Users</Text>
@@ -101,7 +102,6 @@ const AdminDashboard = () => {
                 <View style={styles.adminContainer}>
                     <TouchableOpacity
                         style={styles.adminButton}
-                        onPress={() => setLogoutModalVisible(true)}
                     >
                         <Ionicons name="book-outline" size={24} color="#0A0F51" />
                         <Text style={styles.adminText}>History</Text>
@@ -111,7 +111,6 @@ const AdminDashboard = () => {
                 <View style={styles.adminContainer}>
                     <TouchableOpacity
                         style={styles.adminButton}
-                        onPress={() => setLogoutModalVisible(true)}
                     >
                         <Ionicons name="key-outline" size={24} color="#0A0F51" />
                         <Text style={styles.adminText}>Change Password</Text>
