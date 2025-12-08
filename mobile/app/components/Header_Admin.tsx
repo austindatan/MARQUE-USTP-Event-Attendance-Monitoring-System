@@ -8,12 +8,20 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
   return (
     <View style={{ zIndex: 10 }}>
       <View style={[styles.headerfirstPRO, { paddingBottom: 0 }]}>
-        <View style={styles.middle}>
+        <View style={styles.topRow}>
+          <TouchableOpacity onPress={onMenuPress}>
+            <Ionicons name="menu" size={30} color="#fff" />
+          </TouchableOpacity>
+
           <Image
             source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
             style={styles.logo}
             resizeMode="contain"
           />
+
+          <TouchableOpacity onPress={onMenuPress}>
+            <Ionicons name="menu" size={30} color="#0A0F51" />
+          </TouchableOpacity>
         </View>
       </View>
     </View>
