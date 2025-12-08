@@ -348,30 +348,32 @@ const Events = () => {
             )}
 
             {/* ===== Cancel / Resume Event Button ===== */}
-            <TouchableOpacity
-                style={{
-                    position: "absolute",
-                    bottom: 25,
-                    left: 20,
-                    right: 20,
-                    backgroundColor: eventData.status === "Cancelled" ? "#0A0F51" : "#ff4d4d",
-                    paddingVertical: 15,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 999,
-                    elevation: 10,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                }}
-                onPress={() => setShowCancelModal(true)}
-            >
-                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-                    {eventData.status === "Cancelled" ? "Resume Event" : "Cancel Event"}
-                </Text>
-            </TouchableOpacity>
+            {eventData.status !== "Concluded" && (
+                <TouchableOpacity
+                    style={{
+                        position: "absolute",
+                        bottom: 25,
+                        left: 20,
+                        right: 20,
+                        backgroundColor: eventData.status === "Cancelled" ? "#0A0F51" : "#ff4d4d",
+                        paddingVertical: 15,
+                        borderRadius: 12,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 999,
+                        elevation: 10,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 4,
+                    }}
+                    onPress={() => setShowCancelModal(true)}
+                >
+                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                        {eventData.status === "Cancelled" ? "Resume Event" : "Cancel Event"}
+                    </Text>
+                </TouchableOpacity>
+            )}
 
             {/* ===== Confirmation Modal ===== */}
             {showCancelModal && (
