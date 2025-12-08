@@ -41,6 +41,10 @@ router.put('/:eventId', uploadEventImages.single('event_image'), updateEvent);
 // Optional: Check if event is active and/or within first 30 minutes
 router.get('/event-status/:id', eventController.getEventStatus);
 
+// CANCEL and RESUME event
+router.put("/cancel/:eventId", eventController.cancelEvent);
+router.put("/resume/:eventId", eventController.resumeEvent);
+
 // NEW ROUTE – MUST BE ABOVE departmentId
 router.get("/event/:id", eventController.getEventById); //also used for edit event
 
