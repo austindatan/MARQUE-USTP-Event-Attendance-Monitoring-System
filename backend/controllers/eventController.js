@@ -177,11 +177,24 @@ const getConcludedEventsByOrganization = async (req, res) => {
   try {
     const { orgId } = req.params;
 
+    const now = new Date();
+
+    // 1️⃣ Update events that have ended but are not yet concluded
+    await Event.updateMany(
+      {
+        organization_id: orgId,
+        end_time: { $lt: now },
+        status: { $nin: ["Concluded", "Cancelled"] },
+      },
+      { $set: { status: "Concluded" } }
+    );
+
+    // 2️⃣ Fetch concluded and cancelled events
     const events = await Event.find({
       organization_id: orgId,
       $or: [
-        { end_time: { $lt: new Date() } }, // already ended
-        { status: "Cancelled" }            // cancelled events
+        { end_time: { $lt: now } }, // already ended
+        { status: "Cancelled" }      // cancelled events
       ]
     })
       .populate("organization_id")
@@ -448,11 +461,22 @@ const updateEvent = async (req, res) => {
       end_time,
     } = req.body;
 
+    // Handle new image if uploaded
     const new_event_image_url = req.file ? req.file.path || req.file.secure_url : undefined;
 
+    // Convert to Date objects
     const eventDateUTC = new Date(event_date);
     const startTimeUTC = new Date(start_time);
     const endTimeUTC = new Date(end_time);
+    const now = new Date();
+
+    // Determine status based on current time
+    let status = "Upcoming";
+    if (now >= startTimeUTC && now <= endTimeUTC) {
+      status = "Ongoing";
+    } else if (now > endTimeUTC) {
+      status = "Concluded";
+    }
 
     const updateData = {
       event_name,
@@ -464,6 +488,7 @@ const updateEvent = async (req, res) => {
       event_date: eventDateUTC,
       start_time: startTimeUTC,
       end_time: endTimeUTC,
+      status, // <-- Add status
     };
 
     if (new_event_image_url !== undefined) {
@@ -482,6 +507,7 @@ const updateEvent = async (req, res) => {
     res.status(500).json({ message: "Server error updating event", details: err.message });
   }
 };
+
 
 // CANCEL EVENT
 const cancelEvent = async (req, res) => {
