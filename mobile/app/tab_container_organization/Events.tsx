@@ -84,11 +84,11 @@ const Events = () => {
                 setShowCancelledOverlay(false);
             }
 
+            // ===== Fetch event status and map within1Hour to within30Min =====
             const statusRes = await fetch(`${BASE_URL}/events/event-status/${eventObj._id}`);
             const statusData = await statusRes.json();
             setEventActive(statusData.isActive);
-            setWithin30Min(statusData.within30Min);
-
+            setWithin30Min(statusData.within1Hour); // <--- only change here
 
         } catch (error) {
             console.error("Error fetching event details/status:", error);
@@ -281,30 +281,53 @@ const Events = () => {
                     </View>
 
                     <View style={styles.buttonsRow}>
-                    
+                        <View style={{ width: 10 }} />
+                        
+                        {/* Analytics Reports Button */}
+                        <TouchableOpacity
+                            style={[styles.actionButton, !isDownloadEnabled && { opacity: 0.5 }]}
+                            activeOpacity={isDownloadEnabled ? 0.8 : 1}
+                            onPress={() => {
+                                if (isDownloadEnabled) {
+                                    const url = `${BASE_URL}/api/reports/event/${eventId}/download-report`; // <-- different URL
+                                    console.log("Attempting download:", url);
+                                    Linking.openURL(url).catch((err) => {
+                                        console.error("Failed to open URL for download:", err);
+                                        Alert.alert("Download Error", "Could not start the download. Check your connection or the server.");
+                                    });
+                                } else {
+                                    Alert.alert(
+                                        "Feature Unavailable",
+                                        `Analytics report download is only available after the event has been Concluded. Current status: ${eventData.status}.`
+                                    );
+                                }
+                            }}
+                        >
+                            <Ionicons name="download" size={30} color="#ffffffff" />
+                            <Text style={styles.actionButtonText}>Analytics Reports</Text>
+                        </TouchableOpacity>
+                        
                         <View style={{ width: 10 }} />
 
+                        {/* Attendance Spreadsheets Button */}
                         <TouchableOpacity
-                        style={[
-                            styles.actionButton,
-                            !isDownloadEnabled && { opacity: 0.5 } 
-                        ]}
-                        activeOpacity={isDownloadEnabled ? 0.8 : 1}
-                        onPress={() => {
-                            if (isDownloadEnabled) {
-                                const url = `${BASE_URL}/events/attendance/export/${eventId}`;
-                                console.log("Attempting download:", url);
-                                Linking.openURL(url).catch((err) => {
-                                    console.error("Failed to open URL for download:", err);
-                                    Alert.alert("Download Error", "Could not start the download. Check your connection or the server.");
-                                });
-                            } else {
-                                Alert.alert(
-                                    "Feature Unavailable", 
-                                    `Attendance download is only available after the event has been Concluded. Current status: ${eventData.status}.`
-                                );
-                            }
-                        }}
+                            style={[styles.actionButton, !isDownloadEnabled && { opacity: 0.5 }]}
+                            activeOpacity={isDownloadEnabled ? 0.8 : 1}
+                            onPress={() => {
+                                if (isDownloadEnabled) {
+                                    const url = `${BASE_URL}/events/attendance/export/${eventId}`;
+                                    console.log("Attempting download:", url);
+                                    Linking.openURL(url).catch((err) => {
+                                        console.error("Failed to open URL for download:", err);
+                                        Alert.alert("Download Error", "Could not start the download. Check your connection or the server.");
+                                    });
+                                } else {
+                                    Alert.alert(
+                                        "Feature Unavailable",
+                                        `Attendance download is only available after the event has been Concluded. Current status: ${eventData.status}.`
+                                    );
+                                }
+                            }}
                         >
                             <Ionicons name="download" size={30} color="#ffffffff" />
                             <Text style={styles.actionButtonText}>Attendance Spreadsheets</Text>

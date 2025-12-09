@@ -67,6 +67,10 @@ app.use('/api/join-request', joinRequestRoutes);
 const bookmarkRoutes = require('./routes/bookmarkRoutes');
 app.use("/api/bookmarks", bookmarkRoutes);
 
+// Report route
+const reportRoutes = require('./routes/reportRoutes');
+app.use('/api/reports', reportRoutes);
+
 // DB connection
 mongoose
   .connect(process.env.MONGODB_URI)
