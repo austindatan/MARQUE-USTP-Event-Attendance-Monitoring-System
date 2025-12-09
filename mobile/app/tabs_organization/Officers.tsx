@@ -11,6 +11,7 @@ import { BASE_URL } from "../../config";
 const ManageOfficers = () => {
     const [localStudentNumber, setLocalStudentNumber] = useState<string | null>(null);
     const [isIdLoading, setIsIdLoading] = useState(true);
+    const [orgId, setOrgId] = useState<string | null>(null);
 
     const [menuVisible, setMenuVisible] = useState(false);
     const [activeTab, setActiveTab] = useState("all");
@@ -26,15 +27,15 @@ const ManageOfficers = () => {
     const openMenu = () => setMenuVisible(true);
     const closeMenu = () => setMenuVisible(false);
 
-    // ----------------------------------------------------
-    // 1. ASYNC NUMBER FETCH EFFECT (Runs once on mount)
-    // ----------------------------------------------------
+    // ASYNC NUMBER FETCH EFFECT (Runs once on mount)
     useEffect(() => {
         const fetchAuthNumber = async () => {
             try {
                 const number = await AsyncStorage.getItem("student_number"); 
                 if (number) {
                     setLocalStudentNumber(number);
+                    // Also fetch the org ID for this user
+                    await fetchOrgId(number);
                 } else {
                     console.error("[AUTH ERROR] Student NUMBER not found in AsyncStorage.");
                     setError("Authentication failed: Sender's ID/Number missing.");
@@ -49,10 +50,35 @@ const ManageOfficers = () => {
 
         fetchAuthNumber();
     }, []);
-    
-    // --------------------
+
+    // FETCH ORG ID FOR CURRENT USER
+    const fetchOrgId = async (studentNumber) => {
+        try {
+            const res = await fetch(`${BASE_URL}/api/memberships/org-id/${studentNumber}`);
+            const data = await res.json();
+            if (data.orgId) {
+                setOrgId(data.orgId);
+            }
+        } catch (err) {
+            console.error("[FETCH ORG ID ERROR]", err);
+        }
+    };
+
+    // FETCH OUTSTANDING INVITES FOR THIS ORG
+    const fetchOutstandingInvites = async (orgIdToUse) => {
+        if (!orgIdToUse) return {};
+        
+        try {
+            const res = await fetch(`${BASE_URL}/api/memberships/outstanding-invites/${orgIdToUse}`);
+            const data = await res.json();
+            return data; // Should be { student_id: role } map
+        } catch (err) {
+            console.error("[FETCH OUTSTANDING INVITES ERROR]", err);
+            return {};
+        }
+    };
+
     // Fetch Students
-    // --------------------
     const fetchStudents = async (tab) => {
         if (isIdLoading) return;
 
@@ -78,7 +104,15 @@ const ManageOfficers = () => {
             }
 
             console.log("[FETCH STUDENTS SUCCESS]", data);
-            setStudents(data);
+
+            // FETCH AND MAP OUTSTANDING INVITES
+            const inviteMap = await fetchOutstandingInvites(orgId);
+            const studentsWithInvites = data.map(student => ({
+                ...student,
+                pendingInviteRole: inviteMap[student.id] || null
+            }));
+
+            setStudents(studentsWithInvites);
         } catch (err) {
             console.error("[FETCH STUDENTS EXCEPTION]", err);
             setError(err.message || "Failed to load student data.");
@@ -88,90 +122,75 @@ const ManageOfficers = () => {
         }
     };
 
-    // ----------------------------------------------------
-    // 2. EFFECT TO TRIGGER DATA FETCH
-    // ----------------------------------------------------
+    // EFFECT TO TRIGGER DATA FETCH
     useEffect(() => {
-        if (!isIdLoading && localStudentNumber) {
+        if (!isIdLoading && localStudentNumber && orgId) {
             fetchStudents(activeTab);
         } else if (!isIdLoading && !localStudentNumber) {
             setIsLoading(false); 
         }
-    }, [activeTab, isIdLoading, localStudentNumber]);
+    }, [activeTab, isIdLoading, localStudentNumber, orgId]);
 
     const safeImage = (img) =>
         typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/crk.jpg");
 
-    // --------------------
     // Invite (sends student_number instead of _id)
-    // --------------------
     const handleInvite = async (student, role) => {
-    if (!role) return;
-    if (!localStudentNumber) {
-        alert("Authentication Error: Cannot send invite without a valid sender number.");
-        return;
-    }
-
-    try {
-        const res = await fetch(`${BASE_URL}/api/memberships/invite`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                sender_student_number: localStudentNumber,
-                target_student_id: student.id,
-                role,
-            }),
-        });
-
-        const text = await res.text();
-        let data;
-        try { data = JSON.parse(text); } catch { data = text; }
-
-        // Handle already pending invite
-        if (res.status === 409 && data?.message?.includes("pending invitation")) {
-            const existingRole = data.role || "Manager";
-            setStudents(prev =>
-                prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: existingRole } : s)
-            );
-            return; // stop further processing
-        }
-
-        if (!res.ok) {
-            console.error("[INVITE ERROR]", { status: res.status, body: data });
-            alert(`Error sending invite: ${data.message || 'check terminal for details.'}`);
+        if (!role) return;
+        if (!localStudentNumber) {
+            alert("Authentication Error: Cannot send invite without a valid sender number.");
             return;
         }
 
-        console.log("[INVITE SUCCESS]", { student, role, response: data });
-        alert(`Invite sent to ${student.name} as ${role}`);
+        try {
+            const res = await fetch(`${BASE_URL}/api/memberships/invite`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    sender_student_number: localStudentNumber,
+                    target_student_id: student.id,
+                    role,
+                }),
+            });
 
-        // Update state
-        setStudents(prev =>
-            prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: role } : s)
-        );
+            const text = await res.text();
+            let data;
+            try { data = JSON.parse(text); } catch { data = text; }
 
-    } catch (err) {
-        console.error("[INVITE EXCEPTION]", err);
-        alert("Error sending invite — check terminal for details.");
-    }
-};
+            // Handle already pending invite
+            if (res.status === 409 && data?.message?.includes("pending invitation")) {
+                const existingRole = data.role || "Manager";
+                setStudents(prev =>
+                    prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: existingRole } : s)
+                );
+                return;
+            }
 
+            if (!res.ok) {
+                console.error("[INVITE ERROR]", { status: res.status, body: data });
+                alert(`Error sending invite: ${data.message || 'check terminal for details.'}`);
+                return;
+            }
 
-    // --------------------
+            console.log("[INVITE SUCCESS]", { student, role, response: data });
+            alert(`Invite sent to ${student.name} as ${role}`);
+
+            // Update state
+            setStudents(prev =>
+                prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: role } : s)
+            );
+
+        } catch (err) {
+            console.error("[INVITE EXCEPTION]", err);
+            alert("Error sending invite — check terminal for details.");
+        }
+    };
+
     // Cancel Invite
-    // --------------------
     const handleCancelInvite = async (student) => {
         if (!student.pendingInviteRole) return;
 
         try {
-            const senderOrgIdRes = await fetch(`${BASE_URL}/api/memberships/org-id/${localStudentNumber}`);
-            const orgData = await senderOrgIdRes.json();
-            const orgId = orgData.orgId;
-            if (!orgId) {
-                alert("Cannot cancel invite: sender organization not found.");
-                return;
-            }
-
             const res = await fetch(`${BASE_URL}/api/memberships/cancel-invite`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
@@ -207,9 +226,7 @@ const ManageOfficers = () => {
         }
     };
 
-    // --------------------
     // Change Role and Remove User
-    // --------------------
     const openRoleModal = (student) => {
         setSelectedStudent(student);
         setNewRole(null);
@@ -273,9 +290,7 @@ const ManageOfficers = () => {
         }
     };
 
-    // --------------------
     // Render Students
-    // --------------------
     const renderStudents = () => {
         if (isLoading) return <ActivityIndicator size="large" color="#0A0F51" style={{ marginTop: 50 }} />;
         if (error) return <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>{error}</Text>;
@@ -310,9 +325,7 @@ const ManageOfficers = () => {
         ));
     };
 
-    // --------------------
     // Initial Loading/Error Render Check
-    // --------------------
     if (isIdLoading) {
         return (
             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -332,9 +345,7 @@ const ManageOfficers = () => {
          );
     }
 
-    // --------------------
     // Main Render
-    // --------------------
     return (
         <View style={styles.container}>
             <Header onMenuPress={openMenu} />
