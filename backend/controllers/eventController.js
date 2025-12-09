@@ -218,8 +218,12 @@ const getEventsByFollowedOrgs = async (req, res) => {
   const orgIds = orgsString.split(",");
 
   try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize to midnight
+
     const events = await Event.find({
       organization_id: { $in: orgIds },
+      event_date: { $gte: today }  // Only upcoming events
     })
       .populate("organization_id")
       .sort({ event_date: 1 });
