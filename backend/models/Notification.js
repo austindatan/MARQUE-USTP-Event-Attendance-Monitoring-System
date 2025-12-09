@@ -33,6 +33,13 @@ const notificationSchema = new mongoose.Schema(
             required: true,
         },
 
+        // ADDED: Role field for invites
+        role: {
+            type: String,
+            enum: ['Committee', 'Manager'],
+            default: null,
+        },
+
         is_read: {
             type: Boolean,
             default: false,

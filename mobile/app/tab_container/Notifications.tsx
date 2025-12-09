@@ -15,7 +15,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL, CLOUD_NAME } from "../../config";
-import moment from 'moment';
 
 const fixCloudinaryUrl = (url, cloudName) => {
     if (!url || url.startsWith("http")) {
