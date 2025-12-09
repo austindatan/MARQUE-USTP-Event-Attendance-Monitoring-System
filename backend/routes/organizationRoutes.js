@@ -36,6 +36,21 @@ router.get('/profile/:orgId', async (req, res) => {
 // Org routes
 router.get('/', organizationController.getOrganizations);
 router.get('/by-type/:type', organizationController.getOrganizationsByType);
+
+// GET all orgs by department ID
+router.get('/department/:departmentId', async (req, res) => {
+  try {
+    console.log(`✅ Organization Department Route Hit. ID: ${req.params.departmentId}`);
+    const { departmentId } = req.params;
+    const orgs = await Organization.find({ department_id: departmentId }).lean();
+
+    res.json(orgs || []);
+  } catch (err) {
+    console.error("Error fetching organizations by department:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 router.get('/:id', organizationController.getOrganizationById);
 router.post(
   '/', 
@@ -43,10 +58,10 @@ router.post(
     { name: 'pfp', maxCount: 1 }, 
     { name: 'cover_photo', maxCount: 1 },
   ]),
-  organizationController.addOrganization // <-- The controller function
+  organizationController.addOrganization
 );
 
-// UPDATE organization profile (This route was already correct)
+// UPDATE organization profile
 router.put(
   '/:orgId',
   uploadOrgImages.fields([

@@ -3,6 +3,7 @@ const Student = require('../models/Student');
 const Event = require('../models/Event');
 const AttendanceLog = require('../models/Attendance_log');
 const mongoose = require('mongoose');
+const OrgOfficer = require('../models/Org_officer');
 
 // GET API
 exports.getStudentProfileByNumber = async (req, res) => {
@@ -21,20 +22,41 @@ exports.getStudentProfileByNumber = async (req, res) => {
     if (!student) return res.status(404).json({ message: 'Student not found' });
 
     const user = student.users_id || {};
-    
+
+    // Fetch all org roles for this student
+    const orgRoles = await OrgOfficer.find({ student_id: student._id })
+      .populate('org_id', 'org_name')
+      .lean();
+
+    // Determine highest role
+    const priority = ["President", "Manager", "Committee"];
+    let highestRole = null;
+    for (let p of priority) {
+      if (orgRoles.some(r => r.role === p)) {
+        highestRole = p;
+        break;
+      }
+    }
+
     res.json({
       _id: student._id,
       student_number: student.student_number,
       firstname: user.firstname || '',
       lastname: user.lastname || '',
       email: user.email || '',
-      profile_image: user.profile_image || 'https://res.cloudinary.com/dhfgfpoav/image/upload/v1764669009/defaultProf_gbmq9j.jpg',
+      profile_image: user.profile_image ||
+        'https://res.cloudinary.com/dhfgfpoav/image/upload/v1764669009/defaultProf_gbmq9j.jpg',
+
       department_id: student.department_id?._id || null,
       department_name: student.department_id?.department_name || '',
       department_code: student.department_id?.department_code || '',
-      college_name: student.department_id?.college_id?.college_name || ''
+      college_name: student.department_id?.college_id?.college_name || '',
+
+      org_role: highestRole || "Student", 
+      org_roles: orgRoles,
     });
-  } catch (error) {
+
+  } catch (err) {
     console.error('Error in getStudentProfileByNumber:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -44,27 +66,72 @@ exports.getStudentProfileByNumber = async (req, res) => {
 exports.updateStudentProfile = async (req, res) => {
   try {
     const student_number = req.params.student_number;
-    const { firstname, lastname, email } = req.body;
+    const { 
+      firstname,
+      lastname,
+      email,
+      role,
+      org_id,
+      department_id,
+      college_id
+    } = req.body;
 
-    // Find student and its user
+    // Find student and user
     const student = await Student.findOne({ student_number });
     if (!student) return res.status(404).json({ message: 'Student not found' });
 
     const user = await User.findById(student.users_id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    // Update user fields
     if (firstname) user.firstname = firstname;
     if (lastname) user.lastname = lastname;
     if (email) user.email = email;
-
     await user.save();
 
-    res.json({ message: 'Profile updated', profile_image: user.profile_image });
+    // Update department & college
+    if (department_id) student.department_id = department_id;
+    if (college_id) student.college_id = college_id;
+    await student.save();
+
+    // Handle org roles
+    if (role === "Student") {
+      await OrgOfficer.deleteMany({ student_id: student._id });
+    } else if (["Committee", "Manager", "President"].includes(role)) {
+      if (!org_id) {
+        return res.status(400).json({ message: "org_id is required for non-student roles" });
+      }
+
+      const orgOfficer = await OrgOfficer.findOne({
+        student_id: student._id,
+        org_id
+      });
+
+      if (orgOfficer) {
+        orgOfficer.role = role;
+        await orgOfficer.save();
+      } else {
+        await OrgOfficer.create({
+          student_id: student._id,
+          org_id,
+          role
+        });
+      }
+    }
+
+    res.json({ 
+      message: 'Profile updated',
+      department_id: student.department_id,
+      college_id: student.college_id
+    });
+
   } catch (err) {
     console.error('Error in updateStudentProfile:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+
 
 // POST API
 exports.uploadStudentProfileImage = async (req, res) => {
@@ -174,6 +241,37 @@ exports.changeStudentPassword = async (req, res) => {
   } catch (err) {
     console.error("Error in changeStudentPassword:", err);
     res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// DELETE STUDENT AND ASSOCIATED USER PROFILE
+exports.deleteStudentProfile = async (req, res) => {
+  const { student_number } = req.params;
+
+  try {
+    // Find the student to get the user ID
+    const studentToDelete = await Student.findOne({ student_number });
+
+    if (!studentToDelete) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+
+    const userId = studentToDelete.users_id;
+    const studentId = studentToDelete._id;
+
+    // Delete the Student document
+    await Student.deleteOne({ student_number });
+
+    // Delete the associated User document
+    await User.findByIdAndDelete(userId);
+
+    // Delete any associated OrgOfficer records
+    await OrgOfficer.deleteMany({ student_id: studentId });
+    res.status(200).json({ message: "Student and associated user successfully deleted." });
+    
+  } catch (err) {
+    console.error("🔥 Error deleting student:", err);
+    res.status(500).json({ message: "Server error during deletion." });
   }
 };
 
