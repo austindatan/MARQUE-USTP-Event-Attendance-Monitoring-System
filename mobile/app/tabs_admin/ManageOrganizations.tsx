@@ -7,10 +7,12 @@ import Header from '../components/Header_Admin';
 import AdminSidebarMenu from '../components/SidebarMenu_Admin';
 import OrgLinear from '../components/Card_OrgsAdmin';
 import { BASE_URL } from "../../config";
+import { useRouter, useFocusEffect } from 'expo-router';
 
 const PLACEHOLDER_LOGO_URL = "https://via.placeholder.com/100?text=No+Logo";
 
 const ManageOrganizations = () => {
+  const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [organizations, setOrganizations] = useState([]);
@@ -25,7 +27,11 @@ const ManageOrganizations = () => {
   };
 
   const handleEditPress = (orgId) => {
-    console.log(`Editing Organization ID: ${orgId}`);
+    // Navigate to the Add/Edit Organization page with orgId
+    router.push({
+      pathname: "/tabs_admin/AddOrganization",
+      params: { orgId }
+    });
   };
 
   // 🔥 Fetch Organizations
@@ -55,9 +61,11 @@ const ManageOrganizations = () => {
     }
   };
 
-  useEffect(() => {
-    fetchOrganizations();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchOrganizations();
+    }, [])
+  );
 
   const renderOrganizations = () => {
     if (isLoading) {
@@ -91,7 +99,7 @@ const ManageOrganizations = () => {
       <OrgLinear
         key={org._id}
         organization={org.org_name}
-        orgLogo={org.safePfp}   // ✔ FIXED: pass a STRING, NOT {uri: ...}
+        orgLogo={org.safePfp}
         text={org.description}
         onEditPress={() => handleEditPress(org._id)}
         onPress={() => console.log(`Viewing details for ${org.org_name}`)}
@@ -117,7 +125,7 @@ const ManageOrganizations = () => {
             />
           </View>
 
-          <TouchableOpacity style={styles.addButtonOrg} onPress={handleAddOrganization}>
+          <TouchableOpacity style={styles.addButtonOrg} onPress={() => router.push("/tabs_admin/AddOrganization")}>
             <Ionicons name="add" size={24} color="#0A0F51" />
           </TouchableOpacity>
 

@@ -28,6 +28,7 @@ interface StudentData {
   department_code: string;
   college_name: string;
   profile_image?: string;
+  role?: "Committee" | "Manager" | "President" | "Admin" | "Student";
 }
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
@@ -40,15 +41,27 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
         const storedStudentNumber = await AsyncStorage.getItem("student_number");
         if (!storedStudentNumber) return;
 
-        const res = await fetch(`${BASE_URL}/api/student/id/${storedStudentNumber}`);
-        if (!res.ok) return;
+        // 1️⃣ Fetch basic student info
+        const resStudent = await fetch(`${BASE_URL}/api/student/id/${storedStudentNumber}`);
+        if (!resStudent.ok) return;
+        const student = await resStudent.json();
 
-        const data = await res.json();
-        if (data && data.firstname && data.lastname) {
-          setStudentData(data);
+        // 2️⃣ Fetch Org_officer roles for this student
+        const resOrgs = await fetch(`${BASE_URL}/api/memberships/student/${student._id}`);
+        let orgs = [];
+        if (resOrgs.ok) {
+          orgs = await resOrgs.json();
         }
+
+        // 3️⃣ Determine Org role for conditional button
+        const orgRole = orgs.find((org: any) =>
+          org && typeof org.role === "string" && ["Committee", "Manager", "President"].includes(org.role)
+        )?.role || null;
+
+
+        setStudentData({ ...student, role: orgRole });
       } catch (err) {
-        console.error("Error fetching student data:", err);
+        console.error("Error fetching student data and org roles:", err);
       }
     };
 
@@ -88,12 +101,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
 
     if (name === "Your Organizations") {
         try {
-            const studentNumber = await AsyncStorage.getItem("student_number");
-            if (!studentNumber) {
-                console.log("No student number found in AsyncStorage.");
-                return;
-            }
-
             router.push("/tabs_organization/Teams");
             return;
         } catch (err) {
@@ -107,9 +114,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
     } else {
         console.warn(`⚠️ No route found for menu item: ${name}`);
     }
-};
-
-
+  };
 
   if (!renderSidebar) return null;
 
@@ -152,13 +157,16 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
           ))}
         </View>
 
-        <TouchableOpacity
-          style={styles.organizationsButton}
-          onPress={() => handleMenuItemPress("Your Organizations")}
-        >
-          <Ionicons name="people-circle-outline" size={24} color="#fff" />
-          <Text style={styles.organizationsText}>Your Organizations</Text>
-        </TouchableOpacity>
+        {/* Conditionally show "Your Organizations" button based on Org role */}
+        {["Committee", "Manager", "President"].includes(studentData?.role || "") && (
+          <TouchableOpacity
+            style={styles.organizationsButton}
+            onPress={() => handleMenuItemPress("Your Organizations")}
+          >
+            <Ionicons name="people-circle-outline" size={24} color="#fff" />
+            <Text style={styles.organizationsText}>Your Organizations</Text>
+          </TouchableOpacity>
+        )}
       </Animated.View>
     </View>
   );

@@ -20,7 +20,11 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.mobile"
+      "package": "com.anonymous.mobile",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -47,11 +51,16 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for scanning QR codes."
         }
       ],
-      "expo-barcode-scanner"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f3982ca8-9d6d-4557-a182-f6c7cf768976"
+      }
     }
   }
 }

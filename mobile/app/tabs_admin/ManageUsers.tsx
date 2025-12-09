@@ -7,8 +7,10 @@ import Header from '../components/Header_Admin';
 import AdminSidebarMenu from '../components/SidebarMenu_Admin';
 import StudentLinear from '../components/Card_StudentLinear';
 import { BASE_URL } from "../../config";
+import { useRouter } from 'expo-router';
 
 const ManageUsers = () => {
+  const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -127,7 +129,10 @@ const ManageUsers = () => {
               onChangeText={setSearchTerm}
             />
           </View>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push("tabs_admin/AddUser")}
+          >
             <Ionicons name="add" size={24} color="#0A0F51" />
           </TouchableOpacity>
           <TouchableOpacity

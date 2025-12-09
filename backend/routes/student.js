@@ -208,4 +208,79 @@ router.get("/:username", async (req, res) => {
   }
 });
 
+
+router.post("/create", async (req, res) => {
+  try {
+    const {
+      username,
+      password,
+      firstname,
+      middlename,
+      lastname,
+      contact_number,
+      email,
+      role,
+      profile_image // this should be a Cloudinary URL from frontend
+    } = req.body;
+
+    // 1. Check required fields
+    if (!username || !password || !firstname || !lastname || !email || !role) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // 2. Check if username or email already exists
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username or email already exists." });
+    }
+
+    const bcrypt = require("bcryptjs");
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Generate user_id automatically (you can use username, or a UUID, or timestamp)
+    const user_id = Date.now(); // generates a numeric ID like 1765210766124
+
+
+    const newUser = new User({
+      user_id,
+      username,
+      firstname,
+      middlename,
+      lastname,
+      email,
+      contact_number,
+      password: hashedPassword,
+      role
+    });
+    await newUser.save();
+
+
+
+    // 5. Create Student document if role is Student
+    if (role === "Student") {
+      const newStudent = new Student({
+        student_number: req.body.student_number, // some unique ID
+        users_id: newUser._id, // must be ObjectId
+        department_id: req.body.department_id, // must provide
+        college_id: req.body.college_id // must provide
+      });
+      await newStudent.save();
+    }
+
+
+
+    res.status(201).json({ message: "User created successfully", user: newUser });
+
+  } catch (err) {
+    console.error("Error creating user:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+
+
+
+
+
 module.exports = router;

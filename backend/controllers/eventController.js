@@ -218,8 +218,12 @@ const getEventsByFollowedOrgs = async (req, res) => {
   const orgIds = orgsString.split(",");
 
   try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize to midnight
+
     const events = await Event.find({
       organization_id: { $in: orgIds },
+      event_date: { $gte: today }  // Only upcoming events
     })
       .populate("organization_id")
       .sort({ event_date: 1 });
@@ -363,18 +367,17 @@ const isEventActive = (event) => {
 };
 
 /**
- * Returns true if the current time is within the first 30 minutes of the event start
+ * Returns true if the current time is within the first 1 hour of the event start
  */
-const isEventWithin30Min = (event) => {
+const isEventWithin1Hour = (event) => {
   if (!event) return false;
 
   const now = new Date();
   const startTime = new Date(event.start_time);
 
-  const thirtyMinutesAfterStart = new Date(startTime.getTime() + 30 * 60 * 1000);
+  const oneHourAfterStart = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour
 
-  // simply return true/false
-  return now >= startTime && now <= thirtyMinutesAfterStart;
+  return now >= startTime && now <= oneHourAfterStart;
 };
 
 const getEventStatus = async (req, res) => {
@@ -391,12 +394,12 @@ const getEventStatus = async (req, res) => {
 
     const isActive = now >= startTime && now <= endTime;
 
-    // Within 30 minutes of start time
-    const within30Min = now >= startTime && now <= new Date(startTime.getTime() + 30 * 60 * 1000);
+    // Within 1 hour of start time
+    const within1Hour = now >= startTime && now <= new Date(startTime.getTime() + 60 * 60 * 1000);
 
     return res.json({
       isActive,
-      within30Min,
+      within1Hour,
     });
   } catch (error) {
     console.error("Error in getEventStatus:", error);
@@ -576,7 +579,7 @@ export {
   getUpcomingEventsByOrganization,
   getConcludedEventsByOrganization,
   isEventActive,
-  isEventWithin30Min,
+  isEventWithin1Hour,
   getEventStatus,
   cancelEvent,
   resumeEvent,

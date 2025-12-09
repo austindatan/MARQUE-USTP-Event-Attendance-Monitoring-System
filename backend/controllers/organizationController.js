@@ -55,47 +55,54 @@ exports.getOrganizationById = async (req, res) => {
     }
 };
 
+// organizationController.js
+
 exports.addOrganization = async (req, res) => {
-    try {
-        const { department_id, org_name, org_type, description, pfp, cover_photo, fb_link, ig_link, x_link, moderator_name } = req.body;
+  try {
+    const { department_id, org_name, org_type, description, fb_link, ig_link, x_link, moderator_name } = req.body;
 
-        const validTypes = ["Unit Organization", "Mother Organization", "FAESO Organization"];
-        if (!validTypes.includes(org_type)) {
-            return res.status(400).json({ message: 'Invalid organization type' });
-        }
+    // Validate department_id
+    if (!department_id || !mongoose.Types.ObjectId.isValid(department_id)) {
+      return res.status(400).json({ message: "Invalid department ID" });
+    }
 
-        const newOrg = new Organization({
-            department_id,
-            org_name,
-            org_type,
-            description,
-            pfp,
-            cover_photo,
-            fb_link,
-            ig_link,
-            x_link,
-            moderator_name
-        });
+    // Validate org_type
+    const validTypes = ["Unit Organization", "Mother Organization", "FAESO Organization"];
+    if (!validTypes.includes(org_type)) {
+      return res.status(400).json({ message: 'Invalid organization type' });
+    }
 
-        await newOrg.save();
-        res.status(201).json({ message: "Organization created successfully", organization: newOrg });
-    } catch (err) {
-    console.error("🔥 REAL ERROR IN GET ORGANIZATIONS:", err.message);
-    console.error("🔥 FULL ERROR OBJECT:", err);
-    res.status(500).json({
-        message: "Server error fetching organizations",
-        error: err.message,
-        stack: err.stack
+    const pfp = req.files?.pfp ? req.files.pfp[0].path : undefined;
+    const cover_photo = req.files?.cover_photo ? req.files.cover_photo[0].path : undefined;
+
+    const newOrg = new Organization({
+      department_id,
+      org_name,
+      org_type,
+      description,
+      pfp,
+      cover_photo,
+      fb_link,
+      ig_link,
+      x_link,
+      moderator_name
     });
-}
+
+    await newOrg.save();
+    res.status(201).json({ message: "Organization created successfully", organization: newOrg });
+
+  } catch (err) {
+    console.error("🔥 UNHANDLED ERROR:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
 };
+
 
 exports.updateOrganizationProfile = async (req, res) => {
   try {
     const { orgId } = req.params;
-    const { org_name, description, fb_link, ig_link, x_link } = req.body;
+    const { org_name, description, fb_link, ig_link, x_link, department_id, org_type, moderator_name } = req.body;
 
-    // Get uploaded images from Cloudinary
     const pfp = req.files?.pfp ? req.files.pfp[0].path : undefined;
     const cover_photo = req.files?.cover_photo ? req.files.cover_photo[0].path : undefined;
 
@@ -105,6 +112,9 @@ exports.updateOrganizationProfile = async (req, res) => {
       fb_link,
       ig_link,
       x_link,
+      department_id,
+      org_type,
+      moderator_name
     };
 
     if (pfp) updateData.pfp = pfp;
@@ -112,14 +122,9 @@ exports.updateOrganizationProfile = async (req, res) => {
 
     const updated = await Organization.findByIdAndUpdate(orgId, updateData, { new: true });
 
-    if (!updated) {
-      return res.status(404).json({ message: "Organization not found" });
-    }
+    if (!updated) return res.status(404).json({ message: "Organization not found" });
 
-    res.status(200).json({
-      message: "Organization profile updated successfully",
-      organization: updated,
-    });
+    res.status(200).json({ message: "Organization profile updated successfully", organization: updated });
 
   } catch (err) {
     console.error("Error updating organization profile:", err);
