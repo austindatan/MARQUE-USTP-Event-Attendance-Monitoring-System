@@ -55,6 +55,33 @@ export default function TabsLayout() {
         }}
       />
 
+      <Tabs.Screen 
+        name="Officers"
+        options={{
+          title: "Officers",
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={{
+                borderRadius: 8, 
+                width: 50,        
+                height: 50,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                source={require("../../assets/images/marque/compass.png")} // replace with your image path
+                style={{
+                  width: 25,
+                  height: 25,
+                  tintColor: focused ? "#0A0F51" : "#888", // optional: mimic icon color change
+                }}
+              />
+            </View>
+          ),
+        }}
+      />
+
     </Tabs>
     </>
   );
