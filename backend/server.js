@@ -22,6 +22,7 @@ app.use("/api/auth", authRouter);
 // Student route
 const studentRoutes = require("./routes/student");
 app.use("/api/student", studentRoutes);
+app.use("/api/user", studentRoutes)
 
 // Student Profile route
 const studentProfileRoutes = require('./routes/studentProfileRoutes');
@@ -70,6 +71,14 @@ app.use("/api/bookmarks", bookmarkRoutes);
 // Report route
 const reportRoutes = require('./routes/reportRoutes');
 app.use('/api/reports', reportRoutes);
+
+// Department route
+const departmentRoutes = require('./routes/departmentRoutes');
+app.use('/api', departmentRoutes);
+
+// College route
+const collegeRoutes = require("./routes/collegeRoutes");
+app.use("/api/college", collegeRoutes);
 
 // DB connection
 mongoose
