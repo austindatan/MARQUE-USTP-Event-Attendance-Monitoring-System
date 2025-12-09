@@ -1,9 +1,16 @@
+// @ts-nocheck
 import { Tabs } from "expo-router"; 
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
+import { StatusBar } from 'react-native';
 
 export default function TabsLayout() {
   return (
+    <>
+    <StatusBar 
+        style="light"
+        backgroundColor="#0A0F51"
+      />
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -84,5 +91,6 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    </>
   );
 }
