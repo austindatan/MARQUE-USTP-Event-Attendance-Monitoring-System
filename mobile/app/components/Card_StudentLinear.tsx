@@ -14,6 +14,7 @@ const StudentLinear = ({
   orgName,
   position,
   onEditPress,
+  onDeletePress, // <-- ADDED PROP
   onPress
 }) => {
   return (
@@ -56,12 +57,29 @@ const StudentLinear = ({
             )}
           </View>
 
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={onEditPress}
-          >
-            <Ionicons name="create-outline" size={24} color="#0A0F51" />
-          </TouchableOpacity>
+          {/* START: MODIFIED ACTION BUTTONS CONTAINER */}
+          {/* Reuse styles.editButton as the main container, and set to row direction */}
+          <View style={[styles.editButton, { flexDirection: 'row', alignItems: 'center' }]}>
+            
+            {/* EDIT BUTTON (Create Icon) */}
+            <TouchableOpacity
+              onPress={onEditPress}
+              // Added padding for larger touch target
+              style={{ padding: 5 }} 
+            >
+              <Ionicons name="create-outline" size={24} color="#0A0F51" />
+            </TouchableOpacity>
+
+            {/* DELETE BUTTON (Trash Icon) */}
+            <TouchableOpacity
+              onPress={onDeletePress} // Trigger the delete confirmation in ManageUsers.tsx
+              // Added left margin for spacing and padding for larger touch target
+              style={{ marginLeft: 15, padding: 4 }} 
+            >
+              <Ionicons name="trash-outline" size={20} color="red" />
+            </TouchableOpacity>
+          </View>
+          {/* END: MODIFIED ACTION BUTTONS CONTAINER */}
         </View>
       </View>
     </TouchableOpacity>
