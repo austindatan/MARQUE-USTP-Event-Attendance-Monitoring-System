@@ -10,7 +10,7 @@ const OrgOfficer = require("../models/Org_officer.js");
 console.log("✅ student.js router loaded");
 
 router.get("/all", async (req, res) => {
-    // 'all' for standard students (no role), 'roles' for students with roles
+    // for students with roles
     const { filter } = req.query; 
     console.log(`🔍 Route hit: /api/student/users/all with filter: ${filter}`);
 
@@ -20,9 +20,9 @@ router.get("/all", async (req, res) => {
             ? { uri: img } 
             : require("../../assets/images/marque/crk.jpg");
 
-        // --- 1. Fetch ALL Org Officer records to identify students with roles ---
+        // Fetch ALL Org Officer records to identify students with roles
         const managers = await OrgOfficer.find({})
-            .populate("org_id", "org_name pfp") // Get organization name and logo
+            .populate("org_id", "org_name pfp") 
             .lean();
 
         // Create a quick map from Student ID to Role data
@@ -30,22 +30,22 @@ router.get("/all", async (req, res) => {
             map[manager.student_id.toString()] = {
                 orgName: manager.org_id.org_name,
                 orgLogo: manager.org_id.pfp,
-                position: manager.role, // The 'role' field in Org_officer is the position
+                position: manager.role, 
             };
             return map;
         }, {});
 
-        // --- 2. Fetch ALL Student records and populate ALL linked data ---
+        // Fetch ALL Student records and populate ALL linked data
         const students = await Student.find({})
-            .populate("users_id", "firstname lastname email profile_image") // User Details
+            .populate("users_id", "firstname lastname email profile_image") 
             .populate({
                 path: "department_id",
                 select: "department_name department_code",
-                populate: { path: "college_id", select: "college_name college_code" }, // College Details
+                populate: { path: "college_id", select: "college_name college_code" }, 
             })
             .lean();
 
-        // --- 3. Process and Filter the combined data ---
+        // Process and Filter the combined data
         const detailedUsers = students
             .map(student => {
                 const user = student.users_id;
@@ -54,15 +54,14 @@ router.get("/all", async (req, res) => {
                 const hasRole = !!role;
 
                 const baseUser = {
-                    id: student._id, // Use Student ID for key and editing
+                    id: student._id, 
                     studentId: student.student_number,
                     name: `${user?.firstname || ''} ${user?.lastname || ''}`,
                     email: user?.email || '',
                     studentImage: user?.profile_image || "",
                     
-                    // Academic Info (Department & Course)
-                    department: department?.college_id?.college_name || department?.department_name || "N/A", // Use College Name for department prop
-                    course: department?.department_name || "N/A", // Use Department Name for course prop
+                    department: department?.college_id?.college_name || department?.department_name || "N/A",
+                    course: department?.department_name || "N/A", 
                     
                     hasRole: hasRole,
                     orgName: null,
@@ -88,7 +87,7 @@ router.get("/all", async (req, res) => {
                     // Filter: Standard Students (no role)
                     return !user.hasRole;
                 }
-                return true; // Should not happen if frontend logic is sound, but returns all if no filter
+                return true; 
             });
 
         console.log(`Successfully fetched ${detailedUsers.length} users for filter: ${filter}.`);
@@ -108,7 +107,7 @@ router.get("/id/:student_number", async (req, res) => {
     const student = await Student.findOne({ student_number })
       .populate({
         path: "department_id",
-        select: "_id department_name department_code",
+        select: "_id department_name department_code college_id",
         populate: { path: "college_id", select: "_id college_name college_code" },
       })
       .populate("users_id", "firstname lastname email profile_image")
@@ -119,15 +118,10 @@ router.get("/id/:student_number", async (req, res) => {
       return res.status(404).json({ message: "Student record not found" });
     }
 
-    // populate fields for response
     const user = student.users_id;
-    // Debug: log raw student and department
-    console.log("Found student document (by number):", student);
     const department = student.department_id;
-    console.log("Student.department_id (raw) (by number):", department);
 
     console.log("Found student by number:", student_number);
-
 
     res.json({
       _id: student._id,
@@ -135,10 +129,16 @@ router.get("/id/:student_number", async (req, res) => {
       lastname: user.lastname,
       email: user.email,
       student_number: student.student_number,
-      department_id: department?._id || student.department_id || null,
+
+      // department
+      department_id: department?._id || null,
       department_name: department?.department_name || "",
       department_code: department?.department_code || "",
+
+      // NEW: college ID included
+      college_id: department?.college_id?._id || null,
       college_name: department?.college_id?.college_name || "",
+
       profile_image: user.profile_image || "",
     });
   } catch (error) {
@@ -146,6 +146,7 @@ router.get("/id/:student_number", async (req, res) => {
     res.status(500).json({ message: "Error fetching student data", error: error.message });
   }
 });
+
 
 // Fetch username ---
 router.get("/:username", async (req, res) => {
@@ -175,9 +176,6 @@ router.get("/:username", async (req, res) => {
       return res.status(404).json({ message: "Student record not found" });
     }
 
-    // student.department_id may be:
-    //  • an object (POPULATED) → use ._id
-    //  • a plain string ID (NOT POPULATED) → use directly
     const dept = student.department_id;
 
     const departmentId =
@@ -193,7 +191,7 @@ router.get("/:username", async (req, res) => {
       email: user.email,
       student_number: student.student_number,
 
-      // *** FIXED: return REAL department ID ***
+      // return department ID
       department_id: departmentId,
 
       department_name: dept?.department_name || "",
@@ -220,15 +218,15 @@ router.post("/create", async (req, res) => {
       contact_number,
       email,
       role,
-      profile_image // this should be a Cloudinary URL from frontend
+      profile_image 
     } = req.body;
 
-    // 1. Check required fields
+    // Check required fields
     if (!username || !password || !firstname || !lastname || !email || !role) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
-    // 2. Check if username or email already exists
+    // Check if username or email already exists
     const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
       return res.status(400).json({ message: "Username or email already exists." });
@@ -238,8 +236,8 @@ router.post("/create", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Generate user_id automatically (you can use username, or a UUID, or timestamp)
-    const user_id = Date.now(); // generates a numeric ID like 1765210766124
+    // Generate user_id automatically 
+    const user_id = Date.now();
 
 
     const newUser = new User({
@@ -255,21 +253,16 @@ router.post("/create", async (req, res) => {
     });
     await newUser.save();
 
-
-
-    // 5. Create Student document if role is Student
+    // Create Student document if role is Student
     if (role === "Student") {
       const newStudent = new Student({
-        student_number: req.body.student_number, // some unique ID
-        users_id: newUser._id, // must be ObjectId
-        department_id: req.body.department_id, // must provide
-        college_id: req.body.college_id // must provide
+        student_number: req.body.student_number, 
+        users_id: newUser._id, 
+        department_id: req.body.department_id, 
+        college_id: req.body.college_id 
       });
       await newStudent.save();
     }
-
-
-
     res.status(201).json({ message: "User created successfully", user: newUser });
 
   } catch (err) {
@@ -277,10 +270,5 @@ router.post("/create", async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
-
-
-
-
-
 
 module.exports = router;
