@@ -37,7 +37,6 @@ const ManageOrganizations = () => {
       const res = await fetch(`${BASE_URL}/exploreorgs/all`);
       const data = await res.json();
 
-      // Sanitize images (make sure pfp is always a string)
       const cleaned = data.map(org => ({
         ...org,
         safePfp:
@@ -60,7 +59,6 @@ const ManageOrganizations = () => {
     fetchOrganizations();
   }, []);
 
-  // 🔎 Filtering Logic
   const renderOrganizations = () => {
     if (isLoading) {
       return (

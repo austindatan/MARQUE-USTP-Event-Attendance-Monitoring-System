@@ -40,7 +40,6 @@ const ManageUsers = () => {
 
     try {
       const url = `${BASE_URL}/api/student/all?filter=${filterParam}`;
-      console.log('Frontend Fetching URL:', url);
       const res = await fetch(url);
       if (!res.ok) throw new Error('Network response was not ok');
       const data = await res.json();
