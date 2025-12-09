@@ -15,8 +15,6 @@ const adminMenuItems = [
   { name: "Events", icon: "calendar-outline", route: "/tabs_admin/ManageEvents" },
   { name: "Organizations", icon: "briefcase-outline", route: "/tabs_admin/ManageOrganizations" },
   { name: "Users", icon: "people-outline", route: "/tabs_admin/ManageUsers" },
-  { name: "History", icon: "book-outline", route: "" },
-  { name: "Change Password", icon: "key-outline", route: "" },
 ];
 
 interface AdminSidebarMenuProps {

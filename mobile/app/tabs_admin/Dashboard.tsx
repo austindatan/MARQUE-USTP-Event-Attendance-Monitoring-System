@@ -102,15 +102,7 @@ const AdminDashboard = () => {
                 <View style={styles.adminContainer}>
                     <TouchableOpacity
                         style={styles.adminButton}
-                    >
-                        <Ionicons name="book-outline" size={24} color="#0A0F51" />
-                        <Text style={styles.adminText}>History</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.adminContainer}>
-                    <TouchableOpacity
-                        style={styles.adminButton}
+                        onPress={() => router.push("/tab_container/Profile_ChangePassword")}
                     >
                         <Ionicons name="key-outline" size={24} color="#0A0F51" />
                         <Text style={styles.adminText}>Change Password</Text>
