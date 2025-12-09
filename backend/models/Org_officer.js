@@ -18,14 +18,16 @@ const OrgOfficerSchema = new mongoose.Schema({
     // Role of the student in the organization
     role: { 
         type: String, 
-        enum: ['Member', 'Officer', 'President'], 
-        default: 'Member' 
+        enum: ['Committee', 'Manager', 'President']
     },
     date_joined: { type: Date, default: Date.now },
 });
 
-// Ensure a student can only be linked to an organization once
-OrgOfficerSchema.index({ student_id: 1, org_id: 1 }, { unique: true });
+// Ensure a student can only be linked as President to one organization
+OrgOfficerSchema.index(
+    { student_id: 1 },
+    { unique: true, partialFilterExpression: { role: "President" } }
+);
 
 const OrgOfficer = mongoose.model('Org_officer', OrgOfficerSchema);
 module.exports = OrgOfficer;
