@@ -82,13 +82,12 @@ const Login = () => {
 
         // Role-based redirection
         const userRole = data.user.role;
-        if (userRole === "Manager") {
-          router.replace("/tabs_admin/Dashboard");
-        } else if (userRole === "Committee") {
-          router.replace("/tabs_organization/Teams");
-        } else {
-          router.replace("/tabs/Events");
-        }
+        if (userRole === "Admin") {
+        router.replace("/tabs_admin/Dashboard");
+      } else {
+        // For students, optionally check if they are an org officer via API
+        router.replace("/tabs/Events");
+      }
       } else {
         setErrorMessage(data.message || "Invalid student ID or password.");
       }

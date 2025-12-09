@@ -37,9 +37,16 @@ router.get('/profile/:orgId', async (req, res) => {
 router.get('/', organizationController.getOrganizations);
 router.get('/by-type/:type', organizationController.getOrganizationsByType);
 router.get('/:id', organizationController.getOrganizationById);
-router.post('/', organizationController.addOrganization);
+router.post(
+  '/', 
+  uploadOrgImages.fields([
+    { name: 'pfp', maxCount: 1 }, 
+    { name: 'cover_photo', maxCount: 1 },
+  ]),
+  organizationController.addOrganization // <-- The controller function
+);
 
-// UPDATE organization profile
+// UPDATE organization profile (This route was already correct)
 router.put(
   '/:orgId',
   uploadOrgImages.fields([
@@ -48,5 +55,21 @@ router.put(
   ]),
   organizationController.updateOrganizationProfile
 );
+
+// DELETE /api/organizations/:orgId
+router.delete('/:orgId', async (req, res) => {
+  try {
+    const { orgId } = req.params;
+    const deleted = await Organization.findByIdAndDelete(orgId);
+
+    if (!deleted) return res.status(404).json({ message: "Organization not found" });
+
+    res.status(200).json({ message: "Organization deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting organization:", err);
+    res.status(500).json({ message: "Server error deleting organization" });
+  }
+});
+
 
 module.exports = router;

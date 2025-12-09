@@ -9,11 +9,11 @@ const { cloudinary } = require('../routes/cloudinaryConfig');
 
 
 /**
- * Checks if the current time is after the event started and within 30 minutes of the start time.
+ * Checks if the current time is after the event started and within 1 hour of the start time.
  * @param {object} event The event document with a start_time field.
- * @returns {boolean} True if within the 30-minute registration window, false otherwise.
+ * @returns {boolean} True if within the 1-hour registration window, false otherwise.
  */
-const isEventWithin30Min = (event) => {
+const isEventWithin1Hour = (event) => {
     if (!event || !event.start_time) {
         return false;
     }
@@ -21,10 +21,10 @@ const isEventWithin30Min = (event) => {
     const now = new Date();
     const startTime = new Date(event.start_time);
     
-    const cutoffTime = new Date(startTime.getTime() + 60 * 60000); 
+    const cutoffTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 60 minutes = 1 hour
 
     // The event must have started (now >= start_time) 
-    // AND it must be before the 60-minute cutoff (now <= cutoff_time)
+    // AND it must be before the 1-hour cutoff (now <= cutoff_time)
     const hasStarted = now >= startTime;
     const isWithinCutoff = now <= cutoffTime;
 
@@ -60,11 +60,11 @@ const registerAttendance = async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    // Check if within first 30 minutes of event start
-    if (!isEventWithin30Min(event)) {
+    // Check if within first 1 hour of event start
+    if (!isEventWithin1Hour(event)) {
       return res.status(403).json({
         message:
-          "Scanner is disabled. Attendance can only be registered within the first 30 minutes of the event start.",
+          "Scanner is disabled. Attendance can only be registered within the first 1 hour of the event start.",
       });
     }
 
@@ -412,7 +412,7 @@ const exportAttendancePDF = async (req, res) => {
 module.exports = {
   registerAttendance,
   getAttendanceHistory,
-  isEventWithin30Min,
+  isEventWithin1Hour,
   searchAttendanceLogs, // export Event model if needed for routes
   uploadPhotoproof,
   exportAttendancePDF,
