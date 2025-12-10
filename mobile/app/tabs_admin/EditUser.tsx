@@ -48,12 +48,13 @@ const EditUser = () => {
   const [role, setRole] = useState("Student");
 
   const [filteredDepartments, setFilteredDepartments] = useState([]);
+  const [extracurricularDepartmentId, setExtracurricularDepartmentId] = useState("");
 
   // fetch data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [studentRes, collegeRes, departmentRes] = await Promise.all([
+        const [studentRes, collegeRes, departmentRes, orgsRes] = await Promise.all([
           axios.get(`${BASE_URL}/api/student/id/${studentNumber}`),
           axios.get(`${BASE_URL}/api/college/colleges`),
           axios.get(`${BASE_URL}/api/departments`),
@@ -77,6 +78,11 @@ const EditUser = () => {
 
         setColleges(collegeRes.data);
         setDepartments(departmentRes.data);
+
+        const extracurricularDept = departmentRes.data.find(d => d.department_name === "Extracurricular");
+        if (extracurricularDept) {
+            setExtracurricularDepartmentId(extracurricularDept._id);
+        }
 
         // Filter departments for selected college
         const filtered = departmentRes.data.filter(d => d.college_id === student.college_id);
@@ -105,16 +111,38 @@ const EditUser = () => {
   // Fetch organizations based on department
   useEffect(() => {
     const fetchOrgs = async () => {
-      if (!departmentId) return;
+      // Only fetch if a department is selected and we have the Extracurricular ID
+      if (!departmentId || !extracurricularDepartmentId) return;
+      // Create a list of department IDs to query
+      const departmentIdsToQuery = [departmentId];
+      if (departmentId !== extracurricularDepartmentId) {
+          departmentIdsToQuery.push(extracurricularDepartmentId);
+      }
+
+
       try {
-        const res = await axios.get(`${BASE_URL}/api/organizations/department/${departmentId}`);
-        setOrgs(res.data);
+        // --- MODIFIED API CALL to use multiple IDs ---
+        // You would need to implement this new endpoint on your server
+        const deptIdsString = departmentIdsToQuery.join(',');
+        const res = await axios.get(`${BASE_URL}/api/student/organizations/by-departments?departmentIds=${deptIdsString}`);
+        
+        // Optional: Filter out any duplicates if they exist, though they shouldn't if your logic is clean
+        const uniqueOrgs = res.data.reduce((acc, current) => {
+            const x = acc.find(item => item._id === current._id);
+            if (!x) {
+                return acc.concat([current]);
+            } else {
+                return acc;
+            }
+        }, []);
+
+        setOrgs(uniqueOrgs);
       } catch (err) {
         console.error("Error fetching orgs:", err);
       }
     };
     fetchOrgs();
-  }, [departmentId]);
+  }, [departmentId, extracurricularDepartmentId]);
 
   // image picker
   const pickImage = async () => {
