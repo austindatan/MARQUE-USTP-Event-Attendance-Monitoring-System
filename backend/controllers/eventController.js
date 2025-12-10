@@ -513,19 +513,27 @@ const createEvent = async (req, res) => {
         // 2. Identify Target Students
         let targetStudentIds = new Set();
 
-        // A. Department Members
-        if (org.department_id) {
-          const deptStudents = await Student.find({ department_id: org.department_id }).select("_id");
-          deptStudents.forEach(s => targetStudentIds.add(s._id.toString()));
-        }
+        if (org.org_type === "Mother Organization") {
+          // Mother Organization -> Notify ALL Students
+          const allStudents = await Student.find({}).select("_id");
+          allStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+        } else {
+          // Unit / FAESO -> Notify Department Members + Followers
 
-        // B. Followers (map User ID -> Student ID)
-        const followers = await FollowedOrgs.find({ organization_id }).select("user_id");
-        const followerUserIds = followers.map(f => f.user_id);
+          // A. Department Members
+          if (org.department_id) {
+            const deptStudents = await Student.find({ department_id: org.department_id }).select("_id");
+            deptStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+          }
 
-        if (followerUserIds.length > 0) {
-          const followerStudents = await Student.find({ users_id: { $in: followerUserIds } }).select("_id");
-          followerStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+          // B. Followers (map User ID -> Student ID)
+          const followers = await FollowedOrgs.find({ organization_id }).select("user_id");
+          const followerUserIds = followers.map(f => f.user_id);
+
+          if (followerUserIds.length > 0) {
+            const followerStudents = await Student.find({ users_id: { $in: followerUserIds } }).select("_id");
+            followerStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+          }
         }
 
         // 3. Create Notifications
