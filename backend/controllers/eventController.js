@@ -7,8 +7,40 @@ import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
 
+// Auto-update status of all events
+const autoUpdateEventStatuses = async () => {
+  const now = new Date();
+
+  try {
+    // 1. Upcoming → Ongoing
+    await Event.updateMany(
+      {
+        status: "Upcoming",
+        start_time: { $lte: now },
+        end_time: { $gt: now }
+      },
+      { $set: { status: "Ongoing" } }
+    );
+
+    // 2. Ongoing → Concluded
+    await Event.updateMany(
+      {
+        status: "Ongoing",
+        end_time: { $lte: now }
+      },
+      { $set: { status: "Concluded" } }
+    );
+
+  } catch (err) {
+    console.error("Error auto-updating statuses:", err);
+  }
+};
+
+
 const getEventsByDepartment = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+    
     const { departmentId } = req.params;
 
     // Find organizations in this department
@@ -41,6 +73,8 @@ const getEventsByOrgType = async (req, res) => {
   else return res.status(400).json({ message: "Invalid organization type" });
 
   try {
+    await autoUpdateEventStatuses();
+
     const orgs = await Organization.find({ org_type: mappedType }).select("_id");
     const orgIds = orgs.map((o) => o._id);
 
@@ -60,6 +94,8 @@ const getEventsByOrgType = async (req, res) => {
 
 const getFilteredEvents = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     let { orgs } = req.query;
 
     console.log("Received orgs query:", orgs);
@@ -98,6 +134,8 @@ const getFilteredEvents = async (req, res) => {
 
 const getFollowedEvents = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const { orgs } = req.query;
 
     if (!orgs) {
@@ -128,6 +166,8 @@ const getFollowedEvents = async (req, res) => {
 
 const getAllUpcomingEvents = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const events = await Event.find({ event_date: { $gte: new Date() } })
       .populate("organization_id")
       .sort({ event_date: 1 });
@@ -141,6 +181,8 @@ const getAllUpcomingEvents = async (req, res) => {
 
 const getAllConcludedEvents = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const events = await Event.find({ end_time: { $lt: new Date() } })
       .populate("organization_id")
       .sort({ event_date: -1 });
@@ -155,6 +197,8 @@ const getAllConcludedEvents = async (req, res) => {
 // events/organization/:orgId/upcoming
 const getUpcomingEventsByOrganization = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const { orgId } = req.params;
     if (!orgId) return res.status(400).json({ message: "Organization ID required" });
 
@@ -177,6 +221,8 @@ const getUpcomingEventsByOrganization = async (req, res) => {
 
 const getConcludedEventsByOrganization = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const { orgId } = req.params;
 
     const now = new Date();
@@ -220,6 +266,8 @@ const getEventsByFollowedOrgs = async (req, res) => {
   const orgIds = orgsString.split(",");
 
   try {
+    await autoUpdateEventStatuses();
+
     const today = new Date();
     today.setHours(0, 0, 0, 0); // normalize to midnight
 
@@ -239,6 +287,8 @@ const getEventsByFollowedOrgs = async (req, res) => {
 
 const getFollowedOrgEvents = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+    
     const { userId } = req.params;
 
     const followed = await FollowedOrgs.find({ user_id: userId }).select("organization_id");
@@ -265,6 +315,8 @@ const getFollowedOrgEvents = async (req, res) => {
 // =========================
 const getOrgEventsByStatus = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const { organizationId } = req.params;
     const { status } = req.query; // optional: "Upcoming", "Ongoing", "Concluded"
 
@@ -294,6 +346,8 @@ const getOngoingFilter = () => {
 
 const getOngoingEvents = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const ongoingEvents = await Event.find(getOngoingFilter())
       .populate("organization_id", "org_name pfp")
       .sort({ event_date: 1 });
@@ -313,6 +367,8 @@ const searchEvents = async (req, res) => {
   }
 
   try {
+    await autoUpdateEventStatuses();
+    
     const searchRegex = new RegExp(query, "i");
 
     const searchConditions = {
@@ -333,6 +389,8 @@ const searchEvents = async (req, res) => {
 
 const getEventById = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const event = await Event.findById(req.params.id).populate("organization_id", "org_name pfp description");
 
     if (!event) {
@@ -384,6 +442,8 @@ const isEventWithin1Hour = (event) => {
 
 const getEventStatus = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const event = await Event.findById(req.params.id);
 
     if (!event) {
@@ -610,6 +670,7 @@ const resumeEvent = async (req, res) => {
 
 
 export {
+  autoUpdateEventStatuses,
   getEventsByDepartment,
   getAllUpcomingEvents,
   getAllConcludedEvents,
