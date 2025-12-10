@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     color: "#777",
     fontFamily: "DMSans-Medium",
   },
-  
+
 
   photoproofButton: {
     backgroundColor: "#0A0F51",
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   actionButton: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: '#0a0f51',
     borderRadius: 12,
@@ -365,15 +365,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     flex: 1,
     justifyContent: 'flex-start',
-    minHeight: 48,
+    minHeight: 40,
   },
   actionButtonText: {
-    marginLeft: 10,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#ffffffff',
     fontFamily: 'DMSans-Bold',
-    textAlign: 'left',
+    textAlign: 'center',
     lineHeight: 14,
   },
   buttonIconImage: { width: 25, height: 25 },

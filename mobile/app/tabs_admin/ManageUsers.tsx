@@ -1,12 +1,12 @@
 //@ts-nocheck
 import React, { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ScrollView, 
-  TextInput, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
   Image,
   Modal,
   StyleSheet,
@@ -33,10 +33,10 @@ const UserActionModal = ({ visible, onClose, onConfirm, title, message, confirmT
         <View style={modalStyles.modalBox}>
           {/* Icon overlaps the modal */}
           <View style={modalStyles.iconContainerWrapper}>
-          <View style={modalStyles.iconContainer}>
-            <Image source={LOGO} style={modalStyles.iconImage} />
+            <View style={modalStyles.iconContainer}>
+              <Image source={LOGO} style={modalStyles.iconImage} />
+            </View>
           </View>
-        </View>
           <Text style={modalStyles.title}>{title}</Text>
           <Text style={modalStyles.desc}>{message}</Text>
 
@@ -207,11 +207,8 @@ const ManageUsers = () => {
               onChangeText={setSearchTerm}
             />
           </View>
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push("tabs_admin/AddUser")}>
+          <TouchableOpacity style={styles.addButtonOrg} onPress={() => router.push("tabs_admin/AddUser")}>
             <Ionicons name="add" size={24} color="#0A0F51" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterButton} onPress={handleFilterPress}>
-            <Ionicons name="filter" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -264,9 +261,6 @@ const ManageUsers = () => {
   );
 };
 
-// ======================================================
-// MODAL BUTTON STYLES (LogoutModal-style)
-// ======================================================
 const modalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -280,7 +274,7 @@ const modalStyles = StyleSheet.create({
     maxWidth: 340,
     backgroundColor: "white",
     borderRadius: 15,
-    paddingTop: 50, // leave space for overlapping icon
+    paddingTop: 50,
     paddingBottom: 25,
     paddingHorizontal: 25,
     alignItems: "center",
@@ -288,10 +282,10 @@ const modalStyles = StyleSheet.create({
   },
   iconContainerWrapper: {
     position: "absolute",
-    top: -25,           // overlaps modal box
+    top: -25,
     borderRadius: 50,
-    backgroundColor: "white",  // white outline circle
-    padding: 5,                // thickness of the white outline
+    backgroundColor: "white",
+    padding: 5,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -300,53 +294,54 @@ const modalStyles = StyleSheet.create({
     borderRadius: 50,
     padding: 10,
   },
-    iconImage: {
-      width: 40,
-      height: 40,
-      resizeMode: "contain",
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: "bold",
-      color: "#0A0F51",
-      marginBottom: 8,
-      textAlign: "center",
-    },
-    desc: {
-      fontSize: 14,
-      color: "#333",
-      textAlign: "center",
-      lineHeight: 20,
-    },
-    buttonRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginTop: 20,
-      width: "100%",
-    },
-    button: {
-      flex: 1,
-      paddingVertical: 12,
-      borderRadius: 25,
-      alignItems: "center",
-      marginHorizontal: 5,
-    },
-    cancelButton: {
-      backgroundColor: "#0a0f51",
-    },
-    confirmButton: {
-      backgroundColor: "#fecb20",
-    },
-    cancelText: {
-      color: "white",
-      fontWeight: "bold",
-      fontSize: 16,
-    },
-    confirmText: {
-      color: "#fff",
-      fontWeight: "bold",
-      fontSize: 16,
-    },
-  });
+  iconImage: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
+  },
+  title: {
+    fontSize: 20,
+    color: "#0A0F51",
+    marginBottom: 8,
+    textAlign: "center",
+    fontFamily: "DMSans-Bold"
+  },
+  desc: {
+    fontSize: 14,
+    color: "#333",
+    textAlign: "center",
+    lineHeight: 20,
+    fontFamily: "DMSans-Regular"
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    width: "100%",
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#0a0f51",
+  },
+  confirmButton: {
+    backgroundColor: "#fecb20",
+  },
+  cancelText: {
+    color: "white",
+    fontSize: 16,
+    fontFamily: "DMSans-Bold"
+  },
+  confirmText: {
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: "DMSans-Bold"
+  },
+});
 
 export default ManageUsers;

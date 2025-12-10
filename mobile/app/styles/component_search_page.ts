@@ -1,28 +1,29 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        backgroundColor: "#fff" 
+    container: {
+        flex: 1,
+        backgroundColor: "#fff"
     },
     headerContentWrapper: {
-        flexDirection: 'row',       
-        alignItems: 'center',       
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingTop: 10,
-        marginBottom: 10,           
+        marginBottom: 10,
     },
     backButtonTitleContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginTop: 5,
     },
     backButtonIcon: {
-        marginRight: 4, 
+        marginRight: 4,
     },
-    backButtonTitleText: { 
-        fontSize: 18, 
-        fontWeight: "700", 
+    backButtonTitleText: {
+        fontSize: 18,
+        fontFamily: "DMSans-Bold"
     },
     loadingContainer: {
         flex: 1,
@@ -34,6 +35,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontSize: 16,
         color: '#666',
+        fontFamily: "DMSans-Regular"
     },
     noResultsContainer: {
         flex: 1,
@@ -44,28 +46,29 @@ const styles = StyleSheet.create({
     noResultsText: {
         marginTop: 10,
         fontSize: 18,
-        fontWeight: 'bold',
         color: '#444',
+        fontFamily: "DMSans-Bold"
     },
     noResultsSubtext: {
         fontSize: 14,
         color: '#888',
+        fontFamily: "DMSans-Regular"
     },
-    titleText: { 
-        fontSize: 18, 
-        fontWeight: "700", 
+    titleText: {
+        fontSize: 18,
+        fontFamily: "DMSans-Bold"
     },
     resultCount: {
         fontSize: 14,
         color: "#888",
-        fontWeight: "500",
+        fontFamily: "DMSans-Regular",
     },
-    scrollView: { 
-        flex: 1, 
-        paddingHorizontal: 20, 
+    scrollView: {
+        flex: 1,
+        paddingHorizontal: 20,
     },
     bottomSpacer: {
-        height: 60 
+        height: 60
     }
 });
 

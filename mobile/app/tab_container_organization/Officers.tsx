@@ -1,19 +1,17 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TextInput, ActivityIndicator, Modal, Pressable, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, Animated, TextInput, ActivityIndicator, Modal, Pressable, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/page_admin_dashboard";
-import Header from "../components/Header_Admin";
 import StudentLinear from "../components/OrgSide_Card_StudentLinear";
 import { BASE_URL } from "../../config";
 
-const ManageOfficers = () => {
-    const [localStudentNumber, setLocalStudentNumber] = useState<string | null>(null);
+const ManageOfficers = ({ scrollY, handleScroll }) => {
+    const [localStudentNumber, setLocalStudentNumber] = useState(null);
     const [isIdLoading, setIsIdLoading] = useState(true);
-    const [orgId, setOrgId] = useState<string | null>(null);
+    const [orgId, setOrgId] = useState(null);
 
-    const [menuVisible, setMenuVisible] = useState(false);
     const [activeTab, setActiveTab] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [students, setStudents] = useState([]);
@@ -22,16 +20,14 @@ const ManageOfficers = () => {
 
     const [roleModalVisible, setRoleModalVisible] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
-    const [newRole, setNewRole] = useState<"Manager" | "Committee" | null>(null);
+    const [newRole, setNewRole] = useState(null);
 
-    const openMenu = () => setMenuVisible(true);
-    const closeMenu = () => setMenuVisible(false);
 
     // ASYNC NUMBER FETCH EFFECT (Runs once on mount)
     useEffect(() => {
         const fetchAuthNumber = async () => {
             try {
-                const number = await AsyncStorage.getItem("student_number"); 
+                const number = await AsyncStorage.getItem("student_number");
                 if (number) {
                     setLocalStudentNumber(number);
                     // Also fetch the org ID for this user
@@ -67,7 +63,7 @@ const ManageOfficers = () => {
     // FETCH OUTSTANDING INVITES FOR THIS ORG
     const fetchOutstandingInvites = async (orgIdToUse) => {
         if (!orgIdToUse) return {};
-        
+
         try {
             const res = await fetch(`${BASE_URL}/api/memberships/outstanding-invites/${orgIdToUse}`);
             const data = await res.json();
@@ -88,7 +84,7 @@ const ManageOfficers = () => {
 
         try {
             console.log(`[DEBUG] Fetching students with filter: ${filterParam}`);
-            const res = await fetch(`${BASE_URL}/api/student/all?filter=${filterParam}`); 
+            const res = await fetch(`${BASE_URL}/api/student/all?filter=${filterParam}`);
             const text = await res.text();
             let data;
             try { data = JSON.parse(text); } catch { data = text; }
@@ -127,7 +123,7 @@ const ManageOfficers = () => {
         if (!isIdLoading && localStudentNumber && orgId) {
             fetchStudents(activeTab);
         } else if (!isIdLoading && !localStudentNumber) {
-            setIsLoading(false); 
+            setIsLoading(false);
         }
     }, [activeTab, isIdLoading, localStudentNumber, orgId]);
 
@@ -302,7 +298,7 @@ const ManageOfficers = () => {
         );
 
         if (filteredStudents.length === 0)
-            return <Text style={{ textAlign: "center", marginTop: 20 }}>No students found for "{searchTerm}"</Text>;
+            return <Text style={{ textAlign: "center", marginTop: 20, fontFamily: "DMSans-Regular" }}>No students found for "{searchTerm}"</Text>;
 
         return filteredStudents.map((student) => (
             <StudentLinear
@@ -334,65 +330,82 @@ const ManageOfficers = () => {
             </View>
         );
     }
-    
+
     if (!localStudentNumber) {
-         return (
-             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-                 <Text style={{ color: "red", textAlign: "center", padding: 20 }}>
-                     🛑 Fatal Error: Cannot load sender authentication. Please log in again.
-                 </Text>
-             </View>
-         );
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <Text style={{ color: "red", textAlign: "center", padding: 20 }}>
+                    🛑 Fatal Error: Cannot load sender authentication. Please log in again.
+                </Text>
+            </View>
+        );
     }
 
     // Main Render
     return (
         <View style={styles.container}>
-            <Header onMenuPress={openMenu} />
+            <Animated.ScrollView
+                style={{ flex: 1, marginTop: -110 }}
+                contentContainerStyle={{ paddingTop: 160, paddingBottom: 0, alignItems: 'center' }}
+                showsVerticalScrollIndicator={false}
+                stickyHeaderIndices={[0]}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: false, listener: handleScroll }
+                )}
+                scrollEventThrottle={16}
+            >
+                {/* 
+                    STICKY HEADER INDEX 0 
+                    - Top Spacer (80px): Occupies space for the Collapsed Header so content doesn't stick under it.
+                    - Search & Tabs: The actual sticky content.
+                */}
+                <View style={{ width: '100%', alignItems: 'center', zIndex: 100 }}>
+                    <View style={{ height: 105, backgroundColor: 'transparent' }} />
+                    <View style={{ width: '100%', backgroundColor: '#F5F5F5', alignItems: 'center', paddingBottom: 5 }}>
+                        <View style={[styles.searchAndAddRow, { width: '90%' }]}>
+                            <View style={styles.searchContainerStud}>
+                                <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+                                <TextInput
+                                    style={styles.searchInput}
+                                    placeholder="Search students..."
+                                    value={searchTerm}
+                                    onChangeText={setSearchTerm}
+                                />
+                            </View>
+                        </View>
 
-            <View style={styles.content}>
-                <View style={styles.searchAndAddRow}>
-                    <View style={styles.searchContainerRow}>
-                        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder="Search students..."
-                            value={searchTerm}
-                            onChangeText={setSearchTerm}
-                        />
+                        <View style={styles.categoryButtonContainer}>
+                            <TouchableOpacity
+                                style={activeTab === "all" ? styles.activeButtonEX : styles.inactiveButtonEX}
+                                onPress={() => setActiveTab("all")}
+                            >
+                                <Text style={activeTab === "all" ? styles.activeText : styles.inactiveText}>Students</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={activeTab === "roles" ? styles.activeButtonEX : styles.inactiveButtonEX}
+                                onPress={() => setActiveTab("roles")}
+                            >
+                                <Text style={activeTab === "roles" ? styles.activeText : styles.inactiveText}>Students w/ Roles</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-
-                    <TouchableOpacity style={styles.filterButton}>
-                        <Ionicons name="filter" size={24} color="#fff" />
-                    </TouchableOpacity>
                 </View>
 
-                <View style={styles.categoryButtonContainer}>
-                    <TouchableOpacity
-                        style={activeTab === "all" ? styles.activeButtonEX : styles.inactiveButtonEX}
-                        onPress={() => setActiveTab("all")}
-                    >
-                        <Text style={activeTab === "all" ? styles.activeText : styles.inactiveText}>Students</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={activeTab === "roles" ? styles.activeButtonEX : styles.inactiveButtonEX}
-                        onPress={() => setActiveTab("roles")}
-                    >
-                        <Text style={activeTab === "roles" ? styles.activeText : styles.inactiveText}>Students w/ Roles</Text>
-                    </TouchableOpacity>
+                {/* SCROLLABLE LIST INDEX 1 */}
+                <View style={[styles.content, { width: '100%', padding: 0 }]}>
+                    <View style={styles.eventList}>
+                        {renderStudents()}
+                    </View>
                 </View>
 
-                <ScrollView showsVerticalScrollIndicator={false} style={styles.eventList}>
-                    {renderStudents()}
-                </ScrollView>
-            </View>
+            </Animated.ScrollView>
 
-            {/* Change Role Modal */}
             <Modal visible={roleModalVisible} transparent animationType="fade">
                 <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
                     <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 10, width: "80%", alignItems: "center" }}>
-                        <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 12 }}>Change Role</Text>
+                        <Text style={{ fontFamily: "DMSans-Bold", fontSize: 18, marginBottom: 12 }}>Change Role</Text>
 
                         {["Manager", "Committee"].map((role) => (
                             <Pressable
@@ -407,7 +420,7 @@ const ManageOfficers = () => {
                                     alignItems: "center",
                                 }}
                             >
-                                <Text style={{ color: newRole === role ? "#fff" : "#000", fontWeight: "bold" }}>{role}</Text>
+                                <Text style={{ color: newRole === role ? "#fff" : "#000", fontFamily: "DMSans-Bold" }}>{role}</Text>
                             </Pressable>
                         ))}
 
@@ -423,7 +436,7 @@ const ManageOfficers = () => {
                                     marginRight: 8,
                                 }}
                             >
-                                <Text style={{ color: "#fff", fontWeight: "bold" }}>Cancel</Text>
+                                <Text style={{ color: "#fff", fontFamily: "DMSans-Bold" }}>Cancel</Text>
                             </Pressable>
 
                             <Pressable
@@ -438,7 +451,7 @@ const ManageOfficers = () => {
                                     marginLeft: 8,
                                 }}
                             >
-                                <Text style={{ color: "#fff", fontWeight: "bold" }}>Confirm</Text>
+                                <Text style={{ color: "#fff", fontFamily: "DMSans-Bold" }}>Confirm</Text>
                             </Pressable>
                         </View>
                     </View>

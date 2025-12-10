@@ -6,8 +6,9 @@ export default function AdminLayout() {
   return (
     <>
     <StatusBar 
-      style="light"
-      backgroundColor="#0A0F51"
+      translucent
+      backgroundColor="transparent"
+      barStyle="light-content"
     />
     <Stack
       screenOptions={{

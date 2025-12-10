@@ -46,7 +46,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
             resizeMode="contain"
           />
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/tab_container/Notifications")}>
             <View style={styles.notif}>
               <Ionicons name="notifications-outline" size={24} color="#fff" />
             </View>
@@ -61,7 +61,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
             paddingTop: 0,
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            
+
             transform: [
               {
                 translateY: scrollY.interpolate({
@@ -92,7 +92,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
             />
           </View>
 
-          <TouchableOpacity style={styles.filterButton}>
+          <TouchableOpacity>
           </TouchableOpacity>
         </Animated.View>
       </Animated.View>

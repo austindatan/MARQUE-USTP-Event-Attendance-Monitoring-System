@@ -290,24 +290,21 @@ const Events = () => {
                     </View>
 
                     <View style={styles.buttonsRow}>
-                        <View style={{ width: 10 }} />
 
-                        {/* Verify Photos Button (styled same as Analytics Reports) */}
                         {eventData && (
                             <TouchableOpacity
                                 style={[styles.actionButton, { backgroundColor: '#0A0F51' }]}
                                 onPress={handleVerifyProofPress}
                             >
-                                <Ionicons name="camera" size={24} color="#fff" />
+                                <Ionicons name="camera" size={30} color="#fff" />
                                 <Text style={styles.actionButtonText}>
-                                    Verify Photos {pendingProofsCount > 0 && `(${pendingProofsCount})`}
+                                    Verify {'\n'}Photos {pendingProofsCount > 0 && `(${pendingProofsCount})`}
                                 </Text>
                             </TouchableOpacity>
                         )}
 
-                        <View style={{ width: 10 }} />
+                        <View style={{ width: 5 }} />
 
-                        {/* Analytics Reports Button */}
                         <TouchableOpacity
                             style={[styles.actionButton, !isDownloadEnabled && { opacity: 0.5 }]}
                             activeOpacity={isDownloadEnabled ? 0.8 : 1}
@@ -327,9 +324,8 @@ const Events = () => {
                             <Text style={styles.actionButtonText}>Analytics Reports</Text>
                         </TouchableOpacity>
 
-                        <View style={{ width: 10 }} />
+                        <View style={{ width: 5 }} />
 
-                        {/* Attendance Spreadsheets Button */}
                         <TouchableOpacity
                             style={[styles.actionButton, !isDownloadEnabled && { opacity: 0.5 }]}
                             activeOpacity={isDownloadEnabled ? 0.8 : 1}

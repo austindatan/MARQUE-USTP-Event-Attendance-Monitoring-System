@@ -36,15 +36,15 @@ const StudentLinear = ({
               <Text style={styles.studentName}>{name}</Text>
               <Text style={styles.studentId}>{studentId}</Text>
             </View>
-            <Text style={styles.studentDetails}>{department}</Text>
-            <Text style={styles.studentDetails}>{course}</Text>
+            <Text style={styles.studentDetails} numberOfLines={1} ellipsizeMode="tail">{department}</Text>
+            <Text style={styles.studentDetails} numberOfLines={1} ellipsizeMode="tail">{course}</Text>
 
             {orgName && (
               <View style={styles.roleContainer}>
                 <Image source={orgLogo} style={styles.orgLogo} />
                 <View>
-                  <Text style={styles.orgName}>{orgName}</Text>
-                  <Text style={styles.position}>{position}</Text>
+                  <Text style={styles.orgName} numberOfLines={1} ellipsizeMode="tail">{orgName}</Text>
+                  <Text style={styles.position} numberOfLines={1} ellipsizeMode="tail">{position}</Text>
                 </View>
               </View>
             )}
@@ -54,7 +54,7 @@ const StudentLinear = ({
               <View style={{ marginTop: 8 }}>
                 {pendingInviteRole ? (
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Text>Already invited as {pendingInviteRole}</Text>
+                    <Text style={{ fontFamily: "DMSans-Regular" }}>Already invited as {pendingInviteRole}</Text>
                     <TouchableOpacity
                       onPress={onCancelInvite}
                       style={{
@@ -64,41 +64,41 @@ const StudentLinear = ({
                         borderRadius: 6,
                       }}
                     >
-                      <Text style={{ color: "#fff" }}>Cancel Invite</Text>
+                      <Text style={{ color: "#fff", fontFamily: "DMSans-Regular" }}>Cancel</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
                   <>
-                    <TouchableOpacity
-                      disabled={!selectedRole}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        marginBottom: 6,
-                        opacity: selectedRole ? 1 : 0.5,
-                      }}
-                      onPress={() => onInvite(selectedRole)}
-                    >
-                      <Ionicons name="add-circle-outline" size={28} color="#0A0F51" />
-                      <Text style={{ marginLeft: 6 }}>Invite</Text>
-                    </TouchableOpacity>
-
                     <View style={{ flexDirection: "row" }}>
                       {["Manager", "Committee"].map((role) => (
                         <TouchableOpacity
                           key={role}
                           style={{
                             paddingHorizontal: 12,
-                            paddingVertical: 6,
+                            paddingVertical: 7,
                             marginRight: 8,
                             borderRadius: 6,
                             backgroundColor: selectedRole === role ? "#0A0F51" : "#ccc",
                           }}
                           onPress={() => handleRoleToggle(role as "Manager" | "Committee")}
                         >
-                          <Text style={{ color: selectedRole === role ? "#fff" : "#000" }}>{role}</Text>
+                          <Text style={{ color: selectedRole === role ? "#fff" : "#000", fontFamily: "DMSans-Regular" }}>{role}</Text>
                         </TouchableOpacity>
                       ))}
+
+                      <TouchableOpacity
+                        disabled={!selectedRole}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginBottom: 6,
+                          opacity: selectedRole ? 1 : 0.5,
+                        }}
+                        onPress={() => onInvite(selectedRole)}
+                      >
+                        <Ionicons name="add-circle-outline" size={28} color="#0A0F51" />
+                        <Text style={{ marginLeft: 6 }}></Text>
+                      </TouchableOpacity>
                     </View>
                   </>
                 )}
@@ -117,7 +117,7 @@ const StudentLinear = ({
                     borderRadius: 6,
                   }}
                 >
-                  <Text style={{ fontWeight: "bold" }}>Change role</Text>
+                  <Text style={{ fontFamily: "DMSans-Bold" }}>Change role</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={onRemove}>

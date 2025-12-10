@@ -71,22 +71,22 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     useEffect(() => {
         fetchAllData();
     }, [orgId]);
--
-    useEffect(() => {
-        if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
-            const t = setTimeout(() => {
-                const node = scrollRef.current?.getNode
-                    ? scrollRef.current.getNode()
-                    : scrollRef.current;
+    -
+        useEffect(() => {
+            if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
+                const t = setTimeout(() => {
+                    const node = scrollRef.current?.getNode
+                        ? scrollRef.current.getNode()
+                        : scrollRef.current;
 
-                if (node?.scrollTo) {
-                    node.scrollTo({ y: initialScroll, animated: false });
-                }
-            }, 0);
+                    if (node?.scrollTo) {
+                        node.scrollTo({ y: initialScroll, animated: false });
+                    }
+                }, 0);
 
-            return () => clearTimeout(t);
-        }
-    }, [initialScroll]);
+                return () => clearTimeout(t);
+            }
+        }, [initialScroll]);
 
     const handleOrgPress = () => {
         router.push({
@@ -183,7 +183,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                             );
                         })
                     ) : (
-                        <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>
+                        <Text style={{ textAlign: "center", color: "gray", marginTop: 20, fontFamily: "DMSans-Regular" }}>
                             No upcoming events for this organization.
                         </Text>
                     )}

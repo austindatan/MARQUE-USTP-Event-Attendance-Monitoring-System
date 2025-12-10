@@ -52,7 +52,7 @@ exports.getStudentProfileByNumber = async (req, res) => {
       department_code: student.department_id?.department_code || '',
       college_name: student.department_id?.college_id?.college_name || '',
 
-      org_role: highestRole || "Student", 
+      org_role: highestRole || "Student",
       org_roles: orgRoles,
     });
 
@@ -66,7 +66,7 @@ exports.getStudentProfileByNumber = async (req, res) => {
 exports.updateStudentProfile = async (req, res) => {
   try {
     const student_number = req.params.student_number;
-    const { 
+    const {
       firstname,
       lastname,
       email,
@@ -119,7 +119,7 @@ exports.updateStudentProfile = async (req, res) => {
       }
     }
 
-    res.json({ 
+    res.json({
       message: 'Profile updated',
       department_id: student.department_id,
       college_id: student.college_id
@@ -141,7 +141,7 @@ exports.uploadStudentProfileImage = async (req, res) => {
     if (!req.file || !req.file.path) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    const imageUrl = req.file.path; 
+    const imageUrl = req.file.path;
 
     const student = await Student.findOne({ student_number });
     if (!student) return res.status(404).json({ message: 'Student not found' });
@@ -174,7 +174,14 @@ exports.getStudentAttendance = async (req, res) => {
     const logs = await AttendanceLog.find({ user_id: userId })
       .sort({ time_in: -1 })
       .limit(limit)
-      .populate('event_id', 'event_name event_date venue event_images event_image')
+      .populate({
+        path: 'event_id',
+        select: 'event_name event_date venue event_images event_image organization_id',
+        populate: {
+          path: 'organization_id',
+          select: 'org_name pfp'
+        }
+      })
       .lean();
 
     // Attendance summary
@@ -185,9 +192,10 @@ exports.getStudentAttendance = async (req, res) => {
         name: l.event_id.event_name,
         date: l.event_id.event_date,
         venue: l.event_id.venue,
+        organization_id: l.event_id.organization_id,
         images: l.event_id.event_image
-        ? [l.event_id.event_image]
-        : (Array.isArray(l.event_id.event_images) ? l.event_id.event_images : [])
+          ? [l.event_id.event_image]
+          : (Array.isArray(l.event_id.event_images) ? l.event_id.event_images : [])
       } : null,
       time_in: l.time_in,
       time_out: l.time_out
@@ -268,7 +276,7 @@ exports.deleteStudentProfile = async (req, res) => {
     // Delete any associated OrgOfficer records
     await OrgOfficer.deleteMany({ student_id: studentId });
     res.status(200).json({ message: "Student and associated user successfully deleted." });
-    
+
   } catch (err) {
     console.error("🔥 Error deleting student:", err);
     res.status(500).json({ message: "Server error during deletion." });

@@ -47,10 +47,10 @@ const Organizations = ({ scrollY }) => {
 
 
   useEffect(() => {
-    if (MOCK_STUDENT_ID) { 
+    if (MOCK_STUDENT_ID) {
       fetchFollowedEvents();
     } else {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   }, [MOCK_STUDENT_ID]);
 
@@ -73,7 +73,7 @@ const Organizations = ({ scrollY }) => {
         />
       );
     }
-    
+
     return (
       <View style={appeffects.eventList}>
         {events.map((ev) => {
@@ -84,7 +84,7 @@ const Organizations = ({ scrollY }) => {
 
           const startTime = new Date(ev.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
           const endTime = new Date(ev.end_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-          const timeVenueStr = `⏰ ${startTime} - ${endTime} | 📍 ${ev.venue}`;
+          const timeVenueStr = `${startTime} - ${endTime} | ${ev.venue}`;
 
           return (
             <EventCard
@@ -111,9 +111,9 @@ const Organizations = ({ scrollY }) => {
   return (
     <Animated.ScrollView
       style={{ flex: 1, marginTop: -110 }}
-      contentContainerStyle={{ 
+      contentContainerStyle={{
         paddingTop: 125,
-        paddingBottom: 40 
+        paddingBottom: 40
       }}
       showsVerticalScrollIndicator={false}
       onScroll={Animated.event(
@@ -122,8 +122,8 @@ const Organizations = ({ scrollY }) => {
       )}
       scrollEventThrottle={16}
     >
-        {renderContent()}
-        <View style={{ height: 40 }} />
+      {renderContent()}
+      <View style={{ height: 40 }} />
     </Animated.ScrollView>
   );
 };
