@@ -140,3 +140,17 @@ exports.markAsRead = async (req, res) => {
     res.status(500).json({ message: "Failed to update notification status." });
   }
 };
+
+exports.deleteReadNotifications = async (req, res) => {
+  try {
+    const { studentId: studentNumber } = req.params;
+    const student = await Student.findOne({ student_number: studentNumber });
+    if (!student) return res.status(404).json({ message: "Student not found" });
+
+    await Notification.deleteMany({ user_id: student._id, is_read: true });
+    res.status(200).json({ message: "Read notifications deleted" });
+  } catch (error) {
+    console.error("Error deleting read notifications:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

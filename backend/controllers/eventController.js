@@ -532,12 +532,13 @@ const createEvent = async (req, res) => {
           }
 
           // B. Followers (map User ID -> Student ID)
+          // DISCOVERY: FollowedOrgs stores STUDENT IDs in the 'user_id' field
           const followers = await FollowedOrgs.find({ organization_id }).select("user_id");
-          const followerUserIds = followers.map(f => f.user_id);
+          const followerStudentIds = followers.map(f => f.user_id);
 
-          if (followerUserIds.length > 0) {
-            const followerStudents = await Student.find({ users_id: { $in: followerUserIds } }).select("_id");
-            followerStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+          if (followerStudentIds.length > 0) {
+            console.log(`[EventCreate] Adding ${followerStudentIds.length} followers directly (IDs are Student IDs).`);
+            followerStudentIds.forEach(id => targetStudentIds.add(id.toString()));
           }
         }
 
@@ -605,8 +606,8 @@ const updateEvent = async (req, res) => {
     // Event is ongoing if current time is between start and end
     if (now >= startTimeUTC && now <= endTimeUTC) {
       status = "Ongoing";
-    } 
-    
+    }
+
     // Event is concluded if now is past the END TIME
     else if (now > endTimeUTC) {
       status = "Concluded";

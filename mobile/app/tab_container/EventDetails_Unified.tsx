@@ -18,7 +18,7 @@ const fixCloudinaryUrl = (url, cloudName) => {
 
 const determineEventStatus = (eventData) => {
   // CRITICAL: This is already protected, but the code calling it needs to be protected too.
-  if (!eventData || !eventData.event_date) return 'unknown'; 
+  if (!eventData || !eventData.event_date) return 'unknown';
   const now = new Date();
   const eventDate = new Date(eventData.event_date);
   const startTime = eventData.start_time ? new Date(eventData.start_time) : null;
@@ -44,13 +44,23 @@ const EventDetails_Unified = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [eventStatus, setEventStatus] = useState('loading');
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
-  const [userId, setUserId] = useState("692402df4600376c2cea56eb"); // Mock user ID (Ensure this is correctly fetched in your real app)
+  const [userId, setUserId] = useState(null);
+  const fetchStudentId = async () => {
+    try {
+      const studentNumber = await AsyncStorage.getItem("student_number");
+      if (!studentNumber) return null;
+      const res = await fetch(`${BASE_URL}/api/student/id/${studentNumber}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      setUserId(data._id);
+    } catch (e) { console.error("Error fetching user ID:", e); }
+  };
 
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(true);
-  
-  const [photoProofStatus, setPhotoProofStatus] = useState(null); 
-  const [attendanceLogId, setAttendanceLogId] = useState(null); 
+
+  const [photoProofStatus, setPhotoProofStatus] = useState(null);
+  const [attendanceLogId, setAttendanceLogId] = useState(null);
 
   /** ================= BOOKMARKS ================= */
   const checkBookmarkStatus = async () => {
@@ -107,9 +117,9 @@ const EventDetails_Unified = () => {
       console.error("Error fetching event details:", error);
       Alert.alert("Network Error", `Failed to load event details. Error: ${error.message}`);
       // If event fetch fails, ensure eventData is null and loading is false
-      setEventData(null); 
-    } finally { 
-      setLoading(false); 
+      setEventData(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,7 +129,7 @@ const EventDetails_Unified = () => {
       // Read correct AsyncStorage keys
       const token = await AsyncStorage.getItem('token'); // matches login
       const student_number = await AsyncStorage.getItem('student_number'); // user ID for API
-      
+
       if (!token || !student_number) {
         console.log("User session data missing. Cannot fetch photo proof status.");
         setPhotoProofStatus(null);
@@ -163,9 +173,9 @@ const EventDetails_Unified = () => {
       }
 
       // 2. Prepare payload for backend
-      const payload = { 
-        event_id: eventId, 
-        student_number 
+      const payload = {
+        event_id: eventId,
+        student_number
         // attendanceLogId is optional; backend will create log if missing
       };
 
@@ -175,8 +185,8 @@ const EventDetails_Unified = () => {
       // 4. Navigate to Photo_Proof screen and pass required info
       router.push({
         pathname: "tab_container/Photo_Proof",
-        params: { 
-          eventId, 
+        params: {
+          eventId,
           payload // send eventId + student_number + optional attendanceLogId
         }
       });
@@ -228,7 +238,7 @@ const EventDetails_Unified = () => {
       if (submitted) await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
     } catch (err) { console.error(err); }
   };
-  
+
   /** ================= BUTTON RENDER LOGIC ================= */
   const renderPhotoProofButton = () => {
     let buttonText = "Upload Photoproof";
@@ -250,9 +260,9 @@ const EventDetails_Unified = () => {
     }
 
     return (
-      <TouchableOpacity 
-        style={buttonStyle} 
-        onPress={handleUploadPhotoproof} 
+      <TouchableOpacity
+        style={buttonStyle}
+        onPress={handleUploadPhotoproof}
         disabled={isDisabled}
       >
         <Text style={styles.photoproofButtonText}>{buttonText}</Text>
@@ -267,23 +277,24 @@ const EventDetails_Unified = () => {
       fetchEventDetails(eventId);
       checkFeedbackStatus();
       checkBookmarkStatus();
-      fetchPhotoProofStatus(eventId); 
+      fetchPhotoProofStatus(eventId);
+      fetchStudentId();
     } else setLoading(false);
   }, [eventId, fetchPhotoProofStatus]));
 
   useEffect(() => {
     if (eventData?.organization_id?._id && userId) checkFollowStatus(eventData.organization_id._id);
   }, [eventData, userId]);
-  
+
   const handleBack = () => router.back();
 
   // 💡 CRITICAL FIX: Render a loading screen if eventData is null
   if (loading || !eventData) {
     return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-            <ActivityIndicator size="large" color="#0A0F51" />
-            <Text style={{ marginTop: 10, color: '#0A0F51' }}>Loading Event Details...</Text>
-        </View>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#0A0F51" />
+        <Text style={{ marginTop: 10, color: '#0A0F51' }}>Loading Event Details...</Text>
+      </View>
     );
   }
 
@@ -352,7 +363,7 @@ const EventDetails_Unified = () => {
             </Text>
           </View>
         )}
-        
+
         {/* ================= ONGOING (combined NoAttendance + Ongoing) ================= */}
         {(eventStatus === "ongoing" || eventStatus === "no-attendance") && (
           <View style={styles.infoColumn}>

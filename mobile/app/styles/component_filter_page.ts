@@ -11,20 +11,20 @@ const styles = StyleSheet.create({
         paddingBottom: 40,
     },
     sectionTitle: {
-        fontWeight: "bold",
+        fontFamily: "DMSans-Bold",
         fontSize: 18,
         marginTop: 30,
         marginBottom: 10,
         color: "#222762",
     },
     loadingIndicator: {
-        height: 50, 
+        height: 50,
         justifyContent: 'center',
     },
     chipWrappingContainer: {
-        flexDirection: 'row', 
-        flexWrap: 'wrap', 
-        gap: 12, 
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
     },
     applyButton: {
         marginTop: 40,
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     applyButtonText: {
-        fontWeight: "bold",
+        fontFamily: "DMSans-Bold",
         color: "#000",
         fontSize: 16,
     },

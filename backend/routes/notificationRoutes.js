@@ -2,12 +2,13 @@
 
 const express = require("express");
 const router = express.Router();
-const { 
+const {
     sendInvite,
-    getNotifications, 
-    markAsRead, 
-    acceptInvite, 
-    declineInvite, 
+    getNotifications,
+    markAsRead,
+    acceptInvite,
+    declineInvite,
+    deleteReadNotifications
 } = require("../controllers/notificationController");
 
 // --- CREATION ---
@@ -21,5 +22,7 @@ router.get("/:studentId", getNotifications);
 router.post("/accept", acceptInvite);
 router.post("/decline", declineInvite);
 router.patch("/read/:id", markAsRead);
+
+router.delete("/read/:studentId", deleteReadNotifications);
 
 module.exports = router;

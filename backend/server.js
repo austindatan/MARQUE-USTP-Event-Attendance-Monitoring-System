@@ -85,10 +85,15 @@ const collegeRoutes = require("./routes/collegeRoutes");
 app.use("/api/college", collegeRoutes);
 
 // DB connection
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB is connected"))
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("MongoDB is connected");
+    // Start Scheduler
+    const initScheduler = require('./scheduler/notificationScheduler');
+    initScheduler();
+  })
   .catch((err) => console.error("MongoDB connection error:", err));
+
 
 // Start server
 const PORT = process.env.PORT || 5000;

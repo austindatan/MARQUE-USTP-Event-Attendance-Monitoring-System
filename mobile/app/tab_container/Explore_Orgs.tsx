@@ -4,16 +4,17 @@ import { View, Text, Animated, ActivityIndicator, Alert } from "react-native";
 import OrgLinear from "../components/Card_OrgsLinear";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
-import { useRouter } from "expo-router"; 
+import { useRouter } from "expo-router";
 
-const MOCK_STUDENT_ID = "692402df4600376c2cea56eb";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
-    const router = useRouter(); 
+    const router = useRouter();
     const scrollRef = useRef(null);
     const [organizations, setOrganizations] = useState([]);
     const [followedOrgIds, setFollowedOrgIds] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [userId, setUserId] = useState(null);
 
     const fetchOrganizations = async () => {
         try {
@@ -26,12 +27,29 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         }
     };
 
-    const fetchFollowedIds = async () => {
-        if (!MOCK_STUDENT_ID) return;
+    const fetchStudentId = async () => {
+        try {
+            const studentNumber = await AsyncStorage.getItem("student_number");
+            if (!studentNumber) return null;
+
+            const res = await fetch(`${BASE_URL}/api/student/id/${studentNumber}`);
+            if (!res.ok) return null;
+
+            const data = await res.json();
+            setUserId(data._id); // Assuming backend returns Student Object with ._id
+            return data._id;
+        } catch (error) {
+            console.error("Error fetching student ID:", error);
+            return null;
+        }
+    };
+
+    const fetchFollowedIds = async (currentUserId) => {
+        if (!currentUserId) return;
 
         try {
             const res = await fetch(
-                `${BASE_URL}/api/followed-orgs/${MOCK_STUDENT_ID}/ids`
+                `${BASE_URL}/api/followed-orgs/${currentUserId}/ids`
             );
             const data = await res.json();
             setFollowedOrgIds(data);
@@ -44,7 +62,11 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     useEffect(() => {
         const loadData = async () => {
             setIsLoading(true);
-            await Promise.all([fetchOrganizations(), fetchFollowedIds()]);
+            const id = await fetchStudentId();
+            const promises = [fetchOrganizations()];
+            if (id) promises.push(fetchFollowedIds(id));
+
+            await Promise.all(promises);
             setIsLoading(false);
         };
 
@@ -52,7 +74,7 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     }, []);
 
     const handleFollowToggle = async (orgId, isCurrentlyFollowed) => {
-        if (!MOCK_STUDENT_ID) {
+        if (!userId) {
             Alert.alert("Authentication Required", "Please log in to follow organizations.");
             return;
         }
@@ -66,7 +88,7 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    userId: MOCK_STUDENT_ID,
+                    userId: userId,
                     organizationId: orgId,
                 }),
             });
@@ -89,7 +111,7 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
 
     const handleOrgPress = (orgId) => {
         router.push({
-            pathname: "../tab_container_organization/ProfileSTU", 
+            pathname: "../tab_container_organization/ProfileSTU",
             params: { orgId: orgId },
         });
     };
@@ -139,7 +161,7 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                     text={org.description}
                     isFollowed={isFollowed}
                     onToggleFollow={() => handleFollowToggle(org._id, isFollowed)}
-                    onPress={() => handleOrgPress(org._id)} 
+                    onPress={() => handleOrgPress(org._id)}
                 />
             );
         });

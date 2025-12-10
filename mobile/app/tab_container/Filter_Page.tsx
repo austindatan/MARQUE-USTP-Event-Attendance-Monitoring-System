@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import OrgChip from "../components/Org_Chip";
 import { BASE_URL } from "../../config";
 import styles from "../styles/component_filter_page";
+import Header from "../components/Header_Normal";
 
 const mapOrgData = (data) =>
   data.map((org) => ({
@@ -87,8 +88,8 @@ export default function Filter_Page() {
 
   return (
     <View style={styles.container}>
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <Header />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}>
         <Text style={styles.sectionTitle}>Unit Organizations</Text>
         {isLoadingUnits ? (
           <ActivityIndicator size="large" color="#222762" style={styles.loadingIndicator} />

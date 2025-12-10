@@ -52,14 +52,24 @@ const NotificationsScreen = () => {
     return created.toLocaleDateString();
   };
 
-  const calculateTimeStatus = (eventDate) => {
+  const calculateTimeStatus = (eventDate, notificationTitle = "") => {
     const now = new Date();
     const eventTime = new Date(eventDate);
-    const diffInHours = Math.ceil((eventTime - now) / (1000 * 60 * 60));
-    if (eventTime < now) return "This event has concluded";
+    const diffInMs = eventTime - now;
+    const diffInHours = Math.ceil(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.ceil(diffInHours / 24);
+
+    if (diffInMs < 0) return "This event has concluded";
+
+    if (notificationTitle.toLowerCase().includes("new event")) {
+      if (diffInDays > 1) return `New exciting event: ${diffInDays} days from now`;
+      if (diffInDays === 1) return `New exciting event: 1 day from now`;
+      if (diffInHours > 0) return `New exciting event: ${diffInHours} hours from now`;
+      return `New exciting event: Starting soon!`;
+    }
+
     if (diffInHours <= 0) return "Starting now!";
     if (diffInHours <= 24) return `Starts in ${diffInHours} more hour${diffInHours > 1 ? "s" : ""}`;
-    const diffInDays = Math.ceil(diffInHours / 24);
     return `Starts in ${diffInDays} day${diffInDays > 1 ? "s" : ""}`;
   };
 
@@ -107,6 +117,31 @@ const NotificationsScreen = () => {
     }
   };
 
+  const handleClearRead = async () => {
+    Alert.alert(
+      "Clear History",
+      "Delete all read notifications?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const studentNumber = await AsyncStorage.getItem("student_number");
+              if (!studentNumber) return;
+              await axios.delete(`${BASE_URL}/api/notifications/read/${studentNumber}`);
+              setNotifications(prev => prev.filter(n => !n.is_read));
+            } catch (err) {
+              console.error("Error clearing notifications:", err);
+              Alert.alert("Error", "Failed to clear notifications");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderNotificationCard = (notification) => {
     const orgName = notification.organization_id?.org_name || "Unknown Organization";
     const orgLogo = notification.organization_id?.pfp ? { uri: notification.organization_id.pfp } : null;
@@ -116,10 +151,23 @@ const NotificationsScreen = () => {
     if (notification.type === "event" && notification.event_id) {
       const eventData = notification.event_id;
       const eventImage = eventData?.event_image ? { uri: eventData.event_image } : null;
-      const timeStatus = eventData?.event_date ? calculateTimeStatus(eventData.event_date) : "Event details pending";
-      const showConfirmation = notification.title.includes("Confirmation") || notification.title.includes("Registered");
+      const timeStatus = calculateTimeStatus(eventData.start_time || eventData.event_date, notification.title);
+      const showConfirmation = notification.title.includes("Confirmation") || notification.title.includes("Registered") || notification.title.includes("Confirmed");
       return (
-        <TouchableOpacity key={key} onPress={() => handleMarkAsRead(notification._id)} disabled={notification.is_read}>
+        <TouchableOpacity
+          key={key}
+          onPress={() => {
+            handleMarkAsRead(notification._id);
+            if (notification.type === "event" && notification.event_id) {
+              // router.push to event details
+              router.push({
+                pathname: "/tab_container/EventDetails_Unified",
+                params: { eventId: eventData._id }
+              });
+            }
+          }}
+          style={{ opacity: notification.is_read ? 0.7 : 1 }}
+        >
           <NotificationCardEvent
             eventImage={eventImage}
             eventName={eventData?.event_name || notification.title}
@@ -137,7 +185,12 @@ const NotificationsScreen = () => {
     if (["invite", "role_change", "announcement"].includes(notification.type)) {
       const showRoleActions = notification.type === "invite" && (notification.status === "pending" || notification.status === "info" || !notification.status);
       return (
-        <TouchableOpacity key={key} onPress={() => handleMarkAsRead(notification._id)} disabled={notification.is_read || showRoleActions}>
+        <TouchableOpacity
+          key={key}
+          // Disabled as per user request: "ONLY event card should be clickable"
+          disabled={true}
+          style={{ opacity: notification.is_read ? 0.5 : 1 }}
+        >
           <NotificationCardOrg
             orgLogo={orgLogo}
             orgName={orgName}
@@ -156,6 +209,9 @@ const NotificationsScreen = () => {
     return null;
   };
 
+  const unreadNotifications = notifications.filter((n) => !n.is_read);
+  const readNotifications = notifications.filter((n) => n.is_read);
+
   return (
     <View style={styles.container}>
       <Header />
@@ -171,8 +227,24 @@ const NotificationsScreen = () => {
           <Text style={localStyles.emptyText}>You're all caught up! No new notifications.</Text>
         ) : (
           <>
-            <Text style={localStyles.heading}>Recent Activity</Text>
-            {notifications.map(renderNotificationCard)}
+            {unreadNotifications.length > 0 && (
+              <>
+                <Text style={localStyles.heading}>Recent Activity</Text>
+                {unreadNotifications.map(renderNotificationCard)}
+              </>
+            )}
+
+            {readNotifications.length > 0 && (
+              <>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15, marginTop: 10 }}>
+                  <Text style={[localStyles.heading, { marginBottom: 0, marginTop: 0 }]}>Past Activity</Text>
+                  <TouchableOpacity onPress={handleClearRead}>
+                    <Ionicons name="trash-outline" size={20} color="#FF4444" />
+                  </TouchableOpacity>
+                </View>
+                {readNotifications.map(renderNotificationCard)}
+              </>
+            )}
           </>
         )}
 
