@@ -7,6 +7,9 @@ import styles from "../styles/page_eventdetails";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL, CLOUD_NAME } from "../../config";
 import ScannerButton from '../components/ScannerButton';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const OFFICER_ROLES = ["Manager", "President"]; 
 
 const fixCloudinaryUrl = (url, cloudName) => {
     if (!url || url.startsWith("http")) {
@@ -36,15 +39,54 @@ const Events = () => {
     const [eventActive, setEventActive] = useState(false);
     const [within30Min, setWithin30Min] = useState(false);
 
-    const [userId, setUserId] = useState("692402df4600376c2cea56eb");
+    const [studentId, setStudentId] = useState(null); 
+    const [userRole, setUserRole] = useState(null);
 
-    // ===== Added states for cancel/resume =====
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showCancelledOverlay, setShowCancelledOverlay] = useState(false);
 
     const handleBack = () => {
         router.back();
     };
+
+    const fetchStudentAndRole = async (organizationId) => {
+        let fetchedStudentId = null;
+        try {
+            const storedStudentNumber = await AsyncStorage.getItem("student_number");
+            if (!storedStudentNumber || !organizationId) {
+                setUserRole(null);
+                return null;
+            }
+
+            // Fetch Student ID
+            const studentIdUrl = `${BASE_URL}/api/student/id/${storedStudentNumber}`;
+            const resStudent = await fetch(studentIdUrl);
+            if (!resStudent.ok) throw new Error("Failed to fetch student ID.");
+
+            const student = await resStudent.json();
+            fetchedStudentId = student._id;
+
+            if (!fetchedStudentId) {
+                setUserRole(null);
+                return null;
+            }
+
+            // Fetch Memberships & Role
+            const joinedOrgsUrl = `${BASE_URL}/api/memberships/student/${fetchedStudentId}`;
+            const response = await fetch(joinedOrgsUrl);
+            if (!response.ok) throw new Error("Failed to fetch memberships.");
+
+            const joinedOrgs = await response.json();
+            const currentOrgLink = joinedOrgs.find(org => org._id === organizationId);
+            const role = currentOrgLink ? currentOrgLink.role : null;
+            setUserRole(role);
+
+        } catch (error) {
+            console.error("Error fetching user role or student ID:", error.message);
+            setUserRole(null);
+        }
+        return fetchedStudentId;
+    }; 
 
     const fetchEventDetails = async (id) => {
         if (!id) {
@@ -79,18 +121,18 @@ const Events = () => {
 
             setEventData(eventObj);
 
-            // ===== Check if event is cancelled =====
+            // Check if event is cancelled
             if (eventObj.status === "Cancelled") {
                 setShowCancelledOverlay(true);
             } else {
                 setShowCancelledOverlay(false);
             }
 
-            // ===== Fetch event status and map within1Hour to within30Min =====
+            // Fetch event status and map within1Hour to within30Min
             const statusRes = await fetch(`${BASE_URL}/events/event-status/${eventObj._id}`);
             const statusData = await statusRes.json();
             setEventActive(statusData.isActive);
-            setWithin30Min(statusData.within1Hour); // <--- only change here
+            setWithin30Min(statusData.within1Hour);
 
         } catch (error) {
             console.error("Error fetching event details/status:", error);
@@ -100,9 +142,10 @@ const Events = () => {
         }
     };
 
-    const checkFollowStatus = async (orgId) => {
-        try {
-            const res = await fetch(`${BASE_URL}/api/followed-orgs/${userId}/ids`);
+    const checkFollowStatus = async (orgId, currentStudentId) => { 
+        if (!currentStudentId) return;
+        try {
+            const res = await fetch(`${BASE_URL}/api/followed-orgs/${currentStudentId}/ids`);
             if (!res.ok) return;
 
             const ids = await res.json();
@@ -113,7 +156,7 @@ const Events = () => {
     };
 
     const handleFollowToggle = async () => {
-        if (!eventData?.organization_id?._id || !userId) return;
+        if (!eventData?.organization_id?._id || !studentId) return;
         const orgId = eventData.organization_id._id;
 
         const action = isFollowing ? "unfollow" : "follow";
@@ -124,7 +167,7 @@ const Events = () => {
             const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, organizationId: orgId }),
+                body: JSON.stringify({ userId: studentId, organizationId: orgId }),
             });
 
             if (!res.ok) {
@@ -136,7 +179,7 @@ const Events = () => {
         }
     };
 
-    // ===== Cancel/Resume Handler =====
+    // Cancel/Resume Handler 
     const handleCancelOrResume = async () => {
         if (!eventData) return;
 
@@ -185,11 +228,17 @@ const Events = () => {
     }, [eventId]);
 
     useEffect(() => {
-        if (eventData?.organization_id?._id && userId) {
-            checkFollowStatus(eventData.organization_id._id);
+        const organizationId = eventData?.organization_id?._id;
+        if (organizationId) {
+            // Fetch student role and ID
+            fetchStudentAndRole(organizationId).then((fetchedStudentId) => {
+                if (fetchedStudentId) {
+                    setStudentId(fetchedStudentId); 
+                    checkFollowStatus(organizationId, fetchedStudentId); 
+                }
+            });
         }
-    }, [eventData, userId]);
-
+    }, [eventData]);
 
     if (loading) {
         return (
@@ -207,6 +256,8 @@ const Events = () => {
             </View>
         );
     }
+
+    const isOfficer = OFFICER_ROLES.includes(userRole);
 
     const eventDateObj = eventData.event_date ? new Date(eventData.event_date) : null;
     const eventDate = eventDateObj
@@ -255,9 +306,11 @@ const Events = () => {
                             </Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.bookmarkBtn} onPress={() => router.push({ pathname: '/tab_container_organization/EditEvents', params: { eventId: eventId } })}>
-                            <Ionicons name="create" size={24} color="#fff" />
-                        </TouchableOpacity>
+                        {isOfficer && ( 
+                    <TouchableOpacity style={styles.bookmarkBtn} onPress={() => router.push({ pathname: '/tab_container_organization/EditEvents', params: { eventId: eventId } })}>
+                        <Ionicons name="create" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    )}
                     </View>
                 </View>
 
@@ -383,7 +436,7 @@ const Events = () => {
             )}
 
             {/* ===== Cancel / Resume Event Button ===== */}
-            {eventData.status !== "Concluded" && (
+            {eventData.status !== "Concluded" && isOfficer && ( 
                 <TouchableOpacity
                     style={{
                         position: "absolute",

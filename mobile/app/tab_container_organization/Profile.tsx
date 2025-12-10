@@ -14,17 +14,18 @@ import { Ionicons } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { BASE_URL, CLOUD_NAME } from "../../config"; // ⭐️ MODIFIED: Added CLOUD_NAME import
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BASE_URL, CLOUD_NAME } from "../../config"; 
 import EventCard from "../components/Card_Event";
 import AddActivityButton from "../components/AddActivityButton";
 import { STYLES, COLORS } from "../styles/component_org_page";
 import styles from "../styles/page_eventdetails";
 
-// ⭐️ MODIFIED: Utility function to fix Cloudinary URLs (using a robust version)
+const OFFICER_ROLES = ["Manager", "President"]; 
+
 const fixCloudinaryUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http")) return url;
-    // Assume CLOUD_NAME is imported from "../../config"
     const path = url.replace(/ /g, "%20");
     return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${path}`;
 };
@@ -40,6 +41,7 @@ const ProfilePage = () => {
     const [incomingEvents, setIncomingEvents] = useState([]);
     const [concludedEvents, setConcludedEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [userRole, setUserRole] = useState(null); 
 
     const STICKY_HEADER_HEIGHT = 90;
 
@@ -57,32 +59,88 @@ const ProfilePage = () => {
     };
 
     const fetchOrganizationProfile = async () => {
-        // NOTE: The backend route /api/organizations/profile/:orgId is assumed to return:
-        // { organization: {...}, events: { incoming: [...], concluded: [...] } }
         const res = await fetch(`${BASE_URL}/api/organizations/profile/${orgId}`);
         return res.json();
     };
 
-    const loadData = async () => {
+    // fetch user role
+    const fetchUserRole = async (organizationId) => {
         try {
-            setLoading(true);
-            const profileData = await fetchOrganizationProfile();
+            const storedStudentNumber = await AsyncStorage.getItem("student_number");
+            if (!storedStudentNumber || !organizationId) {
+                console.warn("Missing student number or organization ID. Cannot fetch role.");
+                return null;
+            }
+    
+            // Fetch Student ID
+            const studentIdUrl = `${BASE_URL}/api/student/id/${storedStudentNumber}`;
+            const resStudent = await fetch(studentIdUrl);
+            if (!resStudent.ok) return null;
 
-            setOrganization(profileData.organization);
-            setIncomingEvents(profileData.events.incoming);
-            setConcludedEvents(profileData.events.concluded);
-        } catch (err) {
-            console.error("❌ Error loading profile:", err);
-        } finally {
-            setLoading(false);
+            const student = await resStudent.json();
+            const studentId = student._id;
+            if (!studentId) return null;
+    
+            // Fetch Organizations & Role
+            const joinedOrgsUrl = `${BASE_URL}/api/memberships/student/${studentId}`;
+            const response = await fetch(joinedOrgsUrl); 
+            if (!response.ok) return null;
+            
+            const joinedOrgs = await response.json(); 
+    
+            // Find the role for the current organization
+            const currentOrgLink = joinedOrgs.find(org => org._id === organizationId);
+            
+            return currentOrgLink ? currentOrgLink.role : null; 
+    
+        } catch (error) {
+            console.error("Error fetching user role:", error.message);
+            return null;
         }
     };
 
     useEffect(() => {
-        if (orgId) loadData();
+        let profileLoaded = false;
+        let roleLoaded = false;
+
+        const finalizeLoading = () => {
+            if (profileLoaded && roleLoaded) {
+                setLoading(false);
+            }
+        };
+
+        const loadProfileAndEvents = async () => {
+            try {
+                const profileData = await fetchOrganizationProfile();
+                setOrganization(profileData.organization);
+                setIncomingEvents(profileData.events.incoming);
+                setConcludedEvents(profileData.events.concluded);
+            } catch (err) {
+                console.error("❌ Error loading profile:", err);
+            } finally {
+                profileLoaded = true;
+                finalizeLoading();
+            }
+        };
+
+        const loadRole = async () => {
+            const role = await fetchUserRole(orgId);
+            setUserRole(role);
+            roleLoaded = true;
+            finalizeLoading();
+        };
+
+        if (orgId) {
+            setLoading(true);
+            loadProfileAndEvents();
+            loadRole();
+        }
     }, [orgId, refresh]);
 
-    // Function to handle event card press
+    // Check if the user has the required permission
+    const isOfficer = OFFICER_ROLES.includes(userRole);
+
+    // handle event card press
     const handleEventPress = (eventId) => {
         router.push({
             pathname: '../tab_container_organization/Events',
@@ -99,6 +157,7 @@ const ProfilePage = () => {
                 ]}
             >
                 <ActivityIndicator size="large" color={COLORS.primaryNavy} />
+                <Text style={{ marginTop: 10 }}>Loading organization profile...</Text>
             </View>
         );
     }
@@ -212,23 +271,17 @@ const ProfilePage = () => {
                     {activeTab === "Incoming" &&
                         (incomingEvents.length > 0 ? (
                             incomingEvents.map((event) => {
-                                // ⭐️ FIX: Use event.event_date
                                 const { dateDay, dateMonth, orgDate } = formatDateForCard(event.event_date);
-
-                                // ⭐️ FIX: Get image from event_images or event_image
                                 const eventImageSource = event.event_image
                                     ? { uri: fixCloudinaryUrl(event.event_image) }
                                     : (event.event_images && event.event_images.length > 0
                                         ? { uri: fixCloudinaryUrl(event.event_images[0]) }
                                         : require("../../assets/images/marque/crtcg1.png"));
 
-
                                 return (
                                     <EventCard
                                         key={event._id}
-                                        // ⭐️ FIX: Use eventImageSource
                                         image={eventImageSource}
-                                        // ⭐️ FIX: Use event_name
                                         title={event.event_name}
                                         organization={org.org_name}
                                         orgLogo={orgLogoSource}
@@ -236,7 +289,6 @@ const ProfilePage = () => {
                                         dateDay={dateDay}
                                         dateMonth={dateMonth}
                                         description={event.description}
-                                        // ⭐️ ADD onPress
                                         onPress={() => handleEventPress(event._id)}
                                     />
                                 );
@@ -249,10 +301,7 @@ const ProfilePage = () => {
                     {activeTab === "Concluded" &&
                         (concludedEvents.length > 0 ? (
                             concludedEvents.map((event) => {
-                                // ⭐️ FIX: Use event.event_date
                                 const { dateDay, dateMonth, orgDate } = formatDateForCard(event.event_date);
-
-                                // ⭐️ FIX: Get image from event_images or event_image
                                 const eventImageSource = event.event_image
                                     ? { uri: fixCloudinaryUrl(event.event_image) }
                                     : (event.event_images && event.event_images.length > 0
@@ -262,9 +311,7 @@ const ProfilePage = () => {
                                 return (
                                     <EventCard
                                         key={event._id}
-                                        // ⭐️ FIX: Use eventImageSource
                                         image={eventImageSource}
-                                        // ⭐️ FIX: Use event_name
                                         title={event.event_name}
                                         organization={org.org_name}
                                         orgLogo={orgLogoSource}
@@ -272,7 +319,6 @@ const ProfilePage = () => {
                                         dateDay={dateDay}
                                         dateMonth={dateMonth}
                                         description={event.description}
-                                        // ⭐️ ADD onPress
                                         onPress={() => handleEventPress(event._id)}
                                     />
                                 );
@@ -284,14 +330,16 @@ const ProfilePage = () => {
             </ScrollView>
 
             {/* Floating Add Button */}
-            <AddActivityButton
-                onPress={() =>
-                    router.push({
-                        pathname: "../tab_container_organization/CreateActivity",
-                        params: { orgId: org._id },
-                    })
-                }
-            />
+            {isOfficer && (
+                <AddActivityButton
+                    onPress={() =>
+                        router.push({
+                            pathname: "../tab_container_organization/EditEvents",
+                            params: { orgId: org._id },
+                        })
+                    }
+                />
+            )}
         </View>
     );
 };
@@ -300,41 +348,41 @@ export default ProfilePage;
 
 
 const tabStyles = StyleSheet.create({
-  tabWrapper: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 12,
-  },
-  singleTab: {
-    flex: 1,
-    paddingVertical: 8,
-    marginHorizontal: 5,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 120,
-  },
-  activeTab: {
-    backgroundColor: COLORS.primaryNavy,
-  },
-  inactiveTab: {
-    backgroundColor: "#d3d3d3",
-  },
-  tabText: {
-    fontSize: 15,
-    fontFamily: "DMSans-Bold",
-  },
-  activeTabText: {
-    color: COLORS.white,
-    fontFamily: "DMSans-Bold",
-  },
-  inactiveTabText: {
-    color: COLORS.textDark,
-    fontFamily: "DMSans-Medium",
-  },
-  noEventsText: {
-    textAlign: "center",
-    color: COLORS.textDark,
-    marginVertical: 12,
-  },
+    tabWrapper: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginVertical: 12,
+    },
+    singleTab: {
+        flex: 1,
+        paddingVertical: 8,
+        marginHorizontal: 5,
+        borderRadius: 50,
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: 120,
+    },
+    activeTab: {
+        backgroundColor: COLORS.primaryNavy,
+    },
+    inactiveTab: {
+        backgroundColor: "#d3d3d3",
+    },
+    tabText: {
+        fontSize: 15,
+        fontFamily: "DMSans-Bold",
+    },
+    activeTabText: {
+        color: COLORS.white,
+        fontFamily: "DMSans-Bold",
+    },
+    inactiveTabText: {
+        color: COLORS.textDark,
+        fontFamily: "DMSans-Medium",
+    },
+    noEventsText: {
+        textAlign: "center",
+        color: COLORS.textDark,
+        marginVertical: 12,
+    },
 });

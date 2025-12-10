@@ -12,6 +12,7 @@ const eventSchema = new mongoose.Schema(
     description: { type: String, required: true },
     event_image: { type: String }, // can be URL or file path
     event_date: { type: Date, required: true },
+    end_date: { type: Date, required: true },
     start_time: { type: Date, required: true }, // includes time
     end_time: { type: Date, required: true },   // includes time
     venue: { type: String, required: true },
