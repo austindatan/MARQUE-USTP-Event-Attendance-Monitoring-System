@@ -239,6 +239,23 @@ const styles = StyleSheet.create({
     color: "#777",
     fontFamily: "DMSans-Medium",
   },
+  
+
+  photoproofButton: {
+    backgroundColor: "#0A0F51",
+    flexDirection: "row",
+    paddingHorizontal: rs(20),
+    alignItems: "center",
+    paddingVertical: rs(14),
+    borderRadius: rs(15),
+  },
+
+  photoproofButtonText: {
+    color: "#fff",
+    marginRight: rs(8),
+    fontSize: rs(11),
+    fontFamily: "DMSans-Medium",
+  },
 
   sectionTitle: {
     fontSize: rs(16),

@@ -10,24 +10,23 @@ import {
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
-import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { BASE_URL } from "../../config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function CameraWithWatermark() {
   const [permission, requestPermission] = useCameraPermissions();
   const [locationText, setLocationText] = useState("Getting location...");
   const [loading, setLoading] = useState(false);
-
-  const [isTorchOn, setIsTorchOn] = useState(false); // ⭐ Torch/flash toggle
-  const [facing, setFacing] = useState("front");   // ⭐ Flip Camera
-  const [preview, setPreview] = useState(null);   // ⭐ Retake Preview Screen
+  const [isTorchOn, setIsTorchOn] = useState(false);
+  const [facing, setFacing] = useState("front");
+  const [preview, setPreview] = useState(null);
 
   const cameraRef = useRef(null);
   const router = useRouter();
-  const { eventId } = useLocalSearchParams();
+  const { eventId, attendanceLogId: initialAttendanceLogId } = useLocalSearchParams();
 
   // -------------------- LOCATION --------------------
   useEffect(() => {
@@ -58,35 +57,28 @@ export default function CameraWithWatermark() {
     );
   }
 
-  // -------------------- FLASH TOGGLE --------------------
+  // -------------------- CAMERA CONTROLS --------------------
   const toggleFlash = () => {
-    // Torch works only on back camera; switch to back if turning torch on
     setIsTorchOn((prev) => {
       const next = !prev;
-      if (next && facing === 'front') {
-        setFacing('back');
-      }
+      if (next && facing === "front") setFacing("back");
       return next;
     });
   };
 
-  // -------------------- FLIP CAMERA --------------------
   const flipCamera = () => {
     setFacing((prev) => {
       const next = prev === "front" ? "back" : "front";
-      // if switching to front camera, ensure torch is off
-      if (next === 'front') setIsTorchOn(false);
+      if (next === "front") setIsTorchOn(false);
       return next;
     });
   };
 
-  // -------------------- CAPTURE PHOTO --------------------
   const capturePhoto = async () => {
     try {
       setLoading(true);
-
       const photo = await cameraRef.current.takePictureAsync();
-      setPreview(photo.uri); // go to preview screen
+      setPreview(photo.uri);
     } catch (err) {
       console.log(err);
       Alert.alert("Error", "Failed to capture photo.");
@@ -95,33 +87,77 @@ export default function CameraWithWatermark() {
     }
   };
 
+  // -------------------- GET OR REGISTER ATTENDANCE LOG --------------------
+  const getOrRegisterLog = async () => {
+    try {
+      const student_number = await AsyncStorage.getItem("student_number");
+      if (!student_number) return null;
+
+      const res = await axios.post(`${BASE_URL}/api/attendance/register-or-get-log`, {
+        event_id: eventId,
+        student_number,
+      });
+
+      return res.data.attendanceLog._id;
+    } catch (err) {
+      console.log("GET OR REGISTER LOG ERROR:", err);
+      return null;
+    }
+  };
+
   // -------------------- UPLOAD PHOTO --------------------
   const uploadPhoto = async () => {
     try {
       setLoading(true);
 
+      const student_number = await AsyncStorage.getItem("student_number");
+      if (!student_number) {
+        Alert.alert("Error", "Student number not found.");
+        setLoading(false);
+        return;
+      }
+
+      // 1. Get attendance log ID
+      let logId = initialAttendanceLogId;
+      if (!logId) {
+        logId = await getOrRegisterLog();
+        if (!logId) {
+          Alert.alert("Error", "Cannot get attendance log ID. Upload failed.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Prepare watermark text
       const now = new Date();
       const watermarkText = `${now.toLocaleDateString()}  ${now.toLocaleTimeString()}\n${locationText}`;
 
+      // 3. Build form data
       const formData = new FormData();
       formData.append("file", {
         uri: preview,
         type: "image/jpeg",
         name: `photoproof_${Date.now()}.jpg`,
       });
-
+      formData.append("attendanceLogId", logId);
       formData.append("watermarkText", watermarkText);
-      formData.append("eventId", eventId || "");
+      formData.append("event_id", eventId);
+      formData.append("student_number", student_number);
 
+      // 4. Upload
       await axios.post(`${BASE_URL}/api/attendance/upload-photoproof`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      Alert.alert("Success", "Photoproof uploaded successfully!");
-      router.back();
+      Alert.alert("Success", "Photo proof submitted for verification.");
+
+      router.replace({
+        pathname: "tab_container/EventDetails_Unified",
+        params: { eventId },
+      });
     } catch (err) {
-      console.log("UPLOAD ERROR:", err);
-      Alert.alert("Error", "Failed to upload photo.");
+      console.log("UPLOAD ERROR:", err.response?.data || err);
+      Alert.alert("Error", err.response?.data?.message || "Failed to upload photo.");
     } finally {
       setLoading(false);
     }
@@ -129,18 +165,14 @@ export default function CameraWithWatermark() {
 
   // -------------------- BACK BUTTON --------------------
   const goBack = () => {
-    if (preview) {
-      setPreview(null); // return to camera
-    } else {
-      router.back(); // return to previous page
-    }
+    if (preview) setPreview(null);
+    else router.back();
   };
 
   // -------------------- PREVIEW SCREEN --------------------
   if (preview) {
     return (
       <View style={{ flex: 1 }}>
-        {/* BACK BUTTON */}
         <TouchableOpacity
           onPress={goBack}
           style={{
@@ -158,7 +190,6 @@ export default function CameraWithWatermark() {
 
         <Image source={{ uri: preview }} style={{ flex: 1 }} />
 
-        {/* RETAKE + UPLOAD BUTTONS */}
         <View
           style={{
             position: "absolute",
@@ -203,14 +234,8 @@ export default function CameraWithWatermark() {
   // -------------------- CAMERA SCREEN --------------------
   return (
     <View style={{ flex: 1 }}>
-      <CameraView
-        ref={cameraRef}
-        style={{ flex: 1 }}
-        facing={facing}
-        enableTorch={isTorchOn}
-      />
+      <CameraView ref={cameraRef} style={{ flex: 1 }} facing={facing} enableTorch={isTorchOn} />
 
-      {/* DARK OVERLAY FOR WATERMARK */}
       <View
         style={{
           position: "absolute",
@@ -224,7 +249,6 @@ export default function CameraWithWatermark() {
         <Text style={{ color: "white", fontSize: 15 }}>{locationText}</Text>
       </View>
 
-      {/* BACK BUTTON */}
       <TouchableOpacity
         onPress={goBack}
         style={{
@@ -239,7 +263,6 @@ export default function CameraWithWatermark() {
         <Ionicons name="arrow-back" size={26} color="white" />
       </TouchableOpacity>
 
-      {/* FLASH BUTTON */}
       <TouchableOpacity
         onPress={toggleFlash}
         style={{
@@ -251,14 +274,9 @@ export default function CameraWithWatermark() {
           borderRadius: 25,
         }}
       >
-        <Ionicons
-          name={isTorchOn ? "flash-outline" : "flash-off-outline"}
-          size={26}
-          color="white"
-        />
+        <Ionicons name={isTorchOn ? "flash-outline" : "flash-off-outline"} size={26} color="white" />
       </TouchableOpacity>
 
-      {/* FLIP CAMERA */}
       <TouchableOpacity
         onPress={flipCamera}
         style={{
@@ -273,7 +291,6 @@ export default function CameraWithWatermark() {
         <Ionicons name="camera-reverse-outline" size={28} color="white" />
       </TouchableOpacity>
 
-      {/* CAPTURE BUTTON */}
       <TouchableOpacity
         onPress={capturePhoto}
         style={{
@@ -288,11 +305,7 @@ export default function CameraWithWatermark() {
           alignItems: "center",
         }}
       >
-        {loading ? (
-          <ActivityIndicator size="large" />
-        ) : (
-          <Ionicons name="camera" size={40} color="black" />
-        )}
+        {loading ? <ActivityIndicator size="large" /> : <Ionicons name="camera" size={40} color="black" />}
       </TouchableOpacity>
     </View>
   );
