@@ -45,9 +45,9 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
           />
 
           <TouchableOpacity>
-              <View style={styles.notif}>
-                <Ionicons name="notifications-outline" size={24} color="#fff" />
-              </View>
+            <View style={styles.notif}>
+              <Ionicons name="notifications-outline" size={24} color="#fff" />
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -87,13 +87,6 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
           onPress={() => handleToggle("YourOrg")}
         >
           <Text style={activeTab === "YourOrg" ? styles.activeTextEX : styles.inactiveTextEX}>Your Orgs</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={activeTab === "JoinOrgs" ? styles.activeButtonEX : styles.inactiveButtonEX}
-          onPress={() => handleToggle("JoinOrgs")}
-        >
-          <Text style={activeTab === "JoinOrgs" ? styles.activeTextEX : styles.inactiveTextEX}>Join Orgs</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>

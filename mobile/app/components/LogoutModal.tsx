@@ -2,7 +2,6 @@
 import React from "react";
 import { Modal, View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import styles from "../styles/components_joinmodal";
-
 const LOGOUT_ICON = require("../../assets/images/marque/MARQUE_whitelogo.png");
 
 const LogoutModal = ({ visible, onClose, onConfirm }) => {
@@ -15,7 +14,8 @@ const LogoutModal = ({ visible, onClose, onConfirm }) => {
           </View>
 
           <Text style={styles.title}>Logged Out</Text>
-          <Text style={styles.desc}>You are ready to log out. Choose an action below.</Text>
+          <Text style={styles.desc}>You are ready to log out.</Text>
+          <Text style={styles.desc}>Choose an action below.</Text>
 
           <View style={buttonStyles.buttonRow}>
             <TouchableOpacity
@@ -64,12 +64,12 @@ const buttonStyles = StyleSheet.create({
   },
   cancelText: {
     color: "white",
-    fontWeight: "bold",
     fontSize: 16,
+    fontFamily: "DMSans-Bold"
   },
   confirmText: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 16,
+    fontFamily: "DMSans-Bold"
   },
 });

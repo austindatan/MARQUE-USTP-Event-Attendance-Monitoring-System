@@ -193,8 +193,11 @@ const ProfilePage = () => {
                     key={log.attendance_log_id}
                     image={eventImageSource}
                     title={log.event?.name || log.event?.event_name || "No Title"}
+                    organization={log.event?.organization_id?.org_name || "Unknown Org"}
+                    orgLogo={{ uri: log.event?.organization_id?.pfp || null }}
                     dateDay={day.toString()}
                     dateMonth={month.toUpperCase()}
+                    onPress={() => router.push({ pathname: "/tab_container/EventDetails_Unified", params: { eventId: log.event?.id } })}
                   />
                 );
               })
@@ -222,7 +225,8 @@ const ProfilePage = () => {
             <Text style={styles.settingLabel}>Change Password</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem}
+            onPress={() => router.push("/tab_container/Notifications")}>
             <Ionicons name="notifications" size={20} color="#0A0F51" />
             <Text style={styles.settingLabel}>Notifications</Text>
           </TouchableOpacity>

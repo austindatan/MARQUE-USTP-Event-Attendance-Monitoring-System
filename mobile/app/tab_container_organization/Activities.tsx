@@ -5,11 +5,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import Header from "../components/Header_Activities";
 import Incoming from "./Incoming";
 import Concluded from "./Concluded";
+import Officers from "./Officers";
 import AddActivityButton from "../components/AddActivityButton";
 import SidebarMenu from "../components/SidebarMenu_Organization";
 import appeffects from "../styles/effects_app";
 
-type TabName = "Incoming" | "Concluded";
+type TabName = "Incoming" | "Concluded" | "Officers";
 
 const Activities = () => {
   const router = useRouter(); // <<< ADDED
@@ -19,10 +20,12 @@ const Activities = () => {
 
   const incomingScrollY = useRef(new Animated.Value(0)).current;
   const concludedScrollY = useRef(new Animated.Value(0)).current;
+  const officersScrollY = useRef(new Animated.Value(0)).current;
 
   const tabScrollPositions = useRef<Record<TabName, number>>({
     Incoming: 0,
     Concluded: 0,
+    Officers: 0,
   }).current;
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -37,8 +40,11 @@ const Activities = () => {
   const handleTabChange = (newTab: TabName) => {
     setActiveTab(newTab);
 
-    const scrollValue =
-      newTab === "Incoming" ? incomingScrollY : concludedScrollY;
+    let scrollValue;
+    if (newTab === "Incoming") scrollValue = incomingScrollY;
+    else if (newTab === "Concluded") scrollValue = concludedScrollY;
+    else scrollValue = officersScrollY;
+
     const lastScrollPos = tabScrollPositions[newTab] || 0;
     scrollValue.setValue(lastScrollPos);
   };
@@ -50,11 +56,17 @@ const Activities = () => {
         handleScroll: createScrollHandler("Incoming", incomingScrollY),
         initialScroll: tabScrollPositions.Incoming,
       };
-    } else {
+    } else if (activeTab === "Concluded") {
       return {
         scrollY: concludedScrollY,
         handleScroll: createScrollHandler("Concluded", concludedScrollY),
         initialScroll: tabScrollPositions.Concluded,
+      };
+    } else {
+      return {
+        scrollY: officersScrollY,
+        handleScroll: createScrollHandler("Officers", officersScrollY),
+        initialScroll: tabScrollPositions.Officers,
       };
     }
   };
@@ -74,6 +86,9 @@ const Activities = () => {
       )}
       {activeTab === "Concluded" && (
         <Concluded key="Concluded" {...activeProps} organizationId={orgId} />
+      )}
+      {activeTab === "Officers" && (
+        <Officers key="Officers" {...activeProps} organizationId={orgId} />
       )}
 
       {/* ROUTED BUTTON */}

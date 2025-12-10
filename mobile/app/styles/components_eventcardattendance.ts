@@ -13,8 +13,8 @@ const HP = (percentage) => {
   return Math.round(value);
 };
 
-const CARD_WIDTH = WP(24); 
-const CARD_HEIGHT = WP(33); 
+const CARD_WIDTH = WP(24);
+const CARD_HEIGHT = WP(34);
 const IMAGE_SIZE = WP(21.8);
 const LOGO_SIZE = WP(4);
 
@@ -67,9 +67,9 @@ const styles = StyleSheet.create({
     borderRadius: WP(2),
     alignItems: "center",
     rowGap: 0,
-    
-    justifyContent: 'center', 
-    
+
+    justifyContent: 'center',
+
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -78,10 +78,10 @@ const styles = StyleSheet.create({
 
   dateDay: {
     color: "#0C1445",
-    fontSize: WP(3), 
+    fontSize: WP(3),
     fontWeight: "700",
     fontFamily: "Inter",
-    marginVertical: 0, 
+    marginVertical: 0,
     lineHeight: WP(3) * 1.1,
   },
 
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     fontSize: WP(2.5),
     fontWeight: "600",
     fontFamily: "Inter",
-    marginVertical: 0, 
+    marginVertical: 0,
     lineHeight: WP(2) * 1.1,
   },
 
@@ -123,10 +123,11 @@ const styles = StyleSheet.create({
   orgRow: {
     flexDirection: "column",
     marginLeft: WP(0.8),
+    paddingRight: WP(5),
   },
 
   orgText: {
-    fontSize: WP(1),
+    fontSize: WP(2.2),
     color: "#858585",
     fontFamily: "DIN",
   },

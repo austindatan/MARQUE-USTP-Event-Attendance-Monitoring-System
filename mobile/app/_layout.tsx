@@ -1,9 +1,9 @@
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import { Stack } from "expo-router";
-import { useFonts } from 'expo-font'; 
-import * as SplashScreen from 'expo-splash-screen'; 
-import {useEffect} from 'react';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
@@ -35,15 +35,13 @@ export default function RootLayout() {
 
   return (
     <>
-      {/* 💡 ADDED: Sets the Status Bar text, icons, and indicators to WHITE */}
-      <StatusBar 
+      <StatusBar
         translucent
         backgroundColor="transparent"
         barStyle="light-content"
       />
 
-      
-      <Stack screenOptions={{headerShown: false}}/>
+      <Stack screenOptions={{ headerShown: false }} />
     </>
   );
 }

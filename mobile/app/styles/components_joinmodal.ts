@@ -43,8 +43,9 @@ export default StyleSheet.create({
   title: {
     marginTop: 20,
     fontSize: 20,
-    fontWeight: "700",
     textAlign: "center",
+    fontFamily: "DMSans-Bold",
+    marginBottom: 5,
   },
 
   desc: {
@@ -53,5 +54,6 @@ export default StyleSheet.create({
     color: "#444",
     textAlign: "center",
     lineHeight: 20,
+    fontFamily: "DMSans-Regular"
   },
 });
