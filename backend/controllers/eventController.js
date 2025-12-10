@@ -40,7 +40,7 @@ const autoUpdateEventStatuses = async () => {
 const getEventsByDepartment = async (req, res) => {
   try {
     await autoUpdateEventStatuses();
-    
+
     const { departmentId } = req.params;
 
     // Find organizations in this department
@@ -288,7 +288,7 @@ const getEventsByFollowedOrgs = async (req, res) => {
 const getFollowedOrgEvents = async (req, res) => {
   try {
     await autoUpdateEventStatuses();
-    
+
     const { userId } = req.params;
 
     const followed = await FollowedOrgs.find({ user_id: userId }).select("organization_id");
@@ -368,7 +368,7 @@ const searchEvents = async (req, res) => {
 
   try {
     await autoUpdateEventStatuses();
-    
+
     const searchRegex = new RegExp(query, "i");
 
     const searchConditions = {
@@ -669,6 +669,24 @@ const resumeEvent = async (req, res) => {
 
 
 
+const deleteEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedEvent = await Event.findByIdAndDelete(id);
+
+    if (!deletedEvent) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.status(200).json({ message: "Event deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    res.status(500).json({ message: "Server error deleting event" });
+  }
+};
+
+
+
 export {
   autoUpdateEventStatuses,
   getEventsByDepartment,
@@ -693,4 +711,5 @@ export {
   getEventStatus,
   cancelEvent,
   resumeEvent,
+  deleteEvent
 };

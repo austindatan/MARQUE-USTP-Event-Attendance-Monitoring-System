@@ -13,7 +13,7 @@ import styles from "../styles/page_editevents";
 import { COLORS } from "../styles/component_org_page";
 
 const eventTypes = ["Event", "Sub-Event"];
-const venueOptions = [ "LRC", "DRER Memorial Hall", "Cafet Hall", "ICT AVR", "Building 28", "PAT AVR", "Building 5", "Science Building", ];
+const venueOptions = ["LRC", "DRER Memorial Hall", "Cafet Hall", "ICT AVR", "Building 28", "PAT AVR", "Building 5", "Science Building",];
 
 const EditEvents = () => {
   const router = useRouter();
@@ -49,7 +49,7 @@ const EditEvents = () => {
     const fetchEvent = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/events/event/${event_id}`);
-        const ev = res.data.event || res.data; 
+        const ev = res.data.event || res.data;
 
         console.log("EVENT RESPONSE:", res.data);
 
@@ -59,7 +59,7 @@ const EditEvents = () => {
           setLoadingEvent(false);
           return;
         }
-        
+
         setEventName(ev.event_name);
         setSelectedEvent(ev.event_type || "");
         setSelectedVenue(ev.venue || "");
@@ -172,6 +172,30 @@ const EditEvents = () => {
     }
   };
 
+  const handleDelete = async () => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this event?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await axios.delete(`${BASE_URL}/events/${event_id}`);
+              Alert.alert("Success", "Event deleted successfully.");
+              router.back();
+            } catch (err) {
+              console.error("Delete error:", err);
+              Alert.alert("Error", "Failed to delete event.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loadingEvent) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -179,6 +203,16 @@ const EditEvents = () => {
       </View>
     );
   }
+
+  const getPickerValue = () => {
+    switch (currentField) {
+      case "startDate": return startDate;
+      case "endDate": return endDate;
+      case "startTime": return startTime;
+      case "endTime": return endTime;
+      default: return new Date();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -327,16 +361,26 @@ const EditEvents = () => {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity style={styles.registerButton} onPress={handleSave}>
+      <View style={styles.bottomButtonContainerAdmin}>
+        <TouchableOpacity style={[styles.registerButton, { width: isEdit ? "48%" : "100%" }]} onPress={handleSave}>
           <Text style={styles.registerText}>{isEdit ? "Update Event" : "Publish Event"}</Text>
           <Ionicons name="arrow-forward" size={18} color="#fff" />
         </TouchableOpacity>
+
+        {isEdit && (
+          <TouchableOpacity
+            style={[styles.deleteButton, { width: "48%" }]}
+            onPress={handleDelete}
+          >
+            <Ionicons name="trash" size={18} color="#fff" />
+            <Text style={styles.deleteText}>Delete Event</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {pickerVisible && (
         <DateTimePicker
-          value={new Date()}
+          value={getPickerValue()}
           mode={pickerMode}
           display="default"
           onChange={onPick}
