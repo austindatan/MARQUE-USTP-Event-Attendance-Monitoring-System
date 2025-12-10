@@ -336,7 +336,13 @@ const EditEvents = () => {
 
       {pickerVisible && (
         <DateTimePicker
-          value={new Date()}
+          value={
+            currentField === "startDate" ? startDate :
+            currentField === "endDate" ? endDate :
+            currentField === "startTime" ? startTime :
+            currentField === "endTime" ? endTime :
+            new Date()
+          }
           mode={pickerMode}
           display="default"
           onChange={onPick}
