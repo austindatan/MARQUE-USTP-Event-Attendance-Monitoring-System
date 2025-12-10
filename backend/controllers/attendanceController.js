@@ -4,6 +4,7 @@ const AttendanceLog = require("../models/Attendance_log");
 const Student = require("../models/Student");
 const User = require("../models/User");
 const Department = require("../models/Department");
+const Notification = require("../models/Notification");
 const Event = require("../models/Event"); // <--- ADD THIS LINE
 const { cloudinary } = require('../routes/cloudinaryConfig');
 
@@ -14,21 +15,21 @@ const { cloudinary } = require('../routes/cloudinaryConfig');
  * @returns {boolean} True if within the 1-hour registration window, false otherwise.
  */
 const isEventWithin1Hour = (event) => {
-    if (!event || !event.start_time) {
-        return false;
-    }
+  if (!event || !event.start_time) {
+    return false;
+  }
 
-    const now = new Date();
-    const startTime = new Date(event.start_time);
-    
-    const cutoffTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 60 minutes = 1 hour
+  const now = new Date();
+  const startTime = new Date(event.start_time);
 
-    // The event must have started (now >= start_time) 
-    // AND it must be before the 1-hour cutoff (now <= cutoff_time)
-    const hasStarted = now >= startTime;
-    const isWithinCutoff = now <= cutoffTime;
+  const cutoffTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 60 minutes = 1 hour
 
-    return hasStarted && isWithinCutoff;
+  // The event must have started (now >= start_time) 
+  // AND it must be before the 1-hour cutoff (now <= cutoff_time)
+  const hasStarted = now >= startTime;
+  const isWithinCutoff = now <= cutoffTime;
+
+  return hasStarted && isWithinCutoff;
 };
 
 const registerAttendance = async (req, res) => {
@@ -92,6 +93,17 @@ const registerAttendance = async (req, res) => {
       time_in: new Date(),
     });
 
+    // Create Notification for the student
+    await Notification.create({
+      user_id: student._id, // Student ObjectId
+      organization_id: event.organization_id,
+      event_id: event._id,
+      type: "event",
+      title: "Attendance Confirmed",
+      message: "You have confirmed attendance for this event.",
+      is_read: false,
+    });
+
     return res.status(201).json({
       message: "Attendance registered successfully.",
       alreadyRegistered: false,
@@ -109,77 +121,77 @@ const registerAttendance = async (req, res) => {
 };
 
 function formatLocalDateTime(utcDate) {
-    const date = new Date(utcDate);
+  const date = new Date(utcDate);
 
-    // Convert to PH timezone using Intl.DateTimeFormat
-    const dateFormatter = new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true, // Use 12-hour format
-        timeZone: "Asia/Manila",
-    });
+  // Convert to PH timezone using Intl.DateTimeFormat
+  const dateFormatter = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true, // Use 12-hour format
+    timeZone: "Asia/Manila",
+  });
 
-    const parts = dateFormatter.formatToParts(date);
-    
-    // Extract parts for MM-DD-YYYY
-    const month = parts.find(p => p.type === 'month').value;
-    const day = parts.find(p => p.type === 'day').value;
-    const year = parts.find(p => p.type === 'year').value;
-    const formattedDate = `${month}-${day}-${year}`; // MM-DD-YYYY
+  const parts = dateFormatter.formatToParts(date);
 
-    // Extract parts for h:mm A (12-hour time)
-    const hour = parts.find(p => p.type === 'hour').value;
-    const minute = parts.find(p => p.type === 'minute').value;
-    const ampm = parts.find(p => p.type === 'dayPeriod').value;
+  // Extract parts for MM-DD-YYYY
+  const month = parts.find(p => p.type === 'month').value;
+  const day = parts.find(p => p.type === 'day').value;
+  const year = parts.find(p => p.type === 'year').value;
+  const formattedDate = `${month}-${day}-${year}`; // MM-DD-YYYY
 
-    const formattedTime = `${hour}:${minute} ${ampm}`; // h:mm AM/PM
+  // Extract parts for h:mm A (12-hour time)
+  const hour = parts.find(p => p.type === 'hour').value;
+  const minute = parts.find(p => p.type === 'minute').value;
+  const ampm = parts.find(p => p.type === 'dayPeriod').value;
 
-    return { formattedDate, formattedTime };
+  const formattedTime = `${hour}:${minute} ${ampm}`; // h:mm AM/PM
+
+  return { formattedDate, formattedTime };
 }
 
 const getAttendanceHistory = async (req, res) => {
-    try {
-        let { event_id } = req.params;
+  try {
+    let { event_id } = req.params;
 
-        if (!event_id) {
-            return res.status(400).json({ message: "Missing required field: event_id" });
-        }
-        event_id = event_id.trim();
-
-        // Find all attendance logs for this event
-        const logs = await AttendanceLog.find({ event_id }).populate("user_id");
-
-        const formatted = await Promise.all(
-            logs.map(async (log) => {
-                const student = await Student.findOne({
-                    users_id: log.user_id._id,
-                }).populate("department_id");
-
-                // Convert UTC → PH local & format
-                const { formattedDate, formattedTime } = formatLocalDateTime(log.time_in);
-
-                return {
-                    name: `${log.user_id.firstname} ${log.user_id.lastname}`,
-                    student_number: student?.student_number || "",
-                    program: student?.department_id?.department_code || "",
-                    status: log.status, // <--- ADDED THIS FIELD
-                    date: formattedDate,  // MM-DD-YYYY
-                    time: formattedTime,  // HH:mm (now 12-hour)
-                };
-            })
-        );
-
-        return res.status(200).json({
-            message: "Attendance history retrieved successfully",
-            history: formatted,
-        });
-    } catch (error) {
-        console.error("GET HISTORY ERROR:", error);
-        return res.status(500).json({ message: "Server Error", error });
+    if (!event_id) {
+      return res.status(400).json({ message: "Missing required field: event_id" });
     }
+    event_id = event_id.trim();
+
+    // Find all attendance logs for this event
+    const logs = await AttendanceLog.find({ event_id }).populate("user_id");
+
+    const formatted = await Promise.all(
+      logs.map(async (log) => {
+        const student = await Student.findOne({
+          users_id: log.user_id._id,
+        }).populate("department_id");
+
+        // Convert UTC → PH local & format
+        const { formattedDate, formattedTime } = formatLocalDateTime(log.time_in);
+
+        return {
+          name: `${log.user_id.firstname} ${log.user_id.lastname}`,
+          student_number: student?.student_number || "",
+          program: student?.department_id?.department_code || "",
+          status: log.status, // <--- ADDED THIS FIELD
+          date: formattedDate,  // MM-DD-YYYY
+          time: formattedTime,  // HH:mm (now 12-hour)
+        };
+      })
+    );
+
+    return res.status(200).json({
+      message: "Attendance history retrieved successfully",
+      history: formatted,
+    });
+  } catch (error) {
+    console.error("GET HISTORY ERROR:", error);
+    return res.status(500).json({ message: "Server Error", error });
+  }
 };
 
 const searchAttendanceLogs = async (req, res) => {
@@ -247,7 +259,7 @@ const getAttendanceLogStatus = async (req, res) => {
     if (!student || !student.users_id) {
       return res.status(404).json({ message: "Student or associated user not found" });
     }
-    
+
     const user_id = student.users_id._id;
 
     // 2. Find the attendance log for this user and event
@@ -259,7 +271,7 @@ const getAttendanceLogStatus = async (req, res) => {
     }
 
     // 3. Return the log object (the client is looking for log.photoproof_status and log._id)
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: "Attendance log retrieved successfully",
       log: log, // Return the full log object
     });
@@ -419,22 +431,22 @@ const getPendingPhotoproofs = async (req, res) => {
 
 // Function for student to check their photo proof status
 const getAttendanceLogByUserAndEvent = async (req, res) => {
-    try {
-        const { event_id, user_id } = req.params;
+  try {
+    const { event_id, user_id } = req.params;
 
-        const log = await AttendanceLog.findOne({
-            event_id: event_id,
-            user_id: user_id,
-        })
-        .select('photoproof_status time_in photoproof_url'); 
+    const log = await AttendanceLog.findOne({
+      event_id: event_id,
+      user_id: user_id,
+    })
+      .select('photoproof_status time_in photoproof_url');
 
-        // Returning 200 with log: null if not found is often better than 404 for status checks
-        res.status(200).json({ log });
+    // Returning 200 with log: null if not found is often better than 404 for status checks
+    res.status(200).json({ log });
 
-    } catch (error) {
-        console.error("GET ATTENDANCE LOG ERROR:", error);
-        res.status(500).json({ message: "Server error retrieving attendance log" });
-    }
+  } catch (error) {
+    console.error("GET ATTENDANCE LOG ERROR:", error);
+    res.status(500).json({ message: "Server error retrieving attendance log" });
+  }
 };
 
 const registerOrGetAttendanceLog = async (req, res) => {
@@ -548,23 +560,23 @@ const exportAttendancePDF = async (req, res) => {
 
     // Define column positions and widths (total width is 510)
     const columns = [
-        { title: "Student No.", x: startX, width: 90 },
-        { title: "Name", x: startX + 95, width: 140 },
-        { title: "Dept.", x: startX + 240, width: 100 },
-        { title: "Time In", x: startX + 345, width: 70 },
-        { title: "Status", x: startX + 420, width: 70 },
+      { title: "Student No.", x: startX, width: 90 },
+      { title: "Name", x: startX + 95, width: 140 },
+      { title: "Dept.", x: startX + 240, width: 100 },
+      { title: "Time In", x: startX + 345, width: 70 },
+      { title: "Status", x: startX + 420, width: 70 },
     ];
 
     /* TABLE HEADER */
     doc.fontSize(12).font("Helvetica-Bold");
 
     columns.forEach((col) => {
-        doc.text(col.title, col.x, currentY, { width: col.width, align: "left" });
+      doc.text(col.title, col.x, currentY, { width: col.width, align: "left" });
     });
 
     doc.moveDown(0.2);
     currentY = doc.y; // Update Y after header text
-    
+
     // Separator line
     doc.moveTo(startX, currentY).lineTo(endX, currentY).stroke();
     doc.moveDown(0.3);
@@ -573,26 +585,26 @@ const exportAttendancePDF = async (req, res) => {
     doc.fontSize(10).font("Helvetica");
 
     formatted.forEach((row) => {
-        currentY = doc.y; // Start position for the new row
+      currentY = doc.y; // Start position for the new row
 
-        // Student No.
-        doc.text(row.student_number, columns[0].x, currentY, { width: columns[0].width, align: "left" });
+      // Student No.
+      doc.text(row.student_number, columns[0].x, currentY, { width: columns[0].width, align: "left" });
 
-        // Name (This is the longest field, use it to determine row height)
-        // We use doc.text() and capture the resulting height
-        const nameHeight = doc.text(row.name, columns[1].x, currentY, { width: columns[1].width, align: "left", continued: false }).currentLineHeight();
+      // Name (This is the longest field, use it to determine row height)
+      // We use doc.text() and capture the resulting height
+      const nameHeight = doc.text(row.name, columns[1].x, currentY, { width: columns[1].width, align: "left", continued: false }).currentLineHeight();
 
-        // Dept.
-        doc.text(row.department, columns[2].x, currentY, { width: columns[2].width, align: "left" });
+      // Dept.
+      doc.text(row.department, columns[2].x, currentY, { width: columns[2].width, align: "left" });
 
-        // Time In
-        doc.text(row.time, columns[3].x, currentY, { width: columns[3].width, align: "left" });
+      // Time In
+      doc.text(row.time, columns[3].x, currentY, { width: columns[3].width, align: "left" });
 
-        // Status
-        doc.text(row.status, columns[4].x, currentY, { width: columns[4].width, align: "left" });
+      // Status
+      doc.text(row.status, columns[4].x, currentY, { width: columns[4].width, align: "left" });
 
-        // Move cursor down by the required height (plus a small buffer)
-        doc.y = currentY + nameHeight + 5; 
+      // Move cursor down by the required height (plus a small buffer)
+      doc.y = currentY + nameHeight + 5;
     });
 
     doc.end();

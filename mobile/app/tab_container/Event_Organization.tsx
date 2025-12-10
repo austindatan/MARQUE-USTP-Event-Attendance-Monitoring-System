@@ -7,18 +7,36 @@ import appeffects from "../styles/effects_app";
 import EmptyCard from "../components/Card_Empty";
 import { BASE_URL } from "../../config";
 
-const MOCK_STUDENT_ID = '692402df4600376c2cea56eb';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Organizations = ({ scrollY }) => {
   const router = useRouter();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
 
-  const fetchFollowedEvents = async () => {
+  const fetchStudentId = async () => {
+    try {
+      const studentNumber = await AsyncStorage.getItem("student_number");
+      if (!studentNumber) return null;
+
+      const res = await fetch(`${BASE_URL}/api/student/id/${studentNumber}`);
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      setUserId(data._id);
+      return data._id;
+    } catch (error) {
+      console.error("Error fetching student ID:", error);
+      return null;
+    }
+  };
+
+  const fetchFollowedEvents = async (currentUserId) => {
     setIsLoading(true);
 
     try {
-      const orgsRes = await fetch(`${BASE_URL}/api/followed-orgs/${MOCK_STUDENT_ID}/ids`);
+      const orgsRes = await fetch(`${BASE_URL}/api/followed-orgs/${currentUserId}/ids`);
       const followedOrgIds = await orgsRes.json();
 
 
@@ -47,12 +65,16 @@ const Organizations = ({ scrollY }) => {
 
 
   useEffect(() => {
-    if (MOCK_STUDENT_ID) {
-      fetchFollowedEvents();
-    } else {
-      setIsLoading(false);
-    }
-  }, [MOCK_STUDENT_ID]);
+    const loadEvents = async () => {
+      const id = await fetchStudentId();
+      if (id) {
+        fetchFollowedEvents(id);
+      } else {
+        setIsLoading(false);
+      }
+    };
+    loadEvents();
+  }, []);
 
 
   const renderContent = () => {
