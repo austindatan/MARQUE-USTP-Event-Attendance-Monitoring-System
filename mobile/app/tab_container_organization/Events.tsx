@@ -395,7 +395,7 @@ const Events = () => {
                         borderRadius: 12,
                         alignItems: "center",
                         justifyContent: "center",
-                        zIndex: 999,
+                        zIndex: 0,
                         elevation: 10,
                         shadowColor: "#000",
                         shadowOffset: { width: 0, height: 2 },

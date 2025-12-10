@@ -16,8 +16,12 @@ const eventSchema = new mongoose.Schema(
     end_time: { type: Date, required: true },   // includes time
     venue: { type: String, required: true },
     venue_details: { type: String }, // new field for additional venue info
-    status: { type: String, enum:["Upcoming", "Ongoing", "Concluded", "Cancelled"], default: 'Upcoming' },
+    status: { type: String, enum: ["Upcoming", "Ongoing", "Concluded", "Cancelled"], default: 'Upcoming' },
     is_mandatory: { type: Boolean, default: false },
+    remindersSent: {
+      twentyFourHours: { type: Boolean, default: false },
+      oneHour: { type: Boolean, default: false }
+    }
   },
 );
 
