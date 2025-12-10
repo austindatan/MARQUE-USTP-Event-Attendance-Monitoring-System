@@ -1,14 +1,27 @@
+// models/Notification.js (Revised)
+
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema(
     {
         user_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+            ref: 'Student',
             required: true,
         },
+        organization_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Organization",
+            required: true,
+        },
+        
+        // --- ADDED: For Event Notification Card ---
+        event_id: { 
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Event",
+            default: null, // Nullable: used only for type: "event"
+        },
 
-        // ENUM: allowed notification categories
         type: {
             type: String,
             enum: ["invite", "event", "role_change", "announcement"],
@@ -25,21 +38,19 @@ const notificationSchema = new mongoose.Schema(
             required: true,
         },
 
-        // The "sender"
-        // This is the organization that created the notification
-        organization_id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Organization",
-            required: true,
-        },
-
-        // ADDED: Role field for invites
-        role: {
+        role: { // USED BY: 'invite' and 'role_change'
             type: String,
             enum: ['Committee', 'Manager'],
             default: null,
         },
 
+        // --- ADDED: For tracking invitation state ---
+        status: { // USED BY: 'invite' to track action state
+            type: String,
+            enum: ['pending', 'accepted', 'rejected', 'info'], 
+            default: 'info', // 'info' for read-only (event/role_change, announcement)
+        },
+        
         is_read: {
             type: Boolean,
             default: false,

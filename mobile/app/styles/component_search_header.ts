@@ -6,7 +6,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#0A0F51",
     borderBottomLeftRadius: moderateScale(33),
     borderBottomRightRadius: moderateScale(33),
-    paddingTop: verticalScale(40),
     paddingHorizontal: moderateScale(20),
     paddingBottom: verticalScale(10),
     zIndex: 8,
@@ -57,7 +56,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center"
   },
-  
+
   filterButton: {
     backgroundColor: "#222762",
     flexDirection: "row",
@@ -66,7 +65,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(10),
     paddingVertical: verticalScale(8),
   },
-  
+
   filterText: {
     color: "#fff",
     fontSize: moderateScale(13),
@@ -133,7 +132,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(14),
     fontFamily: "DMSans-Regular",
   },
-  
+
   inactiveText: {
     color: "#fff",
     fontSize: moderateScale(14),
@@ -145,7 +144,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(13),
     fontFamily: "DMSans-Regular",
   },
-  
+
   inactiveTextEX: {
     color: "#fff",
     fontSize: moderateScale(13),

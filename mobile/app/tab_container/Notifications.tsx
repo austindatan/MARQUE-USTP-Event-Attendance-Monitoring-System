@@ -1,143 +1,203 @@
-// @ts-nocheck
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    ScrollView,
-    RefreshControl
-} from "react-native";
+//@ts-nocheck
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { BASE_URL } from "../../config";
+import NotificationCardEvent from "../components/Card_NotificationEvent";
+import NotificationCardOrg from "../components/Card_NotificationOrg";
 import Header from "../components/Header_Normal";
 import styles from "../styles/components_bookmark";
-import { useRouter } from "expo-router";
-import NotificationCard from "../components/Card_Notification";
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BASE_URL, CLOUD_NAME } from "../../config";
 
-const fixCloudinaryUrl = (url, cloudName) => {
-    if (!url || url.startsWith("http")) {
-        return url;
+const NotificationsScreen = () => {
+  const router = useRouter();
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [studentObjectId, setStudentObjectId] = useState(null);
+
+  useEffect(() => {
+    loadUserIdAndNotifications();
+  }, []);
+
+  const loadUserIdAndNotifications = async () => {
+    try {
+      const storedObjectId = await AsyncStorage.getItem("student_number");
+      console.log("AsyncStorage 'student_id':", storedObjectId);
+      if (storedObjectId) {
+        setStudentObjectId(storedObjectId);
+        fetchNotifications(storedObjectId);
+      } else {
+        setLoading(false);
+        Alert.alert("Error", "User ID not found. Cannot load notifications.");
+      }
+    } catch (error) {
+      console.error("Error loading user ID:", error);
+      setLoading(false);
     }
-    const path = url.replace(/ /g, "%20");
-    if (path.includes(cloudName)) {
-        return `https://${path}`;
+  };
+
+  const formatRelativeTime = (timestamp) => {
+    const now = new Date();
+    const created = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - created) / 1000);
+    if (diffInSeconds < 60) return "Just now";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+    return created.toLocaleDateString();
+  };
+
+  const calculateTimeStatus = (eventDate) => {
+    const now = new Date();
+    const eventTime = new Date(eventDate);
+    const diffInHours = Math.ceil((eventTime - now) / (1000 * 60 * 60));
+    if (eventTime < now) return "This event has concluded";
+    if (diffInHours <= 0) return "Starting now!";
+    if (diffInHours <= 24) return `Starts in ${diffInHours} more hour${diffInHours > 1 ? "s" : ""}`;
+    const diffInDays = Math.ceil(diffInHours / 24);
+    return `Starts in ${diffInDays} day${diffInDays > 1 ? "s" : ""}`;
+  };
+
+  const fetchNotifications = async (studentObjectId) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}/api/notifications/${studentObjectId}`);
+      setNotifications(res.data);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      Alert.alert("Error", "Failed to load notifications.");
+    } finally {
+      setLoading(false);
     }
-    return `https://res.cloudinary.com/${cloudName}/image/upload/${path}`;
+  };
+
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await axios.patch(`${BASE_URL}/api/notifications/read/${notificationId}`);
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notificationId ? { ...n, is_read: true } : n))
+      );
+    } catch (error) {
+      console.error("Error marking as read:", error);
+    }
+  };
+
+  const handleRoleAction = async (notificationId, action) => {
+    const studentNumberForAction = await AsyncStorage.getItem("student_number");
+    if (!studentNumberForAction) {
+      Alert.alert("Error", "Student Number is missing for action.");
+      return;
+    }
+    try {
+      const endpoint = `${BASE_URL}/api/notifications/${action}`;
+      await axios.post(endpoint, {
+        notification_id: notificationId,
+        user_id: studentNumberForAction
+      });
+      Alert.alert("Success", `Invite ${action}ed.`);
+      loadUserIdAndNotifications();
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || `Failed to ${action} invite.`;
+      Alert.alert("Error", errorMessage);
+    }
+  };
+
+  const renderNotificationCard = (notification) => {
+    const orgName = notification.organization_id?.org_name || "Unknown Organization";
+    const orgLogo = notification.organization_id?.pfp ? { uri: notification.organization_id.pfp } : null;
+    const key = notification._id;
+    const timeAgo = formatRelativeTime(notification.createdAt);
+
+    if (notification.type === "event" && notification.event_id) {
+      const eventData = notification.event_id;
+      const eventImage = eventData?.event_image ? { uri: eventData.event_image } : null;
+      const timeStatus = eventData?.event_date ? calculateTimeStatus(eventData.event_date) : "Event details pending";
+      const showConfirmation = notification.title.includes("Confirmation") || notification.title.includes("Registered");
+      return (
+        <TouchableOpacity key={key} onPress={() => handleMarkAsRead(notification._id)} disabled={notification.is_read}>
+          <NotificationCardEvent
+            eventImage={eventImage}
+            eventName={eventData?.event_name || notification.title}
+            orgLogo={orgLogo}
+            orgName={orgName}
+            timeStatus={timeStatus}
+            message={notification.message}
+            timeAgo={timeAgo}
+            showConfirmation={showConfirmation}
+          />
+        </TouchableOpacity>
+      );
+    }
+
+    if (["invite", "role_change", "announcement"].includes(notification.type)) {
+      const showRoleActions = notification.type === "invite" && (notification.status === "pending" || notification.status === "info" || !notification.status);
+      return (
+        <TouchableOpacity key={key} onPress={() => handleMarkAsRead(notification._id)} disabled={notification.is_read || showRoleActions}>
+          <NotificationCardOrg
+            orgLogo={orgLogo}
+            orgName={orgName}
+            message={notification.message}
+            showRoleActions={showRoleActions}
+            onAcceptRole={() => handleRoleAction(notification._id, "accept")}
+            onDenyRole={() => handleRoleAction(notification._id, "decline")}
+            timeAgo={timeAgo}
+            status={notification.status}
+            role={notification.role}
+          />
+        </TouchableOpacity>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <View style={styles.container}>
+      <Header />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={localStyles.scrollContent}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={18} color="#0A0F51" />
+          <Text style={styles.backText}>Notifications</Text>
+        </TouchableOpacity>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#0A0F51" style={{ marginTop: 50 }} />
+        ) : notifications.length === 0 ? (
+          <Text style={localStyles.emptyText}>You're all caught up! No new notifications.</Text>
+        ) : (
+          <>
+            <Text style={localStyles.heading}>Recent Activity</Text>
+            {notifications.map(renderNotificationCard)}
+          </>
+        )}
+
+        <View style={{ height: 130 }} />
+      </ScrollView>
+    </View>
+  );
 };
 
+const localStyles = StyleSheet.create({
+  scrollContent: { paddingHorizontal: 20, paddingTop: 20 },
+  heading: {
+    fontSize: 20,
+    fontFamily: "DMSans-Bold",
+    color: "#0A0F51",
+    marginBottom: 15,
+    marginTop: 10
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 50,
+    fontSize: 16,
+    color: "#666",
+    fontFamily: "DMSans-Regular"
+  }
+});
 
-const Notifications = () => {
-    const router = useRouter();
-    const [notifications, setNotifications] = useState([]);
-    const [refreshing, setRefreshing] = useState(false);
-
-    const loadNotifications = async () => {
-        const userId = await AsyncStorage.getItem("user_id");
-        if (!userId) return;
-
-        try {
-            const res = await axios.get(`${BASE_URL}/api/notifications/${userId}`);
-            setNotifications(res.data);
-        } catch (err) {
-            console.log("❌ Error loading notifications:", err);
-        }
-    };
-    
-    useEffect(() => {
-        loadNotifications();
-    }, []);
-
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        loadNotifications().then(() => setRefreshing(false));
-    }, []);
-
-    const handleEventPress = (eventId) => {
-        router.push({ 
-            pathname: '../tab_container/EventDetails_Unified', 
-            params: { eventId }
-        });
-    }
-
-    const formatMessage = (notification) => {
-        const { notification_type, event_id, message } = notification;
-        const eventDate = moment(event_id.event_date);
-        const now = moment();
-        
-        switch (notification_type) {
-            case 'event_reminder':
-                return `Event is ${eventDate.fromNow()}.`;
-            case 'attendance_recorded':
-                return message;
-            case 'event_concluded':
-                return `Event has concluded.`;
-            case 'new_event':
-                return `New event from ${event_id.organization_id.org_name || 'an organization'}.`;
-            default:
-                return message;
-        }
-    }
-
-    return (
-        <View style={styles.container}>
-            <Header />
-
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={{ paddingHorizontal: 20, paddingTop: 20 }}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-            >
-                <TouchableOpacity
-                    style={styles.backBtn}
-                    onPress={() => router.back()}
-                >
-                    <Ionicons name="arrow-back" size={18} color="#0A0F51" />
-                    <Text style={styles.backText}>Notifications</Text>
-                </TouchableOpacity>
-
-                {notifications.map((n) => {
-                    if (!n.event_id) {
-                        return null; 
-                    }
-                    
-                    const event = n.event_id;
-                    const organization = event.organization_id;
-
-                    const eventImageUri = event.event_image
-                        ? fixCloudinaryUrl(event.event_image, CLOUD_NAME)
-                        : (event.event_images && event.event_images.length > 0
-                            ? fixCloudinaryUrl(event.event_images[0], CLOUD_NAME)
-                            : null);
-
-                    const orgLogoUri = organization?.pfp
-                        ? fixCloudinaryUrl(organization.pfp, CLOUD_NAME)
-                        : null;
-
-                    const orgName = organization?.org_name || organization?.name || "Organization";
-
-                    return (
-                        <NotificationCard
-                            key={n._id}
-                            id={event._id}
-                            title={event.event_name}
-                            image={eventImageUri ? { uri: eventImageUri } : require("../../assets/images/marque/crtcg1.png")}
-                            orgLogo={orgLogoUri ? { uri: orgLogoUri } : require("../../assets/images/marque/crk.jpg")}
-                            organization={orgName}
-                            message={formatMessage(n)}
-                            notification_type={n.notification_type}
-                            onPress={() => handleEventPress(event._id)}
-                        />
-                    );
-                })}
-
-                <View style={{ height: 80 }} />
-            </ScrollView>
-        </View>
-    );
-};
-
-export default Notifications;
+export default NotificationsScreen;

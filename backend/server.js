@@ -72,6 +72,10 @@ app.use("/api/bookmarks", bookmarkRoutes);
 const reportRoutes = require('./routes/reportRoutes');
 app.use('/api/reports', reportRoutes);
 
+// Notification route
+const notificationRoutes = require("./routes/notificationRoutes");
+app.use("/api/notifications", notificationRoutes);
+
 // Department route
 const departmentRoutes = require('./routes/departmentRoutes');
 app.use('/api', departmentRoutes);

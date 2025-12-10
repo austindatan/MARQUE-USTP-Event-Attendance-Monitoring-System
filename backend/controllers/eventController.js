@@ -1,6 +1,8 @@
 import Event from "../models/Event.js";
 import Organization from "../models/Organization.js";
 import FollowedOrgs from "../models/Followed_org.js";
+import Notification from "../models/Notification.js";
+import Student from "../models/Student.js";
 import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
@@ -441,6 +443,53 @@ const createEvent = async (req, res) => {
     });
 
     const savedEvent = await newEvent.save();
+
+    // --- NOTIFICATION LOGIC ---
+    try {
+      // 1. Get Org details (for Department & Name)
+      const org = await Organization.findById(organization_id);
+
+      if (org) {
+        // 2. Identify Target Students
+        let targetStudentIds = new Set();
+
+        // A. Department Members
+        if (org.department_id) {
+          const deptStudents = await Student.find({ department_id: org.department_id }).select("_id");
+          deptStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+        }
+
+        // B. Followers (map User ID -> Student ID)
+        const followers = await FollowedOrgs.find({ organization_id }).select("user_id");
+        const followerUserIds = followers.map(f => f.user_id);
+
+        if (followerUserIds.length > 0) {
+          const followerStudents = await Student.find({ users_id: { $in: followerUserIds } }).select("_id");
+          followerStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+        }
+
+        // 3. Create Notifications
+        const notifications = Array.from(targetStudentIds).map(studentId => ({
+          user_id: studentId,
+          organization_id,
+          event_id: savedEvent._id,
+          type: "event",
+          title: "New Event: " + event_name,
+          message: `${org.org_name} has published a new event: "${event_name}". Check it out!`,
+          status: "info",
+          is_read: false
+        }));
+
+        if (notifications.length > 0) {
+          await Notification.insertMany(notifications);
+          console.log(`Created ${notifications.length} notifications for event: ${event_name}`);
+        }
+      }
+    } catch (notifErr) {
+      console.error("Error creating notifications for new event:", notifErr);
+    }
+    // ---------------------------
+
     res.status(201).json({ message: "Event created successfully", event: savedEvent });
   } catch (err) {
     console.error("Error creating event:", err);
@@ -514,48 +563,48 @@ const updateEvent = async (req, res) => {
 
 // CANCEL EVENT
 const cancelEvent = async (req, res) => {
-    try {
-        const { eventId } = req.params;
+  try {
+    const { eventId } = req.params;
 
-        const event = await Event.findById(eventId);
-        if (!event) {
-            return res.status(404).json({ message: "Event not found" });
-        }
-
-        event.status = "Cancelled";
-        await event.save();
-
-        return res.json({
-            message: "Event cancelled successfully",
-            status: event.status
-        });
-    } catch (error) {
-        console.error("Cancel event error:", error);
-        return res.status(500).json({ message: "Server error" });
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
     }
+
+    event.status = "Cancelled";
+    await event.save();
+
+    return res.json({
+      message: "Event cancelled successfully",
+      status: event.status
+    });
+  } catch (error) {
+    console.error("Cancel event error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
 
 // RESUME EVENT
 const resumeEvent = async (req, res) => {
-    try {
-        const { eventId } = req.params;
+  try {
+    const { eventId } = req.params;
 
-        const event = await Event.findById(eventId);
-        if (!event) {
-            return res.status(404).json({ message: "Event not found" });
-        }
-
-        event.status = "Upcoming";
-        await event.save();
-
-        return res.json({
-            message: "Event resumed successfully",
-            status: event.status
-        });
-    } catch (error) {
-        console.error("Resume event error:", error);
-        return res.status(500).json({ message: "Server error" });
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
     }
+
+    event.status = "Upcoming";
+    await event.save();
+
+    return res.json({
+      message: "Event resumed successfully",
+      status: event.status
+    });
+  } catch (error) {
+    console.error("Resume event error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
 
 
