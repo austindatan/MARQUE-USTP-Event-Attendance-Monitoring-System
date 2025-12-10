@@ -36,7 +36,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
     const d = new Date(dateStr);
     return d.toLocaleString(undefined, { month: "short" });
   };
-  
+
   const fetchAllData = async () => {
     if (!organizationId) {
       setError("No organization ID provided");
@@ -65,7 +65,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
   useEffect(() => {
     fetchAllData();
   }, [organizationId]);
-  
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
@@ -119,7 +119,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
               const evImage = ev.event_image
                 ? { uri: ev.event_image }
                 : require("../../assets/images/marque/crk.jpg");
-                
+
               return (
                 <EventCard
                   key={ev._id}
@@ -136,7 +136,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
               );
             })
           ) : (
-            <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>
+            <Text style={{ textAlign: "center", color: "gray", marginTop: 20, fontFamily: "DMSans-Regular" }}>
               No concluded events for this organization.
             </Text>
           )}
