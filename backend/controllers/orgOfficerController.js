@@ -13,25 +13,25 @@ exports.getJoinedOrganizations = async (req, res) => {
             return res.status(400).json({ message: "Invalid student ID" });
         }
 
-        // Find all Org_officer entries for the given studentId
         const officerLinks = await OrgOfficer.find({ student_id: studentId })
-            .populate('org_id') // populate organization details
+            .populate('org_id') 
             .lean();
 
         if (officerLinks.length === 0) {
-            return res.status(200).json([]); 
+            return res.status(200).json([]);
         }
 
-        // Map to include organization + role
-        const organizationsWithRole = officerLinks.map(link => ({
+        const organizations = officerLinks.map(link => ({
             _id: link.org_id._id,
-            name: link.org_id.name,         // assuming Organization has 'name'
+            org_name: link.org_id.org_name,             // ✔ renamed for frontend
             description: link.org_id.description || "",
-            role: link.role,                // include role for frontend checks
+            pfp: link.org_id.pfp || null,           // ✔ include pfp
+            role: link.role,
             date_joined: link.date_joined,
         }));
 
-        res.status(200).json(organizationsWithRole);
+        res.status(200).json(organizations);
+
     } catch (error) {
         console.error("Error fetching joined organizations:", error);
         res.status(500).json({ message: "Server error fetching joined organizations" });

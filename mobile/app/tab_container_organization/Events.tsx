@@ -26,6 +26,8 @@ const Events = () => {
     const rawEventId = params.eventId;
     const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
 
+    const [pendingProofsCount, setPendingProofsCount] = useState(0);
+
     const STICKY_HEADER_HEIGHT = 90;
 
     const [eventData, setEventData] = useState(null);
@@ -167,6 +169,13 @@ const Events = () => {
         }
     };
 
+    const handleVerifyProofPress = () => {
+        router.push({
+            pathname: "tab_container_organization/Photo_Proof_Verification",
+            params: { eventId: eventId }
+        });
+    };
+
     useEffect(() => {
         if (eventId) {
             fetchEventDetails(eventId);
@@ -282,19 +291,30 @@ const Events = () => {
 
                     <View style={styles.buttonsRow}>
                         <View style={{ width: 10 }} />
-                        
+
+                        {/* Verify Photos Button (styled same as Analytics Reports) */}
+                        {eventData && (
+                            <TouchableOpacity
+                                style={[styles.actionButton, { backgroundColor: '#0A0F51' }]}
+                                onPress={handleVerifyProofPress}
+                            >
+                                <Ionicons name="camera" size={24} color="#fff" />
+                                <Text style={styles.actionButtonText}>
+                                    Verify Photos {pendingProofsCount > 0 && `(${pendingProofsCount})`}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+
+                        <View style={{ width: 10 }} />
+
                         {/* Analytics Reports Button */}
                         <TouchableOpacity
                             style={[styles.actionButton, !isDownloadEnabled && { opacity: 0.5 }]}
                             activeOpacity={isDownloadEnabled ? 0.8 : 1}
                             onPress={() => {
                                 if (isDownloadEnabled) {
-                                    const url = `${BASE_URL}/api/reports/event/${eventId}/download-report`; // <-- different URL
-                                    console.log("Attempting download:", url);
-                                    Linking.openURL(url).catch((err) => {
-                                        console.error("Failed to open URL for download:", err);
-                                        Alert.alert("Download Error", "Could not start the download. Check your connection or the server.");
-                                    });
+                                    const url = `${BASE_URL}/api/reports/event/${eventId}/download-report`;
+                                    Linking.openURL(url).catch(err => console.error(err));
                                 } else {
                                     Alert.alert(
                                         "Feature Unavailable",
@@ -303,10 +323,10 @@ const Events = () => {
                                 }
                             }}
                         >
-                            <Ionicons name="download" size={30} color="#ffffffff" />
+                            <Ionicons name="download" size={30} color="#fff" />
                             <Text style={styles.actionButtonText}>Analytics Reports</Text>
                         </TouchableOpacity>
-                        
+
                         <View style={{ width: 10 }} />
 
                         {/* Attendance Spreadsheets Button */}
@@ -316,11 +336,7 @@ const Events = () => {
                             onPress={() => {
                                 if (isDownloadEnabled) {
                                     const url = `${BASE_URL}/events/attendance/export/${eventId}`;
-                                    console.log("Attempting download:", url);
-                                    Linking.openURL(url).catch((err) => {
-                                        console.error("Failed to open URL for download:", err);
-                                        Alert.alert("Download Error", "Could not start the download. Check your connection or the server.");
-                                    });
+                                    Linking.openURL(url).catch(err => console.error(err));
                                 } else {
                                     Alert.alert(
                                         "Feature Unavailable",
@@ -329,7 +345,7 @@ const Events = () => {
                                 }
                             }}
                         >
-                            <Ionicons name="download" size={30} color="#ffffffff" />
+                            <Ionicons name="download" size={30} color="#fff" />
                             <Text style={styles.actionButtonText}>Attendance Spreadsheets</Text>
                         </TouchableOpacity>
                     </View>
