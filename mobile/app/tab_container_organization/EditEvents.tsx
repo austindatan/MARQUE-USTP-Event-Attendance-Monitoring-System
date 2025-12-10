@@ -67,7 +67,7 @@ const EditEvents = () => {
         setDescription(ev.description || "");
 
         setStartDate(ev.event_date ? new Date(ev.event_date) : new Date());
-        setEndDate(ev.event_date ? new Date(ev.event_date) : new Date());
+        setEndDate(ev.end_date ? new Date(ev.end_date) : new Date());
         setStartTime(ev.start_time ? new Date(ev.start_time) : new Date());
         setEndTime(ev.end_time ? new Date(ev.end_time) : new Date());
 
@@ -127,10 +127,23 @@ const EditEvents = () => {
     d?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || "";
 
   const handleSave = async () => {
-    if (!eventName.trim() || !selectedEvent || !selectedVenue || !description.trim()) {
-      Alert.alert("Missing Fields", "Please fill all required fields.");
-      return;
-    }
+  if (!eventName.trim() || !selectedEvent || !selectedVenue || !description.trim()) {
+    Alert.alert("Missing Fields", "Please fill all required fields.");
+    return;
+  }
+
+  // Helper to combine date and time
+  const combineDateTime = (date, time) => {
+      const combined = new Date(date);
+      combined.setHours(time.getHours());
+      combined.setMinutes(time.getMinutes());
+      combined.setSeconds(time.getSeconds());
+      combined.setMilliseconds(time.getMilliseconds());
+      return combined;
+    };
+
+    const startDateTime = combineDateTime(startDate, startTime);
+    const endDateTime = combineDateTime(endDate, endTime);
 
     const formData = new FormData();
     formData.append("organization_id", orgId);
@@ -140,9 +153,11 @@ const EditEvents = () => {
     formData.append("venue_details", venueDetails);
     formData.append("description", description);
 
-    formData.append("event_date", startDate.toISOString());
-    formData.append("start_time", startTime.toISOString());
-    formData.append("end_time", endTime.toISOString());
+    // Use combined date-time values
+    formData.append("event_date", startDateTime.toISOString());
+    formData.append("end_date", endDateTime.toISOString());
+    formData.append("start_time", startDateTime.toISOString());
+    formData.append("end_time", endDateTime.toISOString());
 
     if (eventImage?.local) {
       formData.append("event_image", {
@@ -171,6 +186,7 @@ const EditEvents = () => {
       Alert.alert("Error", "Failed to save event.");
     }
   };
+
 
   const handleDelete = async () => {
     Alert.alert(

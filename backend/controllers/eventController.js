@@ -471,6 +471,8 @@ const getEventStatus = async (req, res) => {
 
 const createEvent = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
+
     const {
       organization_id,
       event_name,
@@ -479,6 +481,7 @@ const createEvent = async (req, res) => {
       venue_details,
       description,
       event_date,
+      end_date,
       start_time,
       end_time,
     } = req.body;
@@ -486,6 +489,7 @@ const createEvent = async (req, res) => {
     const event_image_url = req.file ? req.file.path || req.file.secure_url : null;
 
     const eventDateUTC = new Date(event_date);
+    const endDateUTC = new Date(end_date);
     const startTimeUTC = new Date(start_time);
     const endTimeUTC = new Date(end_time);
 
@@ -498,6 +502,7 @@ const createEvent = async (req, res) => {
       venue_details,
       event_image: event_image_url,
       event_date: eventDateUTC,
+      end_date: endDateUTC,
       start_time: startTimeUTC,
       end_time: endTimeUTC,
     });
@@ -559,6 +564,7 @@ const createEvent = async (req, res) => {
 
 const updateEvent = async (req, res) => {
   try {
+    await autoUpdateEventStatuses();
     const { eventId } = req.params;
     const {
       organization_id,
@@ -569,6 +575,7 @@ const updateEvent = async (req, res) => {
       venue_details,
       is_mandatory,
       event_date,
+      end_date,        // <-- ADDED
       start_time,
       end_time,
     } = req.body;
@@ -578,15 +585,22 @@ const updateEvent = async (req, res) => {
 
     // Convert to Date objects
     const eventDateUTC = new Date(event_date);
+    const endDateUTC = new Date(end_date);    // <-- ADDED
     const startTimeUTC = new Date(start_time);
     const endTimeUTC = new Date(end_time);
+
     const now = new Date();
 
     // Determine status based on current time
     let status = "Upcoming";
+
+    // Event is ongoing if current time is between start and end
     if (now >= startTimeUTC && now <= endTimeUTC) {
       status = "Ongoing";
-    } else if (now > endTimeUTC) {
+    } 
+    
+    // Event is concluded if now is past the END TIME
+    else if (now > endTimeUTC) {
       status = "Concluded";
     }
 
@@ -597,28 +611,40 @@ const updateEvent = async (req, res) => {
       venue,
       venue_details,
       is_mandatory,
-      event_date: eventDateUTC,
+      event_date: eventDateUTC,  // START DATE
+      end_date: endDateUTC,      // <-- ADDED
       start_time: startTimeUTC,
       end_time: endTimeUTC,
-      status, // <-- Add status
+      status,
     };
 
     if (new_event_image_url !== undefined) {
       updateData.event_image = new_event_image_url;
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(eventId, updateData, { new: true, runValidators: true });
+    const updatedEvent = await Event.findByIdAndUpdate(eventId, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedEvent) {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    res.status(200).json({ message: "Event updated successfully", event: updatedEvent });
+    res.status(200).json({
+      message: "Event updated successfully",
+      event: updatedEvent,
+    });
+
   } catch (err) {
     console.error("Error updating event:", err);
-    res.status(500).json({ message: "Server error updating event", details: err.message });
+    res.status(500).json({
+      message: "Server error updating event",
+      details: err.message,
+    });
   }
 };
+
 
 
 // CANCEL EVENT
