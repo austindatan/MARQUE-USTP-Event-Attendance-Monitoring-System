@@ -72,7 +72,13 @@ const EditOrganization = () => {
 
         setOrgName(org.org_name);
         setOrgType(org.org_type);
-        setDepartment(org.department_id?._id || "");
+        setDepartment(
+          org.department_id?._id ||
+          org.department?._id ||
+          org.department_id ||         // some backends return only the ID
+          org.department ||            // fallback
+          ""
+        );
         setDescription(org.description);
         setModeratorName(org.moderator_name);
 
