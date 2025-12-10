@@ -97,14 +97,6 @@ const Login = () => {
     }
   };
 
-  useEffect(() => {
-    const clearStorage = async () => {
-      await AsyncStorage.clear();
-      console.log("AsyncStorage cleared");
-    };
-    clearStorage();
-  }, []);
-
   return (
     <ImageBackground
       source={require("../assets/images/marque/SplashScreen.png")}
