@@ -1,7 +1,8 @@
 // @ts-nocheck
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, Animated, ActivityIndicator } from "react-native";
+import { View, Text, Animated, ActivityIndicator, Image } from "react-native";
 import EventCard from "../components/Card_Event";
+import EmptyCard from "../components/Card_Empty";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
 import { useRouter } from "expo-router"
@@ -9,17 +10,17 @@ import { useRouter } from "expo-router"
 const Departments = ({ scrollY, studentDept }) => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter ();
+  const router = useRouter();
 
   const fetchEvents = useCallback(async (studentDept) => {
     setIsLoading(true);
     try {
       const res = await fetch(`${BASE_URL}/events/${studentDept}`);
-      
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      
+
       const data = await res.json();
       setEvents(data);
     } catch (err) {
@@ -32,10 +33,10 @@ const Departments = ({ scrollY, studentDept }) => {
 
   useEffect(() => {
     if (studentDept) {
-      fetchEvents(studentDept); 
+      fetchEvents(studentDept);
     }
   }, [studentDept, fetchEvents]);
-  
+
   const renderEvents = () => {
     if (isLoading) {
       return (
@@ -44,12 +45,14 @@ const Departments = ({ scrollY, studentDept }) => {
         </View>
       );
     }
-    
+
     if (events.length === 0) {
       return (
-        <View style={{ flex: 1, paddingTop: 50, alignItems: 'center' }}>
-          <Text style={appeffects.pageSubtitle}>No upcoming events found for your department.</Text>
-        </View>
+        <EmptyCard
+          image={require("../../assets/images/marque/MARQUE_singlelogo.png")}
+          text="No upcoming events found for your department."
+          button={() => router.push("/tabs/Explore")}
+        />
       );
     }
 
@@ -94,11 +97,14 @@ const Departments = ({ scrollY, studentDept }) => {
       )}
       scrollEventThrottle={16}
     >
-      <View style={appeffects.pageStarter}>
-        <Text style={appeffects.pageTitle}>Upcoming Events</Text>
-        <Text style={appeffects.pageSubtitle}>Filtered by Dept.</Text>
-      </View>
-      
+      {/* ⭐️ HIDE THE TEXT IF LOADING IS DONE AND THERE ARE NO EVENTS ⭐️ */}
+      {(!isLoading && events.length > 0) && (
+        <View style={appeffects.pageStarter}>
+          <Text style={appeffects.pageTitle}>Upcoming Events</Text>
+          <Text style={appeffects.pageSubtitle}>Filtered by Dept.</Text>
+        </View>
+      )}
+
       {renderEvents()}
 
       <View style={{ height: 40 }} />

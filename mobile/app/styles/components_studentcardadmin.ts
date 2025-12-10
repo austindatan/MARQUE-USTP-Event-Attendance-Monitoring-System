@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#0A0F51",
     fontFamily: "DMSans-Medium",
+    paddingRight: 20,
   },
 
   position: {

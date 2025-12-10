@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState } from "react";
-import { View, TouchableOpacity, Image, Text, Animated,} from "react-native";
+import { View, TouchableOpacity, Image, Text, Animated, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
@@ -47,8 +47,8 @@ const Header = ({ onMenuPress, scrollY, onToggleChange }) => {
             resizeMode="contain"
           />
 
-          <TouchableOpacity>
-            <View style={styles.notif}>
+          <TouchableOpacity onPress={() => router.push("/tab_container/Notifications")}>
+            <View style={styles.notif} >
               <Ionicons name="notifications-outline" size={24} color="#fff" />
             </View>
           </TouchableOpacity>

@@ -71,9 +71,9 @@ export default function Filter_Page() {
     const allSelectedIds = [...selectedUnits, ...selectedMothers];
 
     router.replace({
-      pathname: "../tab_container/Search_Page", 
-      params: { 
-        filterIds: JSON.stringify(allSelectedIds) 
+      pathname: "../tab_container/Search_Page",
+      params: {
+        filterIds: JSON.stringify(allSelectedIds)
       },
     });
   };
@@ -98,7 +98,7 @@ export default function Filter_Page() {
               <OrgChip
                 key={unit._id}
                 item={unit}
-                isSelected={selectedUnits.includes(unit._id)} 
+                isSelected={selectedUnits.includes(unit._id)}
                 onPress={() => toggleUnit(unit._id)}
               />
             ))}
@@ -114,7 +114,7 @@ export default function Filter_Page() {
               <OrgChip
                 key={mother._id}
                 item={mother}
-                isSelected={selectedMothers.includes(mother._id)} 
+                isSelected={selectedMothers.includes(mother._id)}
                 onPress={() => toggleMother(mother._id)}
               />
             ))}

@@ -5,10 +5,10 @@ import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
 
-const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) => {
+const Header = ({ onMenuPress = () => { }, scrollY, onToggleChange = () => { } }) => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"Back" | "Incoming" | "Concluded">("Incoming");
-  const handleToggle = (tab: "Back" | "Incoming" | "Concluded") => {
+  const [activeTab, setActiveTab] = useState<"Back" | "Incoming" | "Concluded" | "Officers">("Incoming");
+  const handleToggle = (tab: "Back" | "Incoming" | "Concluded" | "Officers") => {
     setActiveTab(tab);
     if (tab === "Back") {
       router.back();
@@ -41,8 +41,8 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
           />
 
           <TouchableOpacity>
-            <View style={styles.notif}>
-              <Ionicons name="notifications-outline" size={24} color="#fff" />
+            <View style={{ backgroundColor: "#0A0F51", padding: 5, borderRadius: 100 }}>
+              <Ionicons name="notifications-outline" size={24} color="#0A0F51" />
             </View>
           </TouchableOpacity>
         </View>
@@ -72,17 +72,6 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
         ]}
       >
         <TouchableOpacity
-          style={activeTab === "Back" ? styles.activeButtonEX : styles.inactiveButtonEX}
-          onPress={() => handleToggle("Back")}
-        >
-          <Image
-            source={require("../../assets/images/marque/arrow-left.png")}
-            style={{ width: 20, height: 20, tintColor: "#fff" }}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
           style={activeTab === "Incoming" ? styles.activeButtonEX : styles.inactiveButtonEX}
           onPress={() => handleToggle("Incoming")}
         >
@@ -94,6 +83,17 @@ const Header = ({ onMenuPress = () => {}, scrollY, onToggleChange = () => {} }) 
           onPress={() => handleToggle("Concluded")}
         >
           <Text style={styles.activeTextEX}>Concluded</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={activeTab === "Officers" ? styles.activeButtonEX : styles.inactiveButtonEX}
+          onPress={() => handleToggle("Officers")}
+        >
+          <Image
+            source={require("../../assets/images/marque/compass.png")}
+            style={{ width: 20, height: 20, tintColor: "#fff" }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
       </View>
     </View>

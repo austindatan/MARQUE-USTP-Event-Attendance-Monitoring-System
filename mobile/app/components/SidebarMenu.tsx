@@ -92,8 +92,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
 
     const routes = {
         Home: "/tabs/Events",
-        Notifications: "/tab_container/Bookmark_Page",
-        Bookmarks: "/tab_container/Notifications",
+        Bookmarks: "/tab_container/Bookmark_Page",
+        Notifications: "/tab_container/Notifications",
         Profile: "/tabs/Profile",
     } as const; 
 
