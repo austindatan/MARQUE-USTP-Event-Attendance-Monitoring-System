@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import styles from "../styles/page_eventdetails"; 
+import styles from "../styles/page_eventdetails";
 import { BASE_URL, CLOUD_NAME } from "../../config";
 import axios from "axios";
 
@@ -17,14 +17,15 @@ const fixCloudinaryUrl = (url, cloudName) => {
 };
 
 const determineEventStatus = (eventData) => {
-  if (!eventData || !eventData.event_date) return 'unknown';
+  // CRITICAL: This is already protected, but the code calling it needs to be protected too.
+  if (!eventData || !eventData.event_date) return 'unknown'; 
   const now = new Date();
   const eventDate = new Date(eventData.event_date);
   const startTime = eventData.start_time ? new Date(eventData.start_time) : null;
   const endTime = eventData.end_time ? new Date(eventData.end_time) : null;
   const requiresManualAttendance = eventData.requiresManualAttendance;
 
-  if (eventData.status === "Cancelled") return "cancelled"; 
+  if (eventData.status === "Cancelled") return "cancelled";
   if (now < eventDate) return 'upcoming';
   else if (endTime && now > endTime) return 'concluded';
   else if (now >= eventDate) return requiresManualAttendance ? 'no-attendance' : 'ongoing';
@@ -43,10 +44,13 @@ const EventDetails_Unified = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [eventStatus, setEventStatus] = useState('loading');
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
-  const [userId, setUserId] = useState("692402df4600376c2cea56eb"); // Mock user ID
+  const [userId, setUserId] = useState("692402df4600376c2cea56eb"); // Mock user ID (Ensure this is correctly fetched in your real app)
 
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(true);
+  
+  const [photoProofStatus, setPhotoProofStatus] = useState(null); 
+  const [attendanceLogId, setAttendanceLogId] = useState(null); 
 
   /** ================= BOOKMARKS ================= */
   const checkBookmarkStatus = async () => {
@@ -102,8 +106,86 @@ const EventDetails_Unified = () => {
     } catch (error) {
       console.error("Error fetching event details:", error);
       Alert.alert("Network Error", `Failed to load event details. Error: ${error.message}`);
-    } finally { setLoading(false); }
+      // If event fetch fails, ensure eventData is null and loading is false
+      setEventData(null); 
+    } finally { 
+      setLoading(false); 
+    }
   };
+
+  /** ================= NEW: PHOTO PROOF STATUS ================= */
+  const fetchPhotoProofStatus = useCallback(async (eId) => {
+    try {
+      // Read correct AsyncStorage keys
+      const token = await AsyncStorage.getItem('token'); // matches login
+      const student_number = await AsyncStorage.getItem('student_number'); // user ID for API
+      
+      if (!token || !student_number) {
+        console.log("User session data missing. Cannot fetch photo proof status.");
+        setPhotoProofStatus(null);
+        setAttendanceLogId(null);
+        return;
+      }
+
+      const response = await axios.get(
+        `${BASE_URL}/api/attendance/log/${eId}/${student_number}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const log = response.data.log;
+
+      if (log) {
+        setPhotoProofStatus(log.photoproof_status);
+        setAttendanceLogId(log._id);
+      } else {
+        setPhotoProofStatus(null);
+        setAttendanceLogId(null);
+      }
+
+    } catch (error) {
+      console.error("Error fetching photo proof status:", error.response?.data || error.message);
+      setPhotoProofStatus(null);
+      setAttendanceLogId(null);
+    }
+  }, []);
+
+
+
+  /** ================= NAVIGATION HANDLER ================= */
+  /** ================= NAVIGATION HANDLER ================= */
+  const handleUploadPhotoproof = async () => {
+    try {
+      // 1. Get student number from AsyncStorage
+      const student_number = await AsyncStorage.getItem("student_number");
+      if (!student_number) {
+        Alert.alert("Error", "Student login info not found.");
+        return;
+      }
+
+      // 2. Prepare payload for backend
+      const payload = { 
+        event_id: eventId, 
+        student_number 
+        // attendanceLogId is optional; backend will create log if missing
+      };
+
+      // 3. Optional: check if attendanceLogId already exists
+      if (attendanceLogId) payload.attendanceLogId = attendanceLogId;
+
+      // 4. Navigate to Photo_Proof screen and pass required info
+      router.push({
+        pathname: "tab_container/Photo_Proof",
+        params: { 
+          eventId, 
+          payload // send eventId + student_number + optional attendanceLogId
+        }
+      });
+    } catch (err) {
+      console.error("UPLOAD PHOTO HANDLER ERROR:", err);
+      Alert.alert("Error", "Failed to prepare photo upload. Please try again.");
+    }
+  };
+
 
   /** ================= FOLLOW ================= */
   const checkFollowStatus = async (orgId) => {
@@ -146,6 +228,38 @@ const EventDetails_Unified = () => {
       if (submitted) await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
     } catch (err) { console.error(err); }
   };
+  
+  /** ================= BUTTON RENDER LOGIC ================= */
+  const renderPhotoProofButton = () => {
+    let buttonText = "Upload Photoproof";
+    let buttonStyle = [styles.photoproofButton, { backgroundColor: '#0A0F51' }];
+    let isDisabled = false;
+
+    if (photoProofStatus === 'verified') {
+      buttonText = "Your Photo has been verified/accepted.";
+      buttonStyle = [styles.photoproofButton, { backgroundColor: '#4CAF50' }];
+      isDisabled = true;
+    } else if (photoProofStatus === 'pending') {
+      buttonText = "Photo Proof Pending Verification";
+      buttonStyle = [styles.photoproofButton, { backgroundColor: '#FFC107' }];
+      isDisabled = true;
+    } else if (photoProofStatus === 'rejected') {
+      buttonText = "Re-upload Photoproof (Rejected)";
+      buttonStyle = [styles.photoproofButton, { backgroundColor: '#F44336' }];
+      isDisabled = false;
+    }
+
+    return (
+      <TouchableOpacity 
+        style={buttonStyle} 
+        onPress={handleUploadPhotoproof} 
+        disabled={isDisabled}
+      >
+        <Text style={styles.photoproofButtonText}>{buttonText}</Text>
+      </TouchableOpacity>
+    );
+  };
+
 
   /** ================= FOCUS EFFECT ================= */
   useFocusEffect(useCallback(() => {
@@ -153,26 +267,27 @@ const EventDetails_Unified = () => {
       fetchEventDetails(eventId);
       checkFeedbackStatus();
       checkBookmarkStatus();
+      fetchPhotoProofStatus(eventId); 
     } else setLoading(false);
-  }, [eventId]));
+  }, [eventId, fetchPhotoProofStatus]));
 
   useEffect(() => {
     if (eventData?.organization_id?._id && userId) checkFollowStatus(eventData.organization_id._id);
   }, [eventData, userId]);
+  
+  const handleBack = () => router.back();
 
-  if (loading) return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <ActivityIndicator size="large" color="#0A0F51" />
-      <Text style={{ marginTop: 10 }}>Loading Event Details...</Text>
-    </View>
-  );
+  // 💡 CRITICAL FIX: Render a loading screen if eventData is null
+  if (loading || !eventData) {
+    return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+            <ActivityIndicator size="large" color="#0A0F51" />
+            <Text style={{ marginTop: 10, color: '#0A0F51' }}>Loading Event Details...</Text>
+        </View>
+    );
+  }
 
-  if (!eventData) return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <Text style={{ fontSize: 16, textAlign: 'center' }}>Could not load event details for ID: {eventId}</Text>
-    </View>
-  );
-
+  // --- SAFE DATA CALCULATIONS START HERE ---
   const eventDateObj = eventData.event_date ? new Date(eventData.event_date) : null;
   const eventDate = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
@@ -199,7 +314,7 @@ const EventDetails_Unified = () => {
     ? { uri: eventData.organization_id.pfp }
     : require("../../assets/images/profile_pic.png");
 
-  const handleBack = () => router.back();
+  // --- SAFE DATA CALCULATIONS END HERE ---
 
   return (
     <View style={styles.container}>
@@ -235,6 +350,21 @@ const EventDetails_Unified = () => {
             <Text style={{ color: "#fff", fontSize: 28, fontWeight: "bold", textAlign: "center", paddingHorizontal: 20 }}>
               This Event Has Been Cancelled
             </Text>
+          </View>
+        )}
+        
+        {/* ================= ONGOING (combined NoAttendance + Ongoing) ================= */}
+        {(eventStatus === "ongoing" || eventStatus === "no-attendance") && (
+          <View style={styles.infoColumn}>
+            {/* Status Text */}
+            <View style={[styles.infoBox, { marginBottom: 10 }]}>
+              <Text style={styles.infoText}>
+                This event is <Text style={{ fontWeight: "bold" }}>ongoing</Text>.
+              </Text>
+            </View>
+
+            {/* Upload Photoproof Button */}
+            {renderPhotoProofButton()}
           </View>
         )}
 
