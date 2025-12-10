@@ -1,25 +1,24 @@
 // @ts-nocheck
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router"; 
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-
 import Header_Search from "../components/Header_Search";
-import EventCard from "../components/Card_Event"; 
-import styles from "../styles/component_search_page"; 
-import { BASE_URL } from "../../config"; 
+import EventCard from "../components/Card_Event";
+import styles from "../styles/component_search_page";
+import { BASE_URL } from "../../config";
 
 export default function SearchPage() {
   const router = useRouter();
 
-  const params = useLocalSearchParams(); 
+  const params = useLocalSearchParams();
 
   const [query, setQuery] = useState("");
-  const [fetchedEvents, setFetchedEvents] = useState([]); 
+  const [fetchedEvents, setFetchedEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true); 
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [activeFilterIds, setActiveFilterIds] = useState([]);
-  
+
   useEffect(() => {
     if (params.filterIds) {
       try {
@@ -31,17 +30,17 @@ export default function SearchPage() {
     }
   }, [params.filterIds]);
 
-  const fetchEvents = useCallback(async (searchQuery, filterIds) => { 
+  const fetchEvents = useCallback(async (searchQuery, filterIds) => {
     setIsLoading(true);
     let url;
     const isFilterActive = filterIds && filterIds.length > 0;
 
     if (isFilterActive) {
-        const query = filterIds.join(",");
-        url = `${BASE_URL}/events/filter?orgs=${query}`; 
-        console.log(`Fetching FILTERED events: ${url}`);
+      const query = filterIds.join(",");
+      url = `${BASE_URL}/events/filter?orgs=${query}`;
+      console.log(`Fetching FILTERED events: ${url}`);
     } else if (searchQuery.trim()) {
-      url = `${BASE_URL}/api/search?query=${encodeURIComponent(searchQuery)}`; 
+      url = `${BASE_URL}/api/search?query=${encodeURIComponent(searchQuery)}`;
     } else {
       url = `${BASE_URL}/api/ongoing`;
     }
@@ -53,7 +52,7 @@ export default function SearchPage() {
       setFetchedEvents(data);
     } catch (err) {
       console.error("Error fetching events:", err);
-      setFetchedEvents([]); 
+      setFetchedEvents([]);
     } finally {
       setIsLoading(false);
       setIsInitialLoad(false);
@@ -62,8 +61,8 @@ export default function SearchPage() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchEvents(query, activeFilterIds); 
-    }, 500); 
+      fetchEvents(query, activeFilterIds);
+    }, 500);
 
     return () => clearTimeout(delayDebounceFn);
   }, [query, activeFilterIds, fetchEvents]);
@@ -113,7 +112,7 @@ export default function SearchPage() {
         </View>
       );
     }
-    
+
     return null;
   };
 
@@ -123,19 +122,19 @@ export default function SearchPage() {
         query={query}
         setQuery={setQuery}
         onBack={() => router.back()}
-        onFilterPress={() => router.push("../tab_container/Filter_Page")} 
+        onFilterPress={() => router.push("../tab_container/Filter_Page")}
       />
 
       <View style={styles.headerContentWrapper}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
+        <TouchableOpacity
+          onPress={() => router.back()}
           style={styles.backButtonTitleContainer}
         >
-          <Ionicons name="chevron-back" size={24} color="#000" style={styles.backButtonIcon} /> 
+          <Ionicons name="chevron-back" size={24} color="#000" style={styles.backButtonIcon} />
           <Text style={styles.backButtonTitleText}>
-            {activeFilterIds.length > 0 
-                ? `Filtered by ${activeFilterIds.length} organizations`
-                : query.trim() ? `Results for "${query}"` : "Ongoing Events"}
+            {activeFilterIds.length > 0
+              ? `Filtered by ${activeFilterIds.length} organizations`
+              : query.trim() ? `Results for "${query}"` : "Ongoing Events"}
           </Text>
         </TouchableOpacity>
       </View>
