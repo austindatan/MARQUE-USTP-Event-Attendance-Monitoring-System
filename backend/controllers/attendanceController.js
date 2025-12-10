@@ -233,49 +233,247 @@ const searchAttendanceLogs = async (req, res) => {
   }
 };
 
+const getAttendanceLogStatus = async (req, res) => {
+  try {
+    const { event_id, student_number } = req.params;
+
+    if (!event_id || !student_number) {
+      return res.status(400).json({ message: "Missing required parameters: event_id or student_number" });
+    }
+
+    // 1. Find the student record to get the MongoDB user_id
+    const student = await Student.findOne({ student_number }).populate("users_id");
+
+    if (!student || !student.users_id) {
+      return res.status(404).json({ message: "Student or associated user not found" });
+    }
+    
+    const user_id = student.users_id._id;
+
+    // 2. Find the attendance log for this user and event
+    // The client expects the full log object to check the status
+    const log = await AttendanceLog.findOne({ event_id, user_id });
+
+    if (!log) {
+      return res.status(200).json({ message: "Attendance log not found", log: null });
+    }
+
+    // 3. Return the log object (the client is looking for log.photoproof_status and log._id)
+    return res.status(200).json({ 
+      message: "Attendance log retrieved successfully",
+      log: log, // Return the full log object
+    });
+
+  } catch (error) {
+    console.error("GET ATTENDANCE LOG STATUS ERROR:", error);
+    // Returning a 500 error here is what the client was likely receiving before.
+    return res.status(500).json({ message: "Server error retrieving attendance log" });
+  }
+};
+
 
 
 const uploadPhotoproof = async (req, res) => {
   try {
-    const watermarkText = req.body?.watermarkText || '';
+    const { watermarkText, attendanceLogId, event_id, student_number } = req.body;
 
     if (!req.file || !req.file.path) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
+    let log = null;
+
+    // If attendanceLogId is provided, use existing log
+    if (attendanceLogId) {
+      log = await AttendanceLog.findById(attendanceLogId);
+      if (!log) return res.status(404).json({ message: 'Attendance log not found.' });
+    } else {
+      // If attendanceLogId is missing, create a new attendance log
+      if (!event_id || !student_number) {
+        return res.status(400).json({ message: 'Missing event_id or student_number for new attendance log.' });
+      }
+
+      // Find student
+      const student = await Student.findOne({ student_number }).populate("users_id");
+      if (!student || !student.users_id) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Check if a log already exists just in case
+      log = await AttendanceLog.findOne({ event_id, user_id: student.users_id._id });
+      if (!log) {
+        log = await AttendanceLog.create({
+          event_id,
+          user_id: student.users_id._id,
+          status: "Pending", // mark as pending until manual verification if needed
+          time_in: new Date(),
+        });
+      }
+    }
+
+    // Upload photo to Cloudinary
     const originalUrl = req.file.path;
 
-    // Use Cloudinary to create a watermarked version of the uploaded image.
-    // We re-upload the already-hosted image URL and apply a text overlay transformation.
     const uploadOptions = {
       folder: 'MARQUE Events/PHOTOPROOF_WATERMARKED',
       public_id: `photoproof-wm-${Date.now()}`,
-      transformation: []
+      transformation: [],
     };
 
     if (watermarkText && watermarkText.trim() !== '') {
       uploadOptions.transformation.push({
-        overlay: {
-          font_family: 'Arial',
-          font_size: 36,
-          font_weight: 'bold',
-          text: watermarkText
-        },
+        overlay: { font_family: 'Arial', font_size: 36, font_weight: 'bold', text: watermarkText },
         gravity: 'south_west',
         x: 20,
         y: 20,
-        color: '#FFFFFF'
+        color: '#FFFFFF',
       });
     }
 
     const result = await cloudinary.uploader.upload(originalUrl, uploadOptions);
+    const photoproofUrl = result.secure_url;
 
-    return res.status(200).json({ message: 'Uploaded', url: result.secure_url });
+    // Update the log with photo details
+    const updatedLog = await AttendanceLog.findByIdAndUpdate(
+      log._id,
+      {
+        photoproof_url: photoproofUrl,
+        photoproof_status: 'pending',
+        photoproof_submitted_at: new Date(),
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: 'Photo proof uploaded successfully.',
+      url: photoproofUrl,
+      attendanceLog: updatedLog,
+    });
+
   } catch (err) {
     console.error('UPLOAD PHOTOPROOF ERROR:', err);
     return res.status(500).json({ message: 'Server Error', error: err.message });
   }
 };
+
+
+const verifyPhotoproof = async (req, res) => {
+  try {
+    const { attendanceLogId, status } = req.body;
+
+    if (!attendanceLogId || !status) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const log = await AttendanceLog.findById(attendanceLogId);
+    if (!log) return res.status(404).json({ message: "Attendance log not found" });
+
+    log.photoproof_status = status;
+    await log.save();
+
+    res.json({ message: "Photo proof updated successfully." });
+  } catch (error) {
+    console.error("Error verifying photo proof:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+// Get all pending photo proofs for an event
+const getPendingPhotoproofs = async (req, res) => {
+  try {
+    const { event_id } = req.params;
+
+    if (!event_id) {
+      return res.status(400).json({ message: "Missing event_id" });
+    }
+
+    // Find logs with pending status
+    const logs = await AttendanceLog.find({ event_id, photoproof_status: 'pending' })
+      .populate('user_id');
+
+    // Attach student_number from Student collection
+    const formattedLogs = await Promise.all(
+      logs.map(async (log) => {
+        const student = await Student.findOne({ users_id: log.user_id._id });
+        return {
+          _id: log._id,
+          event_id: log.event_id,
+          user_id: log.user_id,
+          student_number: student?.student_number || '',
+          photoproof_url: log.photoproof_url,
+          photoproof_status: log.photoproof_status,
+          photoproof_submitted_at: log.photoproof_submitted_at,
+        };
+      })
+    );
+
+    res.status(200).json(formattedLogs);
+
+  } catch (error) {
+    console.error("FETCH PENDING PHOTO PROOFS ERROR:", error);
+    res.status(500).json({ message: "Server error fetching pending photo proofs" });
+  }
+};
+
+
+// Function for student to check their photo proof status
+const getAttendanceLogByUserAndEvent = async (req, res) => {
+    try {
+        const { event_id, user_id } = req.params;
+
+        const log = await AttendanceLog.findOne({
+            event_id: event_id,
+            user_id: user_id,
+        })
+        .select('photoproof_status time_in photoproof_url'); 
+
+        // Returning 200 with log: null if not found is often better than 404 for status checks
+        res.status(200).json({ log });
+
+    } catch (error) {
+        console.error("GET ATTENDANCE LOG ERROR:", error);
+        res.status(500).json({ message: "Server error retrieving attendance log" });
+    }
+};
+
+const registerOrGetAttendanceLog = async (req, res) => {
+  try {
+    const { event_id, student_number } = req.body;
+
+    if (!event_id || !student_number) {
+      return res.status(400).json({ message: "Missing event_id or student_number." });
+    }
+
+    const student = await Student.findOne({ student_number }).populate("users_id");
+    if (!student) return res.status(404).json({ message: "Student not found." });
+
+    const user = student.users_id;
+
+    // Find existing log
+    let log = await AttendanceLog.findOne({ event_id, user_id: user._id });
+
+    if (!log) {
+      // Create new log with default status 'Present'
+      log = await AttendanceLog.create({
+        event_id,
+        user_id: user._id,
+        status: "Present",
+        time_in: new Date(),
+      });
+    }
+
+    return res.status(200).json({ message: "Attendance log retrieved.", attendanceLog: log });
+
+  } catch (err) {
+    console.error("REGISTER OR GET LOG ERROR:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+
+
+
 
 /* ============================================================
     EXPORT ATTENDANCE LOGS AS PDF
@@ -414,6 +612,11 @@ module.exports = {
   getAttendanceHistory,
   isEventWithin1Hour,
   searchAttendanceLogs, // export Event model if needed for routes
+  getAttendanceLogStatus,
   uploadPhotoproof,
   exportAttendancePDF,
+  verifyPhotoproof,
+  getPendingPhotoproofs,
+  getAttendanceLogByUserAndEvent,
+  registerOrGetAttendanceLog,
 };
