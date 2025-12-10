@@ -10,6 +10,8 @@ router.post('/profile/:student_number/upload-photo', uploadStudentImage.single('
 router.get('/profile/:student_number/attendance', controller.getStudentAttendance);
 router.delete('/profile/:student_number', controller.deleteStudentProfile);
 
+router.get('/organizations/by-departments', controller.getOrganizationsByDepartmentIds);
+
 // change password route
 router.put("/profile/:student_number/change-password", controller.changeStudentPassword
 );

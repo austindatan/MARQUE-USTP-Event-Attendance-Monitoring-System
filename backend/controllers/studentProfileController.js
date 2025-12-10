@@ -4,6 +4,7 @@ const Event = require('../models/Event');
 const AttendanceLog = require('../models/Attendance_log');
 const mongoose = require('mongoose');
 const OrgOfficer = require('../models/Org_officer');
+const Organization = require('../models/Organization');
 
 // GET API
 exports.getStudentProfileByNumber = async (req, res) => {
@@ -283,3 +284,37 @@ exports.deleteStudentProfile = async (req, res) => {
   }
 };
 
+// GET API to fetch organizations by multiple department IDs
+exports.getOrganizationsByDepartmentIds = async (req, res) => {
+    try {
+        const { departmentIds } = req.query; // Get the comma-separated string
+
+        if (!departmentIds) {
+            // This is the most likely cause of the 400 error in a newly implemented route
+            return res.status(400).json({ message: 'Missing departmentIds query parameter' }); 
+        }
+
+        // 1. Split the string into an array of strings
+        const stringIds = departmentIds.split(',');
+        
+        // 2. Map the string array to Mongoose ObjectIds
+        const validObjectIds = stringIds
+            .map(id => id.trim())
+            .filter(id => mongoose.Types.ObjectId.isValid(id)) // Crucial validation
+            .map(id => new mongoose.Types.ObjectId(id));
+
+        if (validObjectIds.length === 0) {
+            return res.status(400).json({ message: 'No valid department IDs provided.' });
+        }
+
+        // 3. Query using the $in operator to find organizations matching ANY of the IDs
+        const organizations = await Organization.find({ 
+            department_id: { $in: validObjectIds } 
+        });
+
+        res.json(organizations);
+    } catch (err) {
+        console.error('Error in getOrganizationsByDepartmentIds:', err);
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+};
