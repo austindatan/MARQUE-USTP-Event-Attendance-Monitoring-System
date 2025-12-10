@@ -312,14 +312,14 @@ exports.downloadEventReport = async (req, res) => {
         // ========== REPORT HEADER ==========
         sheet.mergeCells(`A${currentRow}`, `H${currentRow}`);
         const headerCell = sheet.getCell(`A${currentRow}`);
-        headerCell.value = `📊 ${event.event_name} – Event Report`;
+        headerCell.value = `${event.event_name} – Event Report`;
         Object.assign(headerCell, STYLES.header);
         sheet.getRow(currentRow).height = 30;
         currentRow++;
 
         sheet.mergeCells(`A${currentRow}`, `H${currentRow}`);
         const dateCell = sheet.getCell(`A${currentRow}`);
-        dateCell.value = `📅 Event Date: ${new Date(
+        dateCell.value = `Event Date: ${new Date(
             event.event_date
         ).toDateString()}`;
         dateCell.font = { size: 11, italic: true, color: { argb: "666666" } };
@@ -327,7 +327,7 @@ exports.downloadEventReport = async (req, res) => {
         currentRow++;
 
         // ========== SECTION 1: FEEDBACK SUMMARY ==========
-        currentRow = addSection(sheet, currentRow, "📝 1. Feedback Summary");
+        currentRow = addSection(sheet, currentRow, "1. Feedback Summary");
         currentRow++;
 
         addTableRow(
@@ -375,7 +375,7 @@ exports.downloadEventReport = async (req, res) => {
         currentRow += 20;
 
         // ========== SECTION 2: ATTENDANCE BY PROGRAM ==========
-        currentRow = addSection(sheet, currentRow, "👥 2. Attendance by Program");
+        currentRow = addSection(sheet, currentRow, "2. Attendance by Program");
         currentRow++;
 
         addTableRow(
@@ -426,7 +426,7 @@ exports.downloadEventReport = async (req, res) => {
         currentRow = addSection(
             sheet,
             currentRow,
-            "📈 3. Attendance Trend (Check-ins every 15 minutes)"
+            "3. Attendance Trend (Check-ins every 15 minutes)"
         );
         currentRow++;
 
