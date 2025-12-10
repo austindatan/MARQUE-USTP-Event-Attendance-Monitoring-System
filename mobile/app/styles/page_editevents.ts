@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans-Medium",
   },
 
-  pickerContainer: { 
+  pickerContainer: {
     borderWidth: 1,
     borderColor: '#D3D3D3',
     borderRadius: 5,
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     fontFamily: "DMSans-Medium",
   },
-  
+
   picker: {
     width: '100%',
     height: 50,
@@ -114,12 +114,12 @@ const styles = StyleSheet.create({
   },
 
   dropdownInput: {
-  backgroundColor: '#F7F7F7',
-  borderRadius: 10,
-  paddingHorizontal: 15,
-  paddingVertical: 14,
-  borderWidth: 1,
-  borderColor: '#EFEFEF',
+    backgroundColor: '#F7F7F7',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
   },
 
   dropdownText: {
@@ -167,9 +167,9 @@ const styles = StyleSheet.create({
   },
 
   row: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
 
   halfInput: {
@@ -261,6 +261,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  bottomButtonContainerAdmin: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    position: "absolute",
+    bottom: rs(20),
+    width: "100%",
+    paddingHorizontal: rs(20),
+  },
+
   bottomButtonContainer: {
     position: "absolute",
     bottom: rs(20),
@@ -274,16 +283,32 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: rs(14),
-    borderRadius: rs(30),
+    borderRadius: rs(20),
+  },
+
+  deleteButton: {
+    backgroundColor: "#ff2600ff",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: rs(14),
+    borderRadius: rs(20),
   },
 
   registerText: {
     color: "#fff",
     marginRight: rs(8),
-    fontSize: rs(14),
+    fontSize: rs(12),
     fontFamily: "DMSans-Medium",
   },
-  
+
+  deleteText: {
+    color: "#fff",
+    marginLeft: rs(8),
+    fontSize: rs(12),
+    fontFamily: "DMSans-Medium",
+  },
+
 });
 
 export default styles;

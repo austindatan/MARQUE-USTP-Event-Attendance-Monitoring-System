@@ -147,7 +147,7 @@ const AddUser = () => {
         </View>
 
         {/* PROFILE IMAGE */}
-        <View style={{ alignItems: "center", marginVertical: 20 }}>
+        <View style={{ alignItems: "left", marginBottom: 20 }}>
           <TouchableOpacity onPress={pickImage}>
             {profileImage ? (
               <Image
@@ -190,7 +190,7 @@ const AddUser = () => {
             style={styles.dropdownInput}
             onPress={() => setCollegeModalVisible(true)}
           >
-            <Text style={{ color: collegeId ? "#000" : "#C1C1C1" }}>
+            <Text style={{ color: collegeId ? "#000" : "#C1C1C1", fontFamily: "DMSans-Medium" }}>
               {colleges.find(c => c._id === collegeId)?.college_name || "Select college"}
             </Text>
           </TouchableOpacity>
@@ -203,7 +203,7 @@ const AddUser = () => {
             style={styles.dropdownInput}
             onPress={() => setDepartmentModalVisible(true)}
           >
-            <Text style={{ color: departmentId ? "#000" : "#C1C1C1" }}>
+            <Text style={{ color: departmentId ? "#000" : "#C1C1C1", fontFamily: "DMSans-Medium" }}>
               {departments.find(d => d._id === departmentId)?.department_name ||
                 "Select department"}
             </Text>
@@ -240,20 +240,18 @@ const AddUser = () => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Role</Text>
           <View style={[styles.dropdownInput, { backgroundColor: "#EEE" }]}>
-            <Text style={{ color: "#000" }}>Student</Text>
+            <Text style={{ color: "#000", fontFamily: "DMSans-Medium" }}>Student</Text>
           </View>
         </View>
 
-        <View style={{ height: 80 }} />
+        <View style={{ height: 60 }} />
       </ScrollView>
 
       <View style={styles.bottomButtonContainer}>
-        <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
-          <TouchableOpacity style={styles.registerButton} onPress={handleSave}>
-            <Text style={styles.registerText}>Publish User</Text>
-            <Ionicons name="arrow-forward" size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.registerButton} onPress={handleSave}>
+          <Text style={styles.registerText}>Publish User</Text>
+          <Ionicons name="arrow-forward" size={18} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       {/* COLLEGE MODAL */}
