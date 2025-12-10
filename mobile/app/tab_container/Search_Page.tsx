@@ -38,13 +38,13 @@ export default function SearchPage() {
 
     if (isFilterActive) {
         const query = filterIds.join(",");
-        url = `${BASE_URL}/events/filter?orgs=${query}`; 
-        console.log(`Fetching FILTERED events: ${url}`);
+        url = `${BASE_URL}/events/filter?orgs=${query}`;
     } else if (searchQuery.trim()) {
-      url = `${BASE_URL}/api/search?query=${encodeURIComponent(searchQuery)}`; 
+        url = `${BASE_URL}/events/search?query=${encodeURIComponent(searchQuery)}`;
     } else {
-      url = `${BASE_URL}/api/ongoing`;
+        url = `${BASE_URL}/events/ongoing`;
     }
+
 
     try {
       const res = await fetch(url);
@@ -98,7 +98,10 @@ export default function SearchPage() {
             description={event.description}
             dateDay={dateDay}
             dateMonth={dateMonth}
-            onPress={() => router.push(`/events/${event._id}`)}
+            onPress={() => router.push({
+                pathname: "/tab_container/EventDetails_Unified",
+                params: { eventId: event._id }
+              })}
           />
         );
       });
