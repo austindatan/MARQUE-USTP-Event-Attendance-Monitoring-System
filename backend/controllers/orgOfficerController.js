@@ -19,7 +19,7 @@ exports.getJoinedOrganizations = async (req, res) => {
             .lean();
 
         if (officerLinks.length === 0) {
-            return res.status(200).json([]); 
+            return res.status(200).json([]);
         }
 
         // Map to include organization + role
@@ -50,8 +50,8 @@ exports.getAvailableOrganizations = async (req, res) => {
         const joinedLinks = await OrgOfficer.find({ student_id: studentId }).select('org_id').lean();
         const joinedOrgIds = joinedLinks.map(link => link.org_id);
 
-        const availableOrgs = await Organization.find({ 
-            _id: { $nin: joinedOrgIds } 
+        const availableOrgs = await Organization.find({
+            _id: { $nin: joinedOrgIds }
         });
 
         res.status(200).json(availableOrgs);
@@ -85,7 +85,7 @@ exports.sendInvite = async (req, res) => {
 
         // 2. Find the sender's OrgOfficer link using the correct MongoDB _id
         const senderOfficer = await OrgOfficer.findOne({ student_id: sender_student_id });
-        
+
         if (!senderOfficer) {
             console.error("Sender not linked to any organization");
             return res.status(400).json({ message: "Sender not linked to any organization" });
@@ -95,7 +95,7 @@ exports.sendInvite = async (req, res) => {
         const existingInvite = await Notification.findOne({
             user_id: target_student_id,
             organization_id: senderOfficer.org_id,
-            type: "invite"
+            type: "invite",
             // Note: If you track 'is_accepted', you might need to add a filter like: is_accepted: { $ne: true }
         });
 
@@ -112,6 +112,7 @@ exports.sendInvite = async (req, res) => {
             title: "Organization Invite",
             message: `You have been invited to join the organization as ${role}`,
             role: role,
+            status: "pending"
         });
 
         console.log("Invite notification created:", notification);
@@ -168,7 +169,7 @@ exports.getOutstandingInvites = async (req, res) => {
             organization_id: orgId,
             type: "invite",
             // Add any other filter needed to ensure it's "pending" (e.g., is_resolved: false)
-        }).select('user_id role'); 
+        }).select('user_id role');
 
         // Map the results to a simpler object { student_id: role } for fast lookup on the client
         const inviteMap = invites.reduce((acc, invite) => {
@@ -187,127 +188,134 @@ exports.getOutstandingInvites = async (req, res) => {
 
 // --- ACCEPT INVITE ---
 exports.acceptInvite = async (req, res) => {
-  const { notification_id, student_id } = req.body;
-  console.log("acceptInvite called:", { notification_id, student_id });
+    const { notification_id, student_id } = req.body;
+    console.log("acceptInvite called:", { notification_id, student_id });
 
-  try {
-    const notif = await Notification.findById(notification_id);
-    if (!notif) {
-      console.error("Notification not found:", notification_id);
-      return res.status(404).json({ message: "Notification not found" });
-    }
+    try {
+        const notif = await Notification.findById(notification_id);
+        if (!notif) {
+            console.error("Notification not found:", notification_id);
+            return res.status(404).json({ message: "Notification not found" });
+        }
 
-    const existingOfficer = await OrgOfficer.findOne({ student_id, org_id: notif.organization_id });
-    if (existingOfficer) {
-      console.error("Student already in organization:", student_id);
-      return res.status(400).json({ message: "Already a member of the organization" });
-    }
+        const existingOfficer = await OrgOfficer.findOne({ student_id, org_id: notif.organization_id });
+        if (existingOfficer) {
+            console.error("Student already in organization:", student_id);
+            return res.status(400).json({ message: "Already a member of the organization" });
+        }
 
-    const newOfficer = await OrgOfficer.create({
-      student_id,
-      org_id: notif.organization_id,
-      role: notif.role || "Committee",
-    });
-    console.log("New officer added:", newOfficer);
+        const newOfficer = await OrgOfficer.create({
+            student_id,
+            org_id: notif.organization_id,
+            role: notif.role || "Committee",
+        });
+        console.log("New officer added:", newOfficer);
 
-    notif.is_read = true;
-    await notif.save();
+        notif.is_read = true;
+        await notif.save();
 
-    res.status(201).json({ message: "Invite accepted, added to organization", officer: newOfficer });
-  } catch (err) {
-    console.error("Error accepting invite:", err);
-    res.status(500).json({ message: "Server error accepting invite", error: err.message });
-  }
+        res.status(201).json({ message: "Invite accepted, added to organization", officer: newOfficer });
+    } catch (err) {
+        console.error("Error accepting invite:", err);
+        res.status(500).json({ message: "Server error accepting invite", error: err.message });
+    }
 };
 
 // --- CANCEL INVITE ---
 exports.cancelInvite = async (req, res) => {
-  const { target_student_id, orgId } = req.body;
+    const { target_student_id, orgId } = req.body;
 
-  if (!target_student_id || !orgId) {
-    return res.status(400).json({ message: "target_student_id and orgId are required" });
-  }
-
-  try {
-    const invite = await Notification.findOneAndDelete({
-      user_id: target_student_id,
-      organization_id: orgId,
-      type: "invite"
-    });
-
-    if (!invite) {
-      return res.status(404).json({ message: "No pending invite found to cancel" });
+    if (!target_student_id || !orgId) {
+        return res.status(400).json({ message: "target_student_id and orgId are required" });
     }
 
-    res.status(200).json({ message: "Invite cancelled successfully" });
-  } catch (err) {
-    console.error("Error cancelling invite:", err);
-    res.status(500).json({ message: "Server error cancelling invite", error: err.message });
-  }
+    try {
+        const invite = await Notification.findOneAndDelete({
+            user_id: target_student_id,
+            organization_id: orgId,
+            type: "invite"
+        });
+
+        if (!invite) {
+            return res.status(404).json({ message: "No pending invite found to cancel" });
+        }
+
+        res.status(200).json({ message: "Invite cancelled successfully" });
+    } catch (err) {
+        console.error("Error cancelling invite:", err);
+        res.status(500).json({ message: "Server error cancelling invite", error: err.message });
+    }
 };
 
 // --- CHANGE ROLE ---
 exports.changeRole = async (req, res) => {
-  const { student_id, new_role } = req.body;
-  console.log("changeRole called:", { student_id, new_role });
+    const { student_id, new_role } = req.body;
+    console.log("changeRole called:", { student_id, new_role });
 
-  if (!new_role) {
-    console.error("No role selected");
-    return res.status(400).json({ message: "Select a role first" });
-  }
+    if (!new_role) {
+        console.error("No role selected");
+        return res.status(400).json({ message: "Select a role first" });
+    }
 
-  try {
-    const officer = await OrgOfficer.findOneAndUpdate(
-      { student_id },
-      { role: new_role },
-      { new: true }
-    );
+    try {
+        const officer = await OrgOfficer.findOneAndUpdate(
+            { student_id },
+            { role: new_role },
+            { new: true }
+        );
 
-    if (!officer) {
-      console.error("Student not found in organization:", student_id);
-      return res.status(404).json({ message: "Student not found in organization" });
-    }
+        if (!officer) {
+            console.error("Student not found in organization:", student_id);
+            return res.status(404).json({ message: "Student not found in organization" });
+        }
 
-    const notification = await Notification.create({
-      user_id: student_id,
-      organization_id: officer.org_id,
-      type: "role_change",
-      title: "Role Updated",
-      message: `Your role has been updated to ${new_role} in the organization`,
-    });
+        const notification = await Notification.create({
+            user_id: student_id,
+            organization_id: officer.org_id,
+            type: "role_change",
+            title: "Role Updated",
+            message: `Your role has been updated to ${new_role} in the organization`,
+        });
 
-    console.log("Role change notification created:", notification);
-    res.status(200).json({ message: "Role updated successfully", notification, officer });
-  } catch (err) {
-    console.error("Error changing role:", err);
-    res.status(500).json({ message: "Server error changing role", error: err.message });
-  }
+        console.log("Role change notification created:", notification);
+        res.status(200).json({ message: "Role updated successfully", notification, officer });
+    } catch (err) {
+        console.error("Error changing role:", err);
+        res.status(500).json({ message: "Server error changing role", error: err.message });
+    }
 };
 
 // --- REMOVE USER ---
 exports.removeUser = async (req, res) => {
-  const { student_id } = req.body;
-  console.log("removeUser called:", student_id);
+    const { student_id } = req.body;
+    console.log("removeUser called:", student_id);
 
-  try {
-    const officer = await OrgOfficer.findOneAndDelete({ student_id });
-    if (!officer) {
-      console.error("Student not found in organization:", student_id);
-      return res.status(404).json({ message: "Student not found in organization" });
-    }
+    try {
+        const officer = await OrgOfficer.findOneAndDelete({ student_id });
+        if (!officer) {
+            console.error("Student not found in organization:", student_id);
+            return res.status(404).json({ message: "Student not found in organization" });
+        }
 
-    const notification = await Notification.create({
-      user_id: student_id,
-      organization_id: officer.org_id,
-      type: "announcement",
-      title: "Removed from Organization",
-      message: `You have been removed from the organization`,
-    });
+        // Look up student to get the correct User ObjectId for the notification
+        const student = await Student.findById(student_id);
+        let userIdForNotif = student_id; // fallback
+        if (student && student.users_id) {
+            userIdForNotif = student.users_id;
+        }
 
-    console.log("Removal notification created:", notification);
-    res.status(200).json({ message: "User removed successfully", notification });
-  } catch (err) {
-    console.error("Error removing user:", err);
-    res.status(500).json({ message: "Server error removing user", error: err.message });
-  }
+        const notification = await Notification.create({
+            user_id: userIdForNotif,
+            organization_id: officer.org_id,
+            type: "announcement",
+            title: "Removed from Organization",
+            message: `You have been removed from the organization`,
+        });
+
+        console.log("Removal notification created:", notification);
+        res.status(200).json({ message: "User removed successfully", notification });
+    } catch (err) {
+        console.error("Error removing user:", err);
+        res.status(500).json({ message: "Server error removing user", error: err.message });
+    }
 };
