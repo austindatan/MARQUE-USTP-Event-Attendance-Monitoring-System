@@ -208,7 +208,7 @@ const EditUser = () => {
         </View>
 
         {/* IMAGE */}
-        <View style={{ alignItems: "center", marginVertical: 20 }}>
+        <View style={{ alignItems: "left", marginBottom: 20 }}>
           <TouchableOpacity onPress={pickImage}>
             {profileImage ? (
               <Image source={{ uri: profileImage.uri }} style={{ width: 120, height: 120, borderRadius: 12 }} />
@@ -230,7 +230,7 @@ const EditUser = () => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>College *</Text>
           <TouchableOpacity style={styles.dropdownInput} onPress={() => setCollegeModalVisible(true)}>
-            <Text>{colleges.find(c => c._id === collegeId)?.college_name || "Select college"}</Text>
+            <Text style={{ fontFamily: "DMSans-Medium" }}>{colleges.find(c => c._id === collegeId)?.college_name || "Select college"}</Text>
           </TouchableOpacity>
         </View>
 
@@ -238,12 +238,12 @@ const EditUser = () => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Department *</Text>
           <TouchableOpacity style={styles.dropdownInput} onPress={() => setDepartmentModalVisible(true)}>
-            <Text>{departments.find(d => d._id === departmentId)?.department_name || "Select department"}</Text>
+            <Text style={{ fontFamily: "DMSans-Medium" }}>{departments.find(d => d._id === departmentId)?.department_name || "Select department"}</Text>
           </TouchableOpacity>
         </View>
 
         {/* USER FIELDS */}
-        {[ 
+        {[
           { label: "First Name", value: firstname, setter: setFirstname },
           { label: "Middle Name", value: middlename, setter: setMiddlename, optional: true },
           { label: "Last Name", value: lastname, setter: setLastname },
@@ -260,7 +260,7 @@ const EditUser = () => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Role *</Text>
           <TouchableOpacity style={styles.dropdownInput} onPress={() => setRoleModalVisible(true)}>
-            <Text>{role}</Text>
+            <Text style={{ fontFamily: "DMSans-Medium" }}>{role}</Text>
           </TouchableOpacity>
         </View>
 
@@ -269,22 +269,20 @@ const EditUser = () => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Organization *</Text>
             <TouchableOpacity style={styles.dropdownInput} onPress={() => setOrgModalVisible(true)}>
-              <Text>{orgs.find(o => o._id === orgId)?.org_name || "Select organization"}</Text>
+              <Text style={{ fontFamily: "DMSans-Medium" }}>{orgs.find(o => o._id === orgId)?.org_name || "Select organization"}</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        <View style={{ height: 80 }} />
+        <View style={{ height: 60 }} />
       </ScrollView>
 
       {/* SAVE BUTTON */}
       <View style={styles.bottomButtonContainer}>
-        <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
-          <TouchableOpacity style={styles.registerButton} onPress={handleSave}>
-            <Text style={styles.registerText}>Update User</Text>
-            <Ionicons name="arrow-forward" size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.registerButton} onPress={handleSave}>
+          <Text style={styles.registerText}>Update User</Text>
+          <Ionicons name="arrow-forward" size={18} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       {/* COLLEGE MODAL */}

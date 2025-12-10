@@ -157,17 +157,17 @@ const EditOrganization = () => {
 
     try {
       if (isEdit) {
-          // FIX 1: Update to /api/organizations/:orgId
-          await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
-              headers: { "Content-Type": "multipart/form-data" },
-          });
-          Alert.alert("Updated", "Organization updated successfully.");
+        // FIX 1: Update to /api/organizations/:orgId
+        await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        Alert.alert("Updated", "Organization updated successfully.");
       } else {
-          // FIX 2: Update to /api/organizations (remove /create)
-          await axios.post(`${BASE_URL}/api/organizations`, formData, {
-              headers: { "Content-Type": "multipart/form-data" },
-          });
-          Alert.alert("Created", "Organization added successfully.");
+        // FIX 2: Update to /api/organizations (remove /create)
+        await axios.post(`${BASE_URL}/api/organizations`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        Alert.alert("Created", "Organization added successfully.");
       }
 
       router.back();
@@ -229,26 +229,9 @@ const EditOrganization = () => {
           </TouchableOpacity>
         </View>
 
-        {/* COVER PHOTO */}
-        <View style={styles.imageUploadArea}>
-          <TouchableOpacity
-            style={styles.mainImagePlaceholder}
-            onPress={() => pickImage("cover")}
-          >
-            {coverPhoto ? (
-              <Image
-                source={{ uri: coverPhoto.uri }}
-                style={{ width: "100%", height: "100%", borderRadius: 12 }}
-                resizeMode="cover"
-              />
-            ) : (
-              <Ionicons name="add-circle" size={32} color="#222762" />
-            )}
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.formSectionTitle}>Organization Details</Text>
 
-        {/* PROFILE PICTURE */}
-        <View style={{ alignItems: "center", marginTop: 20 }}>
+        <View style={{ alignItems: "left", marginBottom: 20 }}>
           <TouchableOpacity onPress={() => pickImage("pfp")}>
             {pfp ? (
               <Image
@@ -276,9 +259,6 @@ const EditOrganization = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.formSectionTitle}>Organization Details</Text>
-
-        {/* ORG NAME */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>
             Organization Name<Text style={styles.required}> *</Text>
@@ -386,39 +366,28 @@ const EditOrganization = () => {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      <View style={styles.bottomButtonContainer}>
-        <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
-          {/* SAVE / UPDATE BUTTON */}
-          <TouchableOpacity
-            style={[styles.registerButton, { marginBottom: 12 }]}
-            onPress={handleSave}
-          >
-            <Text style={styles.registerText}>
-              {isEdit ? "Update Organization" : "Publish Organization"}
-            </Text>
-            <Ionicons name="arrow-forward" size={18} color="#fff" />
-          </TouchableOpacity>
+      <View style={styles.bottomButtonContainerAdmin}>
+        <TouchableOpacity
+          style={[styles.registerButton, { marginBottom: 12, width: "49%" }]}
+          onPress={handleSave}
+        >
+          <Text style={styles.registerText}>
+            {isEdit ? "Update Organization" : "Publish Organization"}
+          </Text>
+          <Ionicons name="arrow-forward" size={15} color="#fff" />
+        </TouchableOpacity>
 
-          {/* DELETE BUTTON */}
-          {isEdit && (
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#FF4D4F",
-                paddingVertical: 14,
-                borderRadius: 12,
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row",
-              }}
-              onPress={handleDelete}
-            >
-              <Ionicons name="trash" size={18} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-                Delete Organization
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        {isEdit && (
+          <TouchableOpacity
+            style={[styles.deleteButton, { marginBottom: 12, width: "49%" }]}
+            onPress={handleDelete}
+          >
+            <Ionicons name="trash" size={15} color="#fff" />
+            <Text style={styles.deleteText}>
+              Delete Organization
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* ORG TYPE MODAL */}
