@@ -25,14 +25,20 @@ router.get("/all", async (req, res) => {
         const managers = await OrgOfficer.find({})
             .populate("org_id", "org_name pfp") 
             .lean();
+        
 
         // Create a quick map from Student ID to Role data
         const studentIdToRole = managers.reduce((map, manager) => {
-            map[manager.student_id.toString()] = {
+          const studentId = manager.student_id.toString();
+            if (!map[studentId]) {
+              map[studentId] = [];
+            }
+
+            map[studentId].push({
                 orgName: manager.org_id.org_name,
                 orgLogo: manager.org_id.pfp,
                 position: manager.role, 
-            };
+            });
             return map;
         }, {});
 
@@ -51,8 +57,8 @@ router.get("/all", async (req, res) => {
             .map(student => {
                 const user = student.users_id;
                 const department = student.department_id;
-                const role = studentIdToRole[student._id.toString()];
-                const hasRole = !!role;
+                const allRoles = studentIdToRole[student._id.toString()] || []; // Initialize to empty array if undefined
+                const hasRole = allRoles.length > 0;
 
                 const baseUser = {
                     id: student._id, 
@@ -65,17 +71,13 @@ router.get("/all", async (req, res) => {
                     course: department?.department_name || "N/A", 
                     
                     hasRole: hasRole,
+                    allRoles: allRoles,
                     orgName: null,
                     orgLogo: "",
                     position: null,
                 };
 
-                // Add role details if found
-                if (hasRole) {
-                    baseUser.orgName = role.orgName;
-                    baseUser.orgLogo = role.orgLogo;
-                    baseUser.position = role.position;
-                }
+                
 
                 return baseUser;
             })
