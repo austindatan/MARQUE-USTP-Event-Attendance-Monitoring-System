@@ -82,7 +82,7 @@ const AddUser = () => {
 
   // Save User
   const handleSave = async () => {
-    if (!username || !firstname || !lastname || !email || !password) {
+    if (!username || !firstname || !lastname || !password) {
       Alert.alert("Missing Fields", "Please fill all required fields.");
       return;
     }
@@ -216,7 +216,7 @@ const AddUser = () => {
           { label: "First Name", value: firstname, setter: setFirstname },
           { label: "Middle Name", value: middlename, setter: setMiddlename, optional: true },
           { label: "Last Name", value: lastname, setter: setLastname },
-          { label: "Email", value: email, setter: setEmail },
+          { label: "Email", value: email, setter: setEmail, optional: true },
           { label: "Contact Number", value: contactNumber, setter: setContactNumber, optional: true },
           { label: "Password", value: password, setter: setPassword, secure: true },
         ].map((field, i) => (
