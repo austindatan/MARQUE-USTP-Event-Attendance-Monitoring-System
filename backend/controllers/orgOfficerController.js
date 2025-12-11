@@ -62,52 +62,51 @@ exports.getAvailableOrganizations = async (req, res) => {
     }
 };
 
-// --- SEND INVITE (FIXED for student_number lookup) ---
+// --- SEND INVITE (organization_id must be provided) ---
 exports.sendInvite = async (req, res) => {
-    const { sender_student_number, target_student_id, role } = req.body;
-    console.log("sendInvite called:", { sender_student_number, target_student_id, role });
+    const { sender_student_number, target_student_id, role, organization_id } = req.body;
+    console.log("sendInvite called:", { sender_student_number, target_student_id, role, organization_id });
 
     if (!role) {
         console.error("No role selected for invite");
         return res.status(400).json({ message: "Select a role before inviting" });
     }
 
+    if (!organization_id || !mongoose.Types.ObjectId.isValid(organization_id)) {
+        console.error("Invalid or missing organization_id");
+        return res.status(400).json({ message: "Valid organization_id is required" });
+    }
+
     try {
-        // 1. LOOKUP: Use the student_number to find the MongoDB _id
+        // 1. LOOKUP sender student _id
         const senderStudent = await Student.findOne({ student_number: sender_student_number }).select('_id').lean();
-
         if (!senderStudent) {
-            console.error("Sender Student document not found for number:", sender_student_number);
-            return res.status(404).json({ message: "Sender student record (via number) not found." });
+            console.error("Sender student not found for number:", sender_student_number);
+            return res.status(404).json({ message: "Sender student record not found." });
         }
-
         const sender_student_id = senderStudent._id;
 
-        // 2. Find the sender's OrgOfficer link using the correct MongoDB _id
-        const senderOfficer = await OrgOfficer.findOne({ student_id: sender_student_id });
-
+        // 2. VERIFY sender is officer of the organization
+        const senderOfficer = await OrgOfficer.findOne({ student_id: sender_student_id, org_id: organization_id });
         if (!senderOfficer) {
-            console.error("Sender not linked to any organization");
-            return res.status(400).json({ message: "Sender not linked to any organization" });
+            return res.status(403).json({ message: "You are not authorized to invite for this organization." });
         }
 
         // 3. Prevent duplicate invite
         const existingInvite = await Notification.findOne({
             user_id: target_student_id,
-            organization_id: senderOfficer.org_id,
+            organization_id: organization_id,
             type: "invite",
-            // Note: If you track 'is_accepted', you might need to add a filter like: is_accepted: { $ne: true }
         });
 
         if (existingInvite) {
-            return res.status(409).json({ message: `Student already has a pending invitation as ${existingInvite.role}.` });
+            return res.status(409).json({ message: `Student already has a pending invitation as ${existingInvite.role}.`, role: existingInvite.role });
         }
 
-
-        // 4. Create Notification
+        // 4. Create notification
         const notification = await Notification.create({
             user_id: target_student_id,
-            organization_id: senderOfficer.org_id,
+            organization_id: organization_id,
             type: "invite",
             title: "Organization Invite",
             message: `You have been invited to join the organization as ${role}`,
@@ -117,41 +116,10 @@ exports.sendInvite = async (req, res) => {
 
         console.log("Invite notification created:", notification);
         res.status(201).json({ message: "Invite sent successfully", notification });
+
     } catch (err) {
         console.error("Failed to send invite:", err);
         res.status(500).json({ message: "Server error sending invite", error: err.message });
-    }
-};
-
-// --- NEW: GET SENDER'S ORGANIZATION ID ---
-exports.getSenderOrganizationId = async (req, res) => {
-    try {
-        const { studentNumber } = req.params;
-
-        if (!studentNumber) {
-            return res.status(400).json({ message: "Student number is required" });
-        }
-
-        // 1. Look up the MongoDB _id using the student number
-        const senderStudent = await Student.findOne({ student_number: studentNumber }).select('_id').lean();
-        if (!senderStudent) {
-            return res.status(404).json({ message: "Sender student record not found." });
-        }
-        const sender_student_id = senderStudent._id;
-
-        // 2. Find the organization link for the sender
-        const senderOfficer = await OrgOfficer.findOne({ student_id: sender_student_id }).select('org_id').lean();
-
-        if (!senderOfficer) {
-            return res.status(200).json({ orgId: null });
-        }
-
-        // 3. Return the Organization ID
-        res.status(200).json({ orgId: senderOfficer.org_id });
-
-    } catch (error) {
-        console.error("Error fetching sender org ID:", error);
-        res.status(500).json({ message: "Server error fetching organization ID" });
     }
 };
 
