@@ -4,10 +4,13 @@ import { View, TextInput, TouchableOpacity, Image, Text, Animated } from "react-
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
+import { useUnreadNotifications } from "../hooks/useUnreadNotifications";
+import NotificationBadge from "./NotificationBadge";
 
 const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }) => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("incoming");
+  const hasUnread = useUnreadNotifications();
 
   const handleToggle = (tab) => {
     setActiveTab(tab);
@@ -49,6 +52,7 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
           <TouchableOpacity onPress={() => router.push("/tab_container/Notifications")}>
             <View style={styles.notif}>
               <Ionicons name="notifications-outline" size={24} color="#fff" />
+              <NotificationBadge show={hasUnread} size={10} top={-2} right={-2} />
             </View>
           </TouchableOpacity>
         </View>

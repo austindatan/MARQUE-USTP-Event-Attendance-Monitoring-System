@@ -4,11 +4,14 @@ import { View, TouchableOpacity, Image, Text, Animated, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
+import { useUnreadNotifications } from "../hooks/useUnreadNotifications";
+import NotificationBadge from "./NotificationBadge";
 
 const Header = ({ onMenuPress, scrollY, onToggleChange }) => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("departments");
   const animatedScrollY = scrollY || new Animated.Value(0);
+  const hasUnread = useUnreadNotifications();
 
   const handleToggle = (tab) => {
     setActiveTab(tab);
@@ -50,6 +53,7 @@ const Header = ({ onMenuPress, scrollY, onToggleChange }) => {
           <TouchableOpacity onPress={() => router.push("/tab_container/Notifications")}>
             <View style={styles.notif} >
               <Ionicons name="notifications-outline" size={24} color="#fff" />
+              <NotificationBadge show={hasUnread} size={10} top={-2} right={-2} />
             </View>
           </TouchableOpacity>
         </View>

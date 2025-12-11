@@ -19,10 +19,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import { BASE_URL } from "../../config";
+import { useUnreadNotifications } from "../hooks/useUnreadNotifications";
+import NotificationBadge from "../components/NotificationBadge";
 
 const ProfilePage = () => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
+  const hasUnread = useUnreadNotifications();
 
   const [loading, setLoading] = useState(true);
   const [studentNumber, setStudentNumber] = useState(null);
@@ -227,7 +230,10 @@ const ProfilePage = () => {
 
           <TouchableOpacity style={styles.settingItem}
             onPress={() => router.push("/tab_container/Notifications")}>
-            <Ionicons name="notifications" size={20} color="#0A0F51" />
+            <View style={{ position: 'relative' }}>
+              <Ionicons name="notifications" size={20} color="#0A0F51" />
+              <NotificationBadge show={hasUnread} size={8} top={-2} right={-2} />
+            </View>
             <Text style={styles.settingLabel}>Notifications</Text>
           </TouchableOpacity>
 

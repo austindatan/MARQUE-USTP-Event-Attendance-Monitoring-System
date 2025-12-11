@@ -6,6 +6,7 @@ const User = require("../models/User");
 const Department = require("../models/Department");
 const College = require("../models/College");
 const OrgOfficer = require("../models/Org_officer.js");
+const Organization = require('../models/Organization'); // make sure this line exists
 
 console.log("✅ student.js router loaded");
 
@@ -98,6 +99,140 @@ router.get("/all", async (req, res) => {
         res.status(500).json({ message: "Error fetching user list", error: error.message });
     }
 });
+
+router.get("/officers/all", async (req, res) => {
+    const { filter, orgId } = req.query;
+
+    console.log(`🔍 Route hit: /api/student/users/all`, { filter, orgId });
+
+    try {
+        if (!orgId) {
+            return res.status(400).json({ message: "orgId is required." });
+        }
+
+        // Fetch Organization to determine filtering rules
+        const Organization = mongoose.model('Organization'); // Ensure models are accessible
+        const OrgOfficer = mongoose.model('Org_officer'); // Ensure models are accessible
+
+        const org = await Organization.findById(orgId)
+            .populate({
+                path: "department_id",
+                populate: { path: "college_id" }
+            })
+            .lean();
+
+        if (!org) {
+            return res.status(404).json({ message: "Organization not found." });
+        }
+
+        const orgType = org.org_type;
+        const orgDeptId = org.department_id?._id?.toString();
+        const orgCollegeId = org.department_id?.college_id?._id?.toString();
+
+        console.log(`Org Type: ${orgType}`);
+
+        // ------------------------------------------------------------
+        // 1. IMPROVEMENT: Fetch Org Officers for *THIS* Organization ONLY
+        //    (This improves efficiency and simplifies Step 5 logic.)
+        // ------------------------------------------------------------
+        const officers = await OrgOfficer.find({ org_id: orgId }) 
+            .populate("org_id", "org_name pfp")
+            .lean();
+
+        // Map will only contain roles for the CURRENT organization (orgId)
+        const studentIdToRole = officers.reduce((map, officer) => {
+            map[officer.student_id.toString()] = {
+                orgId: officer.org_id?._id?.toString(),
+                orgName: officer.org_id?.org_name,
+                orgLogo: officer.org_id?.pfp,
+                position: officer.role
+            };
+            return map;
+        }, {});
+
+        // --------------------------------------------
+        // 2. Fetch Students with full population
+        // --------------------------------------------
+        const Student = mongoose.model('Student'); // Ensure model is accessible
+        let students = await Student.find({})
+            .populate("users_id", "firstname lastname email profile_image")
+            .populate({
+                path: "department_id",
+                select: "department_name department_code college_id",
+                populate: { path: "college_id", select: "college_name college_code" },
+            })
+            .lean();
+
+        // --------------------------------------------
+        // 3. Apply Organization Type Filter (Correct - As requested)
+        // --------------------------------------------
+            students = students.filter(student => {
+              const studentDeptId = student.department_id?._id?.toString();
+              const studentCollegeId = student.college_id?.toString();
+        
+              if (orgType === "Unit Organization") {
+                return studentDeptId === orgDeptId;
+              }
+              if (orgType === "Mother Organization") {
+                return studentCollegeId === orgCollegeId;
+              }
+              if (orgType === "FAESO Organization") {
+                return true; // Show all students
+              }
+        
+              return false;
+            });
+        // --------------------------------------------
+        // 4. Build Detailed User List
+        // --------------------------------------------
+        let detailedUsers = students.map(student => {
+            const user = student.users_id;
+            const dept = student.department_id;
+            const role = studentIdToRole[student._id.toString()]; // Role only from the current org
+            const hasRole = !!role;
+
+            return {
+                id: student._id,
+                studentId: student.student_number,
+                name: `${user?.firstname || ''} ${user?.lastname || ''}`,
+                email: user?.email || '',
+                studentImage: user?.profile_image || "",
+                // Determine Department/College display name
+                department: dept?.college_id?.college_name || dept?.department_name || "N/A",
+                course: dept?.department_name || "N/A",
+
+                // Role data for the CURRENT organization (orgId)
+                hasRole: hasRole,
+                orgId: role?.orgId || null,
+                orgName: role?.orgName || null,
+                orgLogo: role?.orgLogo || "",
+                position: role?.position || null,
+            };
+        });
+
+        // ------------------------------------------------------------
+        // 5. FIX: Filter Students based on 'all' (Available) vs 'roles' (Officers)
+        // ------------------------------------------------------------
+        if (filter === 'roles') {
+            // "Students w/ Roles" tab: Show only students who ARE officers of this specific org.
+            // Since studentIdToRole only contained officers of this org, we filter for those who have a role.
+            detailedUsers = detailedUsers.filter(u => u.hasRole);
+        }
+
+        if (filter === 'all') {
+            // "Students" tab: Show only students who are NOT officers of this specific org 
+            // (i.e., those who are available to be invited).
+            detailedUsers = detailedUsers.filter(u => !u.hasRole);
+        }
+
+        res.json(detailedUsers);
+
+    } catch (error) {
+        console.error("❌ Error fetching users:", error);
+        res.status(500).json({ message: "Error fetching user list", error: error.message });
+    }
+});
+
 
 router.get("/id/:student_number", async (req, res) => {
   const student_number = req.params.student_number;
