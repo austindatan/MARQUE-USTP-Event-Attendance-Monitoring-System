@@ -19,6 +19,8 @@ import Header from "../components/Header_Normal";
 import styles from "../styles/page_editevents";
 import { BASE_URL } from "../../config";
 
+const SPYGLASS_ICON = require("../../assets/images/marque/MARQUE_whitelogo.png");
+
 const EditUser = () => {
   const router = useRouter();
   const { studentNumber } = useLocalSearchParams();
@@ -43,6 +45,9 @@ const EditUser = () => {
   const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [orgModalVisible, setOrgModalVisible] = useState(false);
+
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const ROLE_OPTIONS = ["Student", "President", "Manager", "Committee"];
   const [role, setRole] = useState("Student");
@@ -210,8 +215,20 @@ const EditUser = () => {
       Alert.alert("Success", "Student updated successfully.");
       router.back();
     } catch (err) {
-      console.error("Error updating student:", err.response?.data || err.message);
-      Alert.alert("Error", err.response?.data?.message || "Failed to update student.");
+
+      let message = "This user is already the president of two organizations. A user cannot be assigned to more than one President roles.";
+
+      if (err.response?.data?.message?.includes("duplicate email")) {
+        message = "This email is already used by another student.";
+      }
+
+      if (err.response?.data?.message?.includes("duplicate student")) {
+        message = "This user is already the president of two organizations. A user cannot be assigned to more than two President roles.";
+      }
+
+      setErrorMessage(message);
+      setErrorModalVisible(true);
+
     }
   };
 
@@ -391,6 +408,37 @@ const EditUser = () => {
               <Text style={styles.modalItemText}>{o.org_name}</Text>
             </TouchableOpacity>
           ))}
+        </View>
+      </Modal>
+
+      {/* ERROR MODAL */}
+      <Modal
+        visible={errorModalVisible}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+
+          <View style={styles.modalWrapper}>
+
+            <View style={styles.modalBox}>
+              <View style={styles.iconContainer}>
+                <Image 
+                  source={SPYGLASS_ICON}
+                  style={styles.iconImage}
+                />
+              </View>
+              <Text style={styles.modalTitle}>Update Failed</Text>
+              <Text style={styles.modalMessage}>{errorMessage}</Text>
+
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setErrorModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
     </View>
