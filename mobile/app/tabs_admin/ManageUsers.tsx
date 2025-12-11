@@ -183,6 +183,7 @@ const ManageUsers = () => {
         studentImage={safeImage(student.studentImage)}
         department={student.department}
         course={student.course}
+        allRoles={student.allRoles}
         orgName={student.orgName}
         orgLogo={safeImage(student.orgLogo)}
         position={student.position}
