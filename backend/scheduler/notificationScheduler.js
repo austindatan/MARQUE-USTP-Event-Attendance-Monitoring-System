@@ -5,6 +5,7 @@ const Notification = require('../models/Notification');
 const Student = require('../models/Student');
 const FollowedOrgs = require('../models/Followed_org');
 const Organization = require('../models/Organization');
+const AttendanceLog = require('../models/Attendance_log');
 
 const sendReminder = async (event, reminderType) => {
     try {
@@ -14,7 +15,7 @@ const sendReminder = async (event, reminderType) => {
                 path: "department_id",
                 select: "college_id", // Fetch department/college linkage
                 // Populate the college ID from the Department model
-                populate: { path: "college_id", select: "_id" } 
+                populate: { path: "college_id", select: "_id" }
             });
 
         if (!org) return;
@@ -33,11 +34,9 @@ const sendReminder = async (event, reminderType) => {
 
                 // 2. Find all students belonging to those departments (i.e., the same college)
                 const collegeStudents = await Student.find({ department_id: { $in: departmentIds } }).select("_id");
-                
+
                 // Add these students to the target set
                 collegeStudents.forEach(s => targetStudentIds.add(s._id.toString()));
-                
-                console.log(`[EventCreate] Mother Organization: Found ${targetStudentIds.size} students in College ID: ${orgCollegeId}.`);
 
             } else {
                 console.error(`[EventCreate] Mother Organization: Could not find College ID for organization ${org.org_name}. Sending to nobody in the college.`);
@@ -50,34 +49,76 @@ const sendReminder = async (event, reminderType) => {
             if (org.department_id) {
                 const deptStudents = await Student.find({ department_id: org.department_id }).select("_id");
                 deptStudents.forEach(s => targetStudentIds.add(s._id.toString()));
-                console.log(`[EventCreate] Unit/FAESO Org: Found ${deptStudents.length} students in Department ID: ${org.department_id}.`);
             }
         }
-        
+
         // B. Followers (APPLIED TO ALL ORG TYPES, including Mother Org)
         const followers = await FollowedOrgs.find({ organization_id: event.organization_id }).select("user_id");
-        const followerStudentIds = followers.map(f => f.user_id); 
+        const followerStudentIds = followers.map(f => f.user_id);
 
         if (followerStudentIds.length > 0) {
-            console.log(`[EventCreate] Adding ${followerStudentIds.length} followers directly (IDs are Student IDs).`);
             followerStudentIds.forEach(id => targetStudentIds.add(id.toString()));
         }
         // *** END OF CORE LOGIC CHANGE ***
-        
+
         let title, message;
         // ... (Rest of the function is unchanged)
-        
+
         const notifications = Array.from(targetStudentIds).map(studentId => ({
             // ... (Notification creation)
         }));
 
         if (notifications.length > 0) {
             await Notification.insertMany(notifications);
-            console.log(`[Scheduler] Sent ${reminderType} reminder for event: ${event.event_name} to ${notifications.length} students.`);
         }
         // ... (Mark as sent logic)
     } catch (error) {
         // ...
+    }
+};
+
+// NEW: Send conclusion notification to attendees urging them to submit feedback
+const sendConclusionNotification = async (event) => {
+    try {
+
+        // Get all students who attended this event
+        const attendanceLogs = await AttendanceLog.find({
+            event_id: event._id
+        }).select('student_id').lean();
+
+        if (attendanceLogs.length === 0) {
+            await Event.findByIdAndUpdate(event._id, {
+                'remindersSent.conclusion': true
+            });
+            return;
+        }
+
+        const attendeeIds = attendanceLogs.map(log => log.student_id.toString());
+
+        const title = `${event.event_name} - Share Your Feedback!`;
+        const message = `Thank you for attending "${event.event_name}"! We'd love to hear your thoughts. Please take a moment to share your feedback and help us improve future events.`;
+
+        const notifications = attendeeIds.map(studentId => ({
+            student_id: studentId,
+            title: title,
+            message: message,
+            type: 'event_concluded',
+            event_id: event._id,
+            is_read: false,
+            createdAt: new Date()
+        }));
+
+        if (notifications.length > 0) {
+            await Notification.insertMany(notifications);
+        }
+
+        // Mark as sent
+        await Event.findByIdAndUpdate(event._id, {
+            'remindersSent.conclusion': true
+        });
+
+    } catch (error) {
+        console.error(`[Scheduler] Error sending conclusion notification:`, error);
     }
 };
 
@@ -122,6 +163,17 @@ const initScheduler = () => {
 
             for (const event of events1) {
                 await sendReminder(event, 'oneHour');
+            }
+
+            // 3. NEW: Conclusion Notification (Look for recently concluded events)
+            const concludedEvents = await Event.find({
+                status: 'Concluded',
+                'remindersSent.conclusion': false,
+                end_time: { $lte: now }
+            });
+
+            for (const event of concludedEvents) {
+                await sendConclusionNotification(event);
             }
 
         } catch (error) {

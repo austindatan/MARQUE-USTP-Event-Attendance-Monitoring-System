@@ -8,7 +8,7 @@ import { BASE_URL } from "../../config";
 import { useRouter } from "expo-router"
 
 const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
-  const router = useRouter ();
+  const router = useRouter();
   const scrollRef = useRef(null);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,16 +32,16 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   }, []);
 
   useEffect(() => {
-      if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
-        const t = setTimeout(() => {
-          const node = scrollRef.current?.getNode ? scrollRef.current.getNode() : scrollRef.current;
-          if (node && node.scrollTo) {
-            node.scrollTo({ y: initialScroll, animated: false });
-          }
-        }, 0);
-        return () => clearTimeout(t);
-      }
-    }, [initialScroll]);
+    if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
+      const t = setTimeout(() => {
+        const node = scrollRef.current?.getNode ? scrollRef.current.getNode() : scrollRef.current;
+        if (node && node.scrollTo) {
+          node.scrollTo({ y: initialScroll, animated: false });
+        }
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [initialScroll]);
 
   const containerTranslateY = scrollY.interpolate({
     inputRange: [0, 80],
@@ -87,15 +87,21 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
               orgLogo={{ uri: event.organization_id?.pfp || null }}
               dateDay={dateDay}
               dateMonth={dateMonth}
-              description={event.description} 
+              description={event.description}
             />
           );
         })}
+        {/* Add blank cards if not divisible by 3 */}
+        {events.length % 3 !== 0 && (
+          Array.from({ length: 3 - (events.length % 3) }).map((_, index) => (
+            <Card_Blank key={`blank-${index}`} />
+          ))
+        )}
       </>
     );
   };
 
-  
+
   return (
     <Animated.View
       style={{

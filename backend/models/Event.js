@@ -21,7 +21,8 @@ const eventSchema = new mongoose.Schema(
     is_mandatory: { type: Boolean, default: false },
     remindersSent: {
       twentyFourHours: { type: Boolean, default: false },
-      oneHour: { type: Boolean, default: false }
+      oneHour: { type: Boolean, default: false },
+      conclusion: { type: Boolean, default: false }
     }
   },
 );
