@@ -10,6 +10,7 @@ const StudentLinear = ({
   studentId = "",
   department = "",
   course = "",
+  allRoles = [],
   orgLogo,
   orgName,
   position,
@@ -17,6 +18,33 @@ const StudentLinear = ({
   onDeletePress, // <-- ADDED PROP
   onPress
 }) => {
+
+  // Function to render a single role block
+  const renderRole = (role, index) => {
+    // We must use safeImage here as well since it's a new variable scope
+    const safeImage = (img) =>
+      typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/crk.jpg");
+
+    return (
+        // 🚨 The key is crucial when mapping an array
+        <View key={index} style={styles.roleContainer}> 
+            <Image
+                source={safeImage(role.orgLogo)}
+                style={styles.orgLogo}
+            />
+            <View>
+                <Text style={styles.orgName} numberOfLines={1}>
+                    {role.orgName}
+                </Text>
+                <Text style={styles.position} numberOfLines={1}>
+                    {role.position}
+                </Text>
+            </View>
+        </View>
+    );
+  };
+
+
   return (
     <TouchableOpacity activeOpacity={0.6} style={styles.card} onPress={onPress}>
       <View style={styles.row}>
@@ -39,22 +67,8 @@ const StudentLinear = ({
               {course}
             </Text>
 
-            {orgName && (
-              <View style={styles.roleContainer}>
-                <Image
-                  source={orgLogo}
-                  style={styles.orgLogo}
-                />
-                <View>
-                  <Text style={styles.orgName} numberOfLines={1}>
-                    {orgName}
-                  </Text>
-                  <Text style={styles.position} numberOfLines={1}>
-                    {position}
-                  </Text>
-                </View>
-              </View>
-            )}
+            {/* 🚨 CRITICAL CHANGE: Iterate over allRoles */}
+            {allRoles.map(renderRole)}
           </View>
 
           <View style={[styles.editButton, { flexDirection: 'column', alignItems: 'center' }]}>

@@ -309,6 +309,80 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans-Medium",
   },
 
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  modalWrapper: {
+    width: "80%",
+    alignItems: "center", // ⭐ important for centering icon relative to box
+  },
+
+  modalBox: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    paddingTop: 45,     // ⭐ add space so the icon won’t overlap the title
+    elevation: 10,
+    alignItems: "center", 
+  },
+
+  iconContainer: {
+    backgroundColor: "#14235b",
+    width: 75,
+    height: 75,
+    borderRadius: 75,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 5,
+    borderColor: "#ffffff",
+
+    // ⭐ absolute center above modal
+    position: "absolute",
+    top: -35,      // move icon halfway above the box
+    alignSelf: "center",
+    zIndex: 10,
+  },
+
+  iconImage: {
+    width: 45,
+    height: 45,
+    resizeMode: "contain",
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  modalMessage: {
+    fontSize: 13,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+
+  modalButton: {
+    alignSelf: "center",
+    backgroundColor: "#0A0F51",
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+  },
+
+  modalButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+
+
 });
 
 export default styles;
