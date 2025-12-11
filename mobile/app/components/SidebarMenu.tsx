@@ -7,6 +7,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import Animated, { useSharedValue, withTiming, useAnimatedStyle, runOnJS } from "react-native-reanimated";
 import { router } from "expo-router";
+import { useUnreadNotifications } from "../hooks/useUnreadNotifications";
+import NotificationBadge from "./NotificationBadge";
 
 const menuItems = [
   { name: "Home", icon: "home-outline" },
@@ -34,6 +36,7 @@ interface StudentData {
 const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [renderSidebar, setRenderSidebar] = useState(isVisible);
+  const hasUnread = useUnreadNotifications();
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -72,7 +75,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
 
   useEffect(() => {
     if (isVisible) {
-      setRenderSidebar(true); 
+      setRenderSidebar(true);
       translateX.value = withTiming(0, { duration: 250 });
     } else {
       translateX.value = withTiming(-300, { duration: 250 }, () => {
@@ -91,28 +94,28 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
     type MenuName = "Home" | "Notifications" | "Bookmarks" | "Profile";
 
     const routes = {
-        Home: "/tabs/Events",
-        Bookmarks: "/tab_container/Bookmark_Page",
-        Notifications: "/tab_container/Notifications",
-        Profile: "/tabs/Profile",
-    } as const; 
+      Home: "/tabs/Events",
+      Bookmarks: "/tab_container/Bookmark_Page",
+      Notifications: "/tab_container/Notifications",
+      Profile: "/tabs/Profile",
+    } as const;
 
     type RoutePath = typeof routes[keyof typeof routes];
 
     if (name === "Your Organizations") {
-        try {
-            router.push("/tabs_organization/Teams");
-            return;
-        } catch (err) {
-            console.error("Error navigating to Organizations:", err);
-            return;
-        }
+      try {
+        router.push("/tabs_organization/Teams");
+        return;
+      } catch (err) {
+        console.error("Error navigating to Organizations:", err);
+        return;
+      }
     }
 
     if (name in routes) {
-        router.push(routes[name as MenuName] as RoutePath); 
+      router.push(routes[name as MenuName] as RoutePath);
     } else {
-        console.warn(`⚠️ No route found for menu item: ${name}`);
+      console.warn(`⚠️ No route found for menu item: ${name}`);
     }
   };
 
@@ -151,7 +154,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
               style={styles.menuItem}
               onPress={() => handleMenuItemPress(item.name)}
             >
-              <Ionicons name={item.icon as any} size={24} color="#222762" />
+              <View style={{ position: 'relative' }}>
+                <Ionicons name={item.icon as any} size={24} color="#222762" />
+                {item.name === "Notifications" && (
+                  <NotificationBadge show={hasUnread} size={10} top={-2} right={-2} />
+                )}
+              </View>
               <Text style={styles.menuText}>{item.name}</Text>
             </TouchableOpacity>
           ))}

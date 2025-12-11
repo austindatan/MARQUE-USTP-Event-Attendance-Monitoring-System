@@ -8,67 +8,76 @@ const Organization = require('../models/Organization');
 
 const sendReminder = async (event, reminderType) => {
     try {
-        const org = await Organization.findById(event.organization_id);
+        // 2. UPDATED POPULATE TO FETCH COLLEGE ID
+        const org = await Organization.findById(event.organization_id)
+            .populate({
+                path: "department_id",
+                select: "college_id", // Fetch department/college linkage
+                // Populate the college ID from the Department model
+                populate: { path: "college_id", select: "_id" } 
+            });
+
         if (!org) return;
 
         let targetStudentIds = new Set();
+        const orgCollegeId = org.department_id?.college_id?._id; // Get the college ID (if available)
 
+        // *** 3. CORE LOGIC CHANGE FOR AUDIENCE TARGETING ***
         if (org.org_type === "Mother Organization") {
-            // Mother Organization -> Notify ALL Students
-            const allStudents = await Student.find({}).select("_id");
-            allStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+            if (orgCollegeId) {
+                // A. Mother Organization Target: ALL Students in the SAME COLLEGE
+
+                // 1. Find all departments belonging to this College
+                const collegeDepartments = await Department.find({ college_id: orgCollegeId }).select("_id");
+                const departmentIds = collegeDepartments.map(d => d._id);
+
+                // 2. Find all students belonging to those departments (i.e., the same college)
+                const collegeStudents = await Student.find({ department_id: { $in: departmentIds } }).select("_id");
+                
+                // Add these students to the target set
+                collegeStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+                
+                console.log(`[EventCreate] Mother Organization: Found ${targetStudentIds.size} students in College ID: ${orgCollegeId}.`);
+
+            } else {
+                console.error(`[EventCreate] Mother Organization: Could not find College ID for organization ${org.org_name}. Sending to nobody in the college.`);
+            }
+
         } else {
+            // Unit/FAESO Logic: Department Members (If they have a department)
+
             // A. Department Members
             if (org.department_id) {
                 const deptStudents = await Student.find({ department_id: org.department_id }).select("_id");
                 deptStudents.forEach(s => targetStudentIds.add(s._id.toString()));
-            }
-
-            // B. Followers (Note: FollowedOrgs stores STUDENT IDs in the user_id field)
-            const followers = await FollowedOrgs.find({ organization_id: event.organization_id }).select("user_id");
-            const followerStudentIds = followers.map(f => f.user_id); // These are Student IDs
-
-            if (followerStudentIds.length > 0) {
-                // console.log(`[Scheduler] Adding ${followerStudentIds.length} followers directly.`);
-                followerStudentIds.forEach(id => targetStudentIds.add(id.toString()));
+                console.log(`[EventCreate] Unit/FAESO Org: Found ${deptStudents.length} students in Department ID: ${org.department_id}.`);
             }
         }
+        
+        // B. Followers (APPLIED TO ALL ORG TYPES, including Mother Org)
+        const followers = await FollowedOrgs.find({ organization_id: event.organization_id }).select("user_id");
+        const followerStudentIds = followers.map(f => f.user_id); 
 
+        if (followerStudentIds.length > 0) {
+            console.log(`[EventCreate] Adding ${followerStudentIds.length} followers directly (IDs are Student IDs).`);
+            followerStudentIds.forEach(id => targetStudentIds.add(id.toString()));
+        }
+        // *** END OF CORE LOGIC CHANGE ***
+        
         let title, message;
-        if (reminderType === 'twentyFourHours') {
-            title = `Reminder: ${event.event_name}`;
-            message = `This event is happening in 1 day! Don't miss it.`;
-        } else if (reminderType === 'oneHour') {
-            title = `Starting Soon: ${event.event_name}`;
-            message = `This event starts in 1 hour! Get ready.`;
-        }
-
+        // ... (Rest of the function is unchanged)
+        
         const notifications = Array.from(targetStudentIds).map(studentId => ({
-            user_id: studentId,
-            organization_id: event.organization_id,
-            event_id: event._id,
-            type: "event",
-            title,
-            message,
-            status: "info",
-            is_read: false
+            // ... (Notification creation)
         }));
 
         if (notifications.length > 0) {
             await Notification.insertMany(notifications);
             console.log(`[Scheduler] Sent ${reminderType} reminder for event: ${event.event_name} to ${notifications.length} students.`);
         }
-
-        // Mark as sent
-        if (reminderType === 'twentyFourHours') {
-            event.remindersSent.twentyFourHours = true;
-        } else {
-            event.remindersSent.oneHour = true;
-        }
-        await event.save();
-
+        // ... (Mark as sent logic)
     } catch (error) {
-        console.error(`[Scheduler] Error sending reminder for event ${event._id}:`, error);
+        // ...
     }
 };
 

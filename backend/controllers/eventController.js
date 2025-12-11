@@ -512,16 +512,25 @@ const createEvent = async (req, res) => {
     // --- NOTIFICATION LOGIC ---
     try {
       // 1. Get Org details (for Department & Name)
-      const org = await Organization.findById(organization_id);
+      const org = await Organization.findById(organization_id).populate({
+        path: 'department_id',
+        populate: {
+          path: 'college_id'
+        }
+      });
 
       if (org) {
         // 2. Identify Target Students
         let targetStudentIds = new Set();
 
         if (org.org_type === "Mother Organization") {
-          // Mother Organization -> Notify ALL Students
-          const allStudents = await Student.find({}).select("_id");
-          allStudents.forEach(s => targetStudentIds.add(s._id.toString()));
+          // Get all followers - Mother Orgs notify ALL followers regardless of college
+          const followers = await FollowedOrgs.find({ organization_id }).select("user_id").lean();
+
+          if (followers.length > 0) {
+            const followerStudentIds = followers.map(f => f.user_id);
+            followerStudentIds.forEach(id => targetStudentIds.add(id.toString()));
+          }
         } else {
           // Unit / FAESO -> Notify Department Members + Followers
 
@@ -537,10 +546,10 @@ const createEvent = async (req, res) => {
           const followerStudentIds = followers.map(f => f.user_id);
 
           if (followerStudentIds.length > 0) {
-            console.log(`[EventCreate] Adding ${followerStudentIds.length} followers directly (IDs are Student IDs).`);
             followerStudentIds.forEach(id => targetStudentIds.add(id.toString()));
           }
         }
+
 
         // 3. Create Notifications
         const notifications = Array.from(targetStudentIds).map(studentId => ({
@@ -556,8 +565,8 @@ const createEvent = async (req, res) => {
 
         if (notifications.length > 0) {
           await Notification.insertMany(notifications);
-          console.log(`Created ${notifications.length} notifications for event: ${event_name}`);
         }
+
       }
     } catch (notifErr) {
       console.error("Error creating notifications for new event:", notifErr);

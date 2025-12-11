@@ -6,11 +6,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/page_admin_dashboard";
 import StudentLinear from "../components/OrgSide_Card_StudentLinear";
 import { BASE_URL } from "../../config";
+import { useRoute } from '@react-navigation/native'; // <- NEW
 
 const ManageOfficers = ({ scrollY, handleScroll }) => {
+    const route = useRoute(); // <- NEW
+    const { orgId } = route.params; // <- NEW
+
     const [localStudentNumber, setLocalStudentNumber] = useState(null);
     const [isIdLoading, setIsIdLoading] = useState(true);
-    const [orgId, setOrgId] = useState(null);
 
     const [activeTab, setActiveTab] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
@@ -22,16 +25,27 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [newRole, setNewRole] = useState(null);
 
+    const [inviteRolePending, setInviteRolePending] = useState(null);
+    const [inviteTargetStudent, setInviteTargetStudent] = useState(null);
 
-    // ASYNC NUMBER FETCH EFFECT (Runs once on mount)
+    // --- SAFEGUARD if orgId is missing
+    if (!orgId) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <Text style={{ color: "red", textAlign: "center", padding: 20 }}>
+                    🛑 Organization ID not found. Please go back and select an organization.
+                </Text>
+            </View>
+        );
+    }
+
+    // ASYNC NUMBER FETCH EFFECT
     useEffect(() => {
         const fetchAuthNumber = async () => {
             try {
                 const number = await AsyncStorage.getItem("student_number");
                 if (number) {
                     setLocalStudentNumber(number);
-                    // Also fetch the org ID for this user
-                    await fetchOrgId(number);
                 } else {
                     console.error("[AUTH ERROR] Student NUMBER not found in AsyncStorage.");
                     setError("Authentication failed: Sender's ID/Number missing.");
@@ -47,25 +61,12 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         fetchAuthNumber();
     }, []);
 
-    // FETCH ORG ID FOR CURRENT USER
-    const fetchOrgId = async (studentNumber) => {
-        try {
-            const res = await fetch(`${BASE_URL}/api/memberships/org-id/${studentNumber}`);
-            const data = await res.json();
-            if (data.orgId) {
-                setOrgId(data.orgId);
-            }
-        } catch (err) {
-            console.error("[FETCH ORG ID ERROR]", err);
-        }
-    };
-
     // FETCH OUTSTANDING INVITES FOR THIS ORG
-    const fetchOutstandingInvites = async (orgIdToUse) => {
-        if (!orgIdToUse) return {};
+    const fetchOutstandingInvites = async () => {
+        if (!orgId) return {};
 
         try {
-            const res = await fetch(`${BASE_URL}/api/memberships/outstanding-invites/${orgIdToUse}`);
+            const res = await fetch(`${BASE_URL}/api/memberships/outstanding-invites/${orgId}`);
             const data = await res.json();
             return data; // Should be { student_id: role } map
         } catch (err) {
@@ -74,7 +75,7 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         }
     };
 
-    // Fetch Students
+    // Fetch Students - ENHANCED WITH ERROR LOGGING
     const fetchStudents = async (tab) => {
         if (isIdLoading) return;
 
@@ -83,34 +84,52 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         const filterParam = tab === "roles" ? "roles" : "all";
 
         try {
-            console.log(`[DEBUG] Fetching students with filter: ${filterParam}`);
-            const res = await fetch(`${BASE_URL}/api/student/all?filter=${filterParam}`);
-            const text = await res.text();
-            let data;
-            try { data = JSON.parse(text); } catch { data = text; }
+            console.log(`[DEBUG] Attempting fetch students: ${BASE_URL}/api/student/officers/all?filter=${filterParam}&orgId=${orgId}`);
+            const res = await fetch(`${BASE_URL}/api/student/officers/all?filter=${filterParam}&orgId=${orgId}`);
+            
+            // Log the network status immediately
+            console.log(`[DEBUG] Fetch response status: ${res.status}`);
 
-            if (!res.ok) {
-                console.error("[FETCH STUDENTS ERROR]", {
-                    status: res.status,
-                    statusText: res.statusText,
-                    body: data,
-                    filterParam,
-                });
-                throw new Error(data.message || "Network response was not ok");
+            const text = await res.text();
+            
+            // Log the raw response text before parsing
+            console.log(`[DEBUG] Raw response text: ${text.substring(0, 200)}...`); 
+
+            let data;
+            try { 
+                data = JSON.parse(text); 
+            } catch (parseError) { 
+                console.error("[PARSE ERROR] Failed to parse JSON. Raw text returned:", text);
+                data = { message: "Failed to parse server response as JSON." }; 
             }
 
-            console.log("[FETCH STUDENTS SUCCESS]", data);
+            if (!res.ok) {
+                console.error("====================================================");
+                console.error("[FETCH STUDENTS ERROR] Request Failed.");
+                console.error(`Status: ${res.status} (${res.statusText})`);
+                console.error(`Filter: ${filterParam}, OrgID: ${orgId}`);
+                console.error("Server Body:", data);
+                console.error("====================================================");
+                throw new Error(data.message || `Server Error (${res.status}): Failed to retrieve data.`);
+            }
+
+            // Log successful data structure
+            console.log("====================================================");
+            console.log("[FETCH STUDENTS SUCCESS]");
+            console.log(`Received ${data.length} student records for filter: ${filterParam}`);
+            console.log("Example student record:", data.length > 0 ? data[0] : "No records.");
+            console.log("====================================================");
 
             // FETCH AND MAP OUTSTANDING INVITES
-            const inviteMap = await fetchOutstandingInvites(orgId);
+            const inviteMap = await fetchOutstandingInvites();
             const studentsWithInvites = data.map(student => ({
                 ...student,
-                pendingInviteRole: inviteMap[student.id] || null
+                pendingInviteRole: inviteMap[student.id] || inviteMap[student._id] || null
             }));
 
             setStudents(studentsWithInvites);
         } catch (err) {
-            console.error("[FETCH STUDENTS EXCEPTION]", err);
+            console.error("[FETCH STUDENTS EXCEPTION] Catch block hit:", err.message);
             setError(err.message || "Failed to load student data.");
             setStudents([]);
         } finally {
@@ -120,17 +139,21 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
 
     // EFFECT TO TRIGGER DATA FETCH
     useEffect(() => {
-        if (!isIdLoading && localStudentNumber && orgId) {
-            fetchStudents(activeTab);
-        } else if (!isIdLoading && !localStudentNumber) {
+        if (isIdLoading) return;
+        if (!localStudentNumber) {
             setIsLoading(false);
+            return;
         }
+        if (!orgId) return;
+        fetchStudents(activeTab);
     }, [activeTab, isIdLoading, localStudentNumber, orgId]);
 
     const safeImage = (img) =>
         typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/crk.jpg");
 
-    // Invite (sends student_number instead of _id)
+    // --------------------
+    // Invite flow (single-org)
+    // --------------------
     const handleInvite = async (student, role) => {
         if (!role) return;
         if (!localStudentNumber) {
@@ -139,26 +162,29 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         }
 
         try {
+            const body = {
+                sender_student_number: localStudentNumber,
+                target_student_id: student.id,
+                role,
+                organization_id: orgId
+            };
+
             const res = await fetch(`${BASE_URL}/api/memberships/invite`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    sender_student_number: localStudentNumber,
-                    target_student_id: student.id,
-                    role,
-                }),
+                body: JSON.stringify(body),
             });
 
             const text = await res.text();
             let data;
             try { data = JSON.parse(text); } catch { data = text; }
 
-            // Handle already pending invite
             if (res.status === 409 && data?.message?.includes("pending invitation")) {
                 const existingRole = data.role || "Manager";
                 setStudents(prev =>
                     prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: existingRole } : s)
                 );
+                alert(`Student already has a pending invite as ${existingRole}`);
                 return;
             }
 
@@ -171,18 +197,15 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
             console.log("[INVITE SUCCESS]", { student, role, response: data });
             alert(`Invite sent to ${student.name} as ${role}`);
 
-            // Update state
             setStudents(prev =>
                 prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: role } : s)
             );
-
         } catch (err) {
             console.error("[INVITE EXCEPTION]", err);
             alert("Error sending invite — check terminal for details.");
         }
     };
 
-    // Cancel Invite
     const handleCancelInvite = async (student) => {
         if (!student.pendingInviteRole) return;
 
@@ -203,7 +226,6 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
                 return;
             }
 
-            // Update student state locally
             setStudents(prev =>
                 prev.map(s => {
                     if (s.id === student.id) {
@@ -222,7 +244,9 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         }
     };
 
-    // Change Role and Remove User
+    // --------------------
+    // Role change & remove
+    // --------------------
     const openRoleModal = (student) => {
         setSelectedStudent(student);
         setNewRole(null);
@@ -286,8 +310,14 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         }
     };
 
+    // --------------------
     // Render Students
+    // --------------------
     const renderStudents = () => {
+        if (!isLoading) {
+             console.log(`[RENDER DEBUG] Displaying ${students.length} students (before search filter).`);
+        }
+        
         if (isLoading) return <ActivityIndicator size="large" color="#0A0F51" style={{ marginTop: 50 }} />;
         if (error) return <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>{error}</Text>;
 
@@ -321,7 +351,7 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         ));
     };
 
-    // Initial Loading/Error Render Check
+    // Initial Loading/Error Render
     if (isIdLoading) {
         return (
             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -355,11 +385,6 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
                 )}
                 scrollEventThrottle={16}
             >
-                {/* 
-                    STICKY HEADER INDEX 0 
-                    - Top Spacer (80px): Occupies space for the Collapsed Header so content doesn't stick under it.
-                    - Search & Tabs: The actual sticky content.
-                */}
                 <View style={{ width: '100%', alignItems: 'center', zIndex: 100 }}>
                     <View style={{ height: 105, backgroundColor: 'transparent' }} />
                     <View style={{ width: '100%', backgroundColor: '#F5F5F5', alignItems: 'center', paddingBottom: 5 }}>
@@ -393,15 +418,14 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
                     </View>
                 </View>
 
-                {/* SCROLLABLE LIST INDEX 1 */}
                 <View style={[styles.content, { width: '100%', padding: 0 }]}>
                     <View style={styles.eventList}>
                         {renderStudents()}
                     </View>
                 </View>
-
             </Animated.ScrollView>
 
+            {/* Role change modal (unchanged) */}
             <Modal visible={roleModalVisible} transparent animationType="fade">
                 <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
                     <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 10, width: "80%", alignItems: "center" }}>
