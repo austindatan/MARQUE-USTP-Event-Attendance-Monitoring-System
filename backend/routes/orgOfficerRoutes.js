@@ -15,7 +15,6 @@ router.put('/change-role', orgOfficerController.changeRole);
 router.delete('/remove', orgOfficerController.removeUser);
 
 // --- NEW ROUTES FOR INVITE STATUS CHECK ---
-router.get('/org-id/:studentNumber', orgOfficerController.getSenderOrganizationId); 
 router.get('/outstanding-invites/:orgId', orgOfficerController.getOutstandingInvites);
 router.delete("/cancel-invite", orgOfficerController.cancelInvite);
     
