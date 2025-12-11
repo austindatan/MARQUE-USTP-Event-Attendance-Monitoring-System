@@ -263,9 +263,9 @@ router.get("/id/:student_number", async (req, res) => {
 
     res.json({
       _id: student._id,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
+      firstname: user?.firstname,
+      lastname: user?.lastname,
+      email: user?.email,
       student_number: student.student_number,
 
       // department
@@ -277,13 +277,39 @@ router.get("/id/:student_number", async (req, res) => {
       college_id: department?.college_id?._id || null,
       college_name: department?.college_id?.college_name || "",
 
-      profile_image: user.profile_image || "",
+      profile_image: user?.profile_image || "",
     });
   } catch (error) {
     console.error("Error fetching student data by student_number:", error);
     res.status(500).json({ message: "Error fetching student data", error: error.message });
   }
 });
+
+// Fetch organizations by a list of department IDs
+router.get("/organizations/by-departments", async (req, res) => {
+  const { departmentIds } = req.query;
+  console.log("🔍 Route hit: /api/student/organizations/by-departments with IDs:", departmentIds);
+
+  if (!departmentIds) {
+    return res.json([]);
+  }
+
+  try {
+    const departmentIdsArray = departmentIds.split(',');
+
+    const organizations = await Organization.find({
+      department_id: { $in: departmentIdsArray }
+    }).lean();
+
+    console.log(`✅ Found ${organizations.length} organizations.`);
+    res.json(organizations);
+
+  } catch (error) {
+    console.error("❌ Error fetching organizations by departments:", error);
+    res.status(500).json({ message: "Server error fetching organizations", error: error.message });
+  }
+});
+
 
 
 // Fetch username ---
