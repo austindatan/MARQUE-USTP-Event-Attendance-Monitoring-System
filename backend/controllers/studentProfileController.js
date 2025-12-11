@@ -70,9 +70,10 @@ exports.updateStudentProfile = async (req, res) => {
     const {
       firstname,
       lastname,
+      middlename,
       email,
-      role,
-      org_id,
+      contact_number,
+      roles, // NEW: Array of role objects
       department_id,
       college_id
     } = req.body;
@@ -86,8 +87,10 @@ exports.updateStudentProfile = async (req, res) => {
 
     // Update user fields
     if (firstname) user.firstname = firstname;
+    if (middlename !== undefined) user.middlename = middlename;
     if (lastname) user.lastname = lastname;
     if (email) user.email = email;
+    if (contact_number !== undefined) user.contact_number = contact_number;
     await user.save();
 
     // Update department & college
@@ -95,33 +98,33 @@ exports.updateStudentProfile = async (req, res) => {
     if (college_id) student.college_id = college_id;
     await student.save();
 
-    // Handle org roles
-    if (role === "Student") {
-      await OrgOfficer.deleteMany({ student_id: student._id });
-    } else if (["Committee", "Manager", "President"].includes(role)) {
-      if (!org_id) {
-        return res.status(400).json({ message: "org_id is required for non-student roles" });
+    // Handle multiple roles
+    if (roles && Array.isArray(roles)) {
+      // Validate president count
+      const presidentRoles = roles.filter(r => r.role === 'President');
+      if (presidentRoles.length > 2) {
+        return res.status(400).json({
+          message: 'A student cannot be President of more than 2 organizations'
+        });
       }
 
-      const orgOfficer = await OrgOfficer.findOne({
-        student_id: student._id,
-        org_id
-      });
+      // Delete ALL existing org officer records for this student
+      await OrgOfficer.deleteMany({ student_id: student._id });
 
-      if (orgOfficer) {
-        orgOfficer.role = role;
-        await orgOfficer.save();
-      } else {
-        await OrgOfficer.create({
-          student_id: student._id,
-          org_id,
-          role
-        });
+      // Create new org officer records
+      for (const roleObj of roles) {
+        if (roleObj.role !== 'Student' && roleObj.org_id) {
+          await OrgOfficer.create({
+            student_id: student._id,
+            org_id: roleObj.org_id,
+            role: roleObj.role
+          });
+        }
       }
     }
 
     res.json({
-      message: 'Profile updated',
+      message: 'Profile updated successfully',
       department_id: student.department_id,
       college_id: student.college_id
     });
@@ -286,73 +289,73 @@ exports.deleteStudentProfile = async (req, res) => {
 
 // GET API to fetch organizations by multiple department IDs
 exports.getOrganizationsByDepartmentIds = async (req, res) => {
-    try {
-        const { departmentIds } = req.query; // Get the comma-separated string
+  try {
+    const { departmentIds } = req.query; // Get the comma-separated string
 
-        if (!departmentIds) {
-            // This is the most likely cause of the 400 error in a newly implemented route
-            return res.status(400).json({ message: 'Missing departmentIds query parameter' }); 
-        }
-
-        // 1. Split the string into an array of strings
-        const stringIds = departmentIds.split(',');
-        
-        // 2. Map the string array to Mongoose ObjectIds
-        const validObjectIds = stringIds
-            .map(id => id.trim())
-            .filter(id => mongoose.Types.ObjectId.isValid(id)) // Crucial validation
-            .map(id => new mongoose.Types.ObjectId(id));
-
-        if (validObjectIds.length === 0) {
-            return res.status(400).json({ message: 'No valid department IDs provided.' });
-        }
-
-        // 3. Query using the $in operator to find organizations matching ANY of the IDs
-        const organizations = await Organization.find({ 
-            department_id: { $in: validObjectIds } 
-        });
-
-        res.json(organizations);
-    } catch (err) {
-        console.error('Error in getOrganizationsByDepartmentIds:', err);
-        res.status(500).json({ message: 'Server error', error: err.message });
+    if (!departmentIds) {
+      // This is the most likely cause of the 400 error in a newly implemented route
+      return res.status(400).json({ message: 'Missing departmentIds query parameter' });
     }
+
+    // 1. Split the string into an array of strings
+    const stringIds = departmentIds.split(',');
+
+    // 2. Map the string array to Mongoose ObjectIds
+    const validObjectIds = stringIds
+      .map(id => id.trim())
+      .filter(id => mongoose.Types.ObjectId.isValid(id)) // Crucial validation
+      .map(id => new mongoose.Types.ObjectId(id));
+
+    if (validObjectIds.length === 0) {
+      return res.status(400).json({ message: 'No valid department IDs provided.' });
+    }
+
+    // 3. Query using the $in operator to find organizations matching ANY of the IDs
+    const organizations = await Organization.find({
+      department_id: { $in: validObjectIds }
+    });
+
+    res.json(organizations);
+  } catch (err) {
+    console.error('Error in getOrganizationsByDepartmentIds:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
 };
 
 exports.updateStudentEmail = async (req, res) => {
-    try {
-        const student_number = req.params.student_number;
-        const { email } = req.body;
+  try {
+    const student_number = req.params.student_number;
+    const { email } = req.body;
 
-        if (!email || email.trim() === '') {
-            return res.status(400).json({ message: 'Email field is required.' });
-        }
-        
-        // Simple client-side validation check (can be expanded)
-        if (!/\S+@\S+\.\S+/.test(email.trim())) {
-             return res.status(400).json({ message: 'Please enter a valid email address.' });
-        }
-
-
-        const student = await Student.findOne({ student_number });
-        if (!student) return res.status(404).json({ message: 'Student not found' });
-
-        const user = await User.findById(student.users_id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
-
-        // Check if the new email already exists for another user
-        const existingUser = await User.findOne({ email, _id: { $ne: user._id } });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email address is already in use by another user.' });
-        }
-
-        user.email = email.trim();
-        await user.save();
-
-        res.json({ message: 'Email updated successfully', email: user.email });
-
-    } catch (err) {
-        console.error('Error in updateStudentEmail:', err);
-        res.status(500).json({ message: 'Server error', error: err.message });
+    if (!email || email.trim() === '') {
+      return res.status(400).json({ message: 'Email field is required.' });
     }
+
+    // Simple client-side validation check (can be expanded)
+    if (!/\S+@\S+\.\S+/.test(email.trim())) {
+      return res.status(400).json({ message: 'Please enter a valid email address.' });
+    }
+
+
+    const student = await Student.findOne({ student_number });
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+
+    const user = await User.findById(student.users_id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Check if the new email already exists for another user
+    const existingUser = await User.findOne({ email, _id: { $ne: user._id } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email address is already in use by another user.' });
+    }
+
+    user.email = email.trim();
+    await user.save();
+
+    res.json({ message: 'Email updated successfully', email: user.email });
+
+  } catch (err) {
+    console.error('Error in updateStudentEmail:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
 };
