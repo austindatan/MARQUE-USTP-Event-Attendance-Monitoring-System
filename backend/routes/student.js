@@ -360,12 +360,12 @@ router.post("/create", async (req, res) => {
     } = req.body;
 
     // Check required fields
-    if (!username || !password || !firstname || !lastname || !email || !role) {
+    if (!username || !password || !firstname || !lastname || !role) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
     // Check if username or email already exists
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    const existingUser = await User.findOne({ $or: [{ username }] });
     if (existingUser) {
       return res.status(400).json({ message: "Username or email already exists." });
     }

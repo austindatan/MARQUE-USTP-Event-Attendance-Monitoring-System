@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header_Profile";
@@ -31,6 +32,9 @@ const ProfilePage = () => {
   const [studentNumber, setStudentNumber] = useState(null);
   const [profile, setProfile] = useState(null);
   const [attendance, setAttendance] = useState([]);
+
+  const [isEmailModalVisible, setIsEmailModalVisible] = useState(false);
+  const [tempEmail, setTempEmail] = useState('');
 
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
@@ -102,6 +106,33 @@ const ProfilePage = () => {
     }
   };
 
+  const handleUpdateEmail = async () => {
+    if (!studentNumber) return;
+
+    const trimmedEmail = tempEmail.trim();
+
+    // Basic client-side validation
+    if (!trimmedEmail || !/\S+@\S+\.\S+/.test(trimmedEmail)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      await axios.put(
+        `${BASE_URL}/api/student/profile/${studentNumber}/email`,
+        { email: trimmedEmail }
+      );
+
+      alert("Email updated successfully!");
+      setIsEmailModalVisible(false);
+      loadProfile(); // Reload the profile data
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || "Failed to update email.";
+      console.log("❌ Email update error:", errorMessage);
+      alert(errorMessage);
+    }
+  };
+
   useEffect(() => {
     loadStudentNumber();
   }, []);
@@ -113,6 +144,12 @@ const ProfilePage = () => {
       setLoading(false);
     }
   }, [studentNumber]);
+
+  useEffect(() => {
+    if (profile) {
+      setTempEmail(profile.email || '');
+    }
+  }, [profile]);
 
   if (loading || !profile) {
     return (
@@ -170,9 +207,27 @@ const ProfilePage = () => {
             <Text style={styles.value}>{profile.student_number}</Text>
           </View>
 
+          {/* 🚨 MODIFIED: Email Row with Edit Button */}
           <View style={styles.row}>
             <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>{profile.email}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.value}>
+                    {profile.email || 'No email set'}
+                </Text>
+                <TouchableOpacity 
+                    onPress={() => {
+                        setTempEmail(profile.email || ''); // Set current value before opening
+                        setIsEmailModalVisible(true);
+                    }}
+                    style={{ marginLeft: 10 }}
+                >
+                    <Ionicons 
+                        name={profile.email ? "pencil" : "add-circle-outline"} 
+                        size={20} 
+                        color="#0A0F51" 
+                    />
+                </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -245,6 +300,47 @@ const ProfilePage = () => {
 
         <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* 🚨 NEW: Email Edit Modal */}
+      <Modal
+        animationType="slide"
+        transparent
+        visible={isEmailModalVisible}
+        onRequestClose={() => setIsEmailModalVisible(false)}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>
+              {profile.email ? 'Edit Email' : 'Add Email'}
+            </Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email address"
+              placeholderTextColor="#888"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={tempEmail}
+              onChangeText={setTempEmail}
+            />
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => setIsEmailModalVisible(false)}
+              >
+                <Text style={styles.textStyle}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSave]}
+                onPress={handleUpdateEmail}
+              >
+                <Text style={styles.textStyle}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         animationType="fade"
