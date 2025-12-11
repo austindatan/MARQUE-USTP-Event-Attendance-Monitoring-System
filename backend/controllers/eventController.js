@@ -111,26 +111,26 @@ const getFilteredEvents = async (req, res) => {
     }
 
     const orgObjectIds = orgs
-      .filter((id) => mongoose.Types.ObjectId.isValid(id))
-      .map((id) => new mongoose.Types.ObjectId(id));
+      .filter(id => mongoose.Types.ObjectId.isValid(id))
+      .map(id => new mongoose.Types.ObjectId(id));
 
     if (orgObjectIds.length === 0) return res.status(200).json([]);
 
-    const now = new Date();
-
+    // ❗ Return ALL events from these orgs (Upcoming, Ongoing, Concluded)
     const filteredEvents = await Event.find({
-      organization_id: { $in: orgObjectIds },
-      end_time: { $gte: now },
+      organization_id: { $in: orgObjectIds }
     })
       .sort({ event_date: 1 })
       .populate("organization_id", "org_name pfp description");
 
     return res.status(200).json(filteredEvents);
+
   } catch (err) {
     console.error("Error fetching filtered events:", err);
     return res.status(500).json({ message: "Server error fetching filtered events" });
   }
 };
+
 
 const getFollowedEvents = async (req, res) => {
   try {
@@ -371,21 +371,31 @@ const searchEvents = async (req, res) => {
 
     const searchRegex = new RegExp(query, "i");
 
-    const searchConditions = {
-      $or: [{ event_name: searchRegex }, { description: searchRegex }],
-      ...getOngoingFilter(),
-    };
-
-    const searchResults = await Event.find(searchConditions)
+    const events = await Event.find({
+      $or: [
+        { event_name: searchRegex },
+        { description: searchRegex }
+      ]
+    })
       .populate("organization_id", "org_name pfp")
       .sort({ event_date: 1 });
 
-    return res.status(200).json(searchResults);
+    // Filter events where org name matches AFTER populate
+    const filtered = events.filter(ev =>
+      ev.organization_id?.org_name?.match(searchRegex)
+      || ev.event_name.match(searchRegex)
+      || ev.description?.match(searchRegex)
+    );
+
+    return res.status(200).json(filtered);
+
   } catch (error) {
     console.error("Error searching events:", error);
     return res.status(500).json({ message: "Server error during search." });
   }
 };
+
+
 
 const getEventById = async (req, res) => {
   try {
