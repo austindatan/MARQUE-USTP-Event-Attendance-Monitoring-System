@@ -318,3 +318,41 @@ exports.getOrganizationsByDepartmentIds = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
+
+exports.updateStudentEmail = async (req, res) => {
+    try {
+        const student_number = req.params.student_number;
+        const { email } = req.body;
+
+        if (!email || email.trim() === '') {
+            return res.status(400).json({ message: 'Email field is required.' });
+        }
+        
+        // Simple client-side validation check (can be expanded)
+        if (!/\S+@\S+\.\S+/.test(email.trim())) {
+             return res.status(400).json({ message: 'Please enter a valid email address.' });
+        }
+
+
+        const student = await Student.findOne({ student_number });
+        if (!student) return res.status(404).json({ message: 'Student not found' });
+
+        const user = await User.findById(student.users_id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Check if the new email already exists for another user
+        const existingUser = await User.findOne({ email, _id: { $ne: user._id } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email address is already in use by another user.' });
+        }
+
+        user.email = email.trim();
+        await user.save();
+
+        res.json({ message: 'Email updated successfully', email: user.email });
+
+    } catch (err) {
+        console.error('Error in updateStudentEmail:', err);
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+};

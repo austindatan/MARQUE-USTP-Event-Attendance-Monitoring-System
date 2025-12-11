@@ -12,6 +12,8 @@ router.delete('/profile/:student_number', controller.deleteStudentProfile);
 
 router.get('/organizations/by-departments', controller.getOrganizationsByDepartmentIds);
 
+router.put('/profile/:student_number/email', controller.updateStudentEmail);
+
 // change password route
 router.put("/profile/:student_number/change-password", controller.changeStudentPassword
 );
