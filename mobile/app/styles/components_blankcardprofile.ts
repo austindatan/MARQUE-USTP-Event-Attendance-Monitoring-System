@@ -13,8 +13,8 @@ const HP = (percentage) => {
   return Math.round(value);
 };
 
-const CARD_WIDTH = WP(28.1);
-const CARD_HEIGHT = WP(41);
+const CARD_WIDTH = WP(26);
+const CARD_HEIGHT = WP(34);
 const IMAGE_SIZE = WP(25.8);
 const LOGO_SIZE = WP(4);
 
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     borderRadius: WP(2.5),
-    backgroundColor: "#fff",
+    backgroundColor: "#0A0F51",
     shadowColor: "#fff",
     shadowOffset: {
       width: 0,

@@ -22,8 +22,11 @@ const {
     deleteEvent
 } = eventController;
 
-
 const { uploadEventImages } = require('./cloudinaryConfig');
+const { testConclusionNotification } = require('../controllers/testConclusionNotification');
+
+// TEST ENDPOINT - Remove in production
+router.get('/test-conclusion/:eventId', testConclusionNotification);
 
 router.get('/search', eventController.searchEvents);
 router.get('/ongoing', getOngoingEvents);

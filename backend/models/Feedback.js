@@ -14,7 +14,7 @@ const FeedbackSchema = new mongoose.Schema(
             required: true,
         },
         // 🔑 CHANGED: Now an object to hold all four specific ratings
-        ratings: { 
+        ratings: {
             overall_experience: {
                 type: Number,
                 required: true,
@@ -46,13 +46,18 @@ const FeedbackSchema = new mongoose.Schema(
             trim: true,
             default: '',
         },
-    }, 
+        // 🔑 NEW: Allow users to submit feedback anonymously
+        is_anonymous: {
+            type: Boolean,
+            default: false,
+        },
+    },
     { timestamps: true }
-); 
+);
 
 // 🔑 CRITICAL: Prevents a user from submitting feedback more than once per event
 FeedbackSchema.index({ event_id: 1, user_id: 1 }, { unique: true });
 
-const Feedback = mongoose.model('Feedback', FeedbackSchema); 
+const Feedback = mongoose.model('Feedback', FeedbackSchema);
 
 module.exports = Feedback;

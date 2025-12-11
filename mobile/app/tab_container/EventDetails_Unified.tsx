@@ -8,6 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/page_eventdetails";
 import { BASE_URL, CLOUD_NAME } from "../../config";
 import axios from "axios";
+import FeedbackComments from "../components/FeedbackComments";
 
 const fixCloudinaryUrl = (url, cloudName) => {
   if (!url || url.startsWith("http")) return url;
@@ -45,6 +46,7 @@ const EventDetails_Unified = () => {
   const [eventStatus, setEventStatus] = useState('loading');
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [feedbackComments, setFeedbackComments] = useState([]);
   const fetchStudentId = async () => {
     try {
       const studentNumber = await AsyncStorage.getItem("student_number");
@@ -239,6 +241,19 @@ const EventDetails_Unified = () => {
     } catch (err) { console.error(err); }
   };
 
+  /** ================= FETCH FEEDBACK COMMENTS ================= */
+  const fetchFeedbackComments = async () => {
+    if (!eventId) return;
+    try {
+      const res = await fetch(`${BASE_URL}/api/feedback/comments/${eventId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setFeedbackComments(data.feedbacks || []);
+    } catch (err) {
+      console.error("Error fetching feedback comments:", err);
+    }
+  };
+
   /** ================= BUTTON RENDER LOGIC ================= */
   const renderPhotoProofButton = () => {
     let buttonText = "Upload Photoproof";
@@ -279,8 +294,11 @@ const EventDetails_Unified = () => {
       checkBookmarkStatus();
       fetchPhotoProofStatus(eventId);
       fetchStudentId();
+      if (eventStatus === 'concluded') {
+        fetchFeedbackComments();
+      }
     } else setLoading(false);
-  }, [eventId, fetchPhotoProofStatus]));
+  }, [eventId, fetchPhotoProofStatus, eventStatus]));
 
   useEffect(() => {
     if (eventData?.organization_id?._id && userId) checkFollowStatus(eventData.organization_id._id);
@@ -337,11 +355,24 @@ const EventDetails_Unified = () => {
           style={styles.gradientOverlay}
         />
         <View style={styles.navRowContent}>
-          <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={18} color="#fff" />
-            <Text style={[styles.navText, { color: "#fff" }]}>{eventData.title || eventData.event_name}</Text>
+          <TouchableOpacity
+            style={{ flexDirection: "row", alignItems: "center", flex: 1, marginRight: 10 }}
+            onPress={handleBack}
+          >
+            <Ionicons name="arrow-back" size={18} color="#fff" style={{ flexShrink: 0 }} />
+            <Text
+              style={[styles.navText, { color: "#fff", flex: 1 }]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {eventData.title || eventData.event_name}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.bookmarkBtn} onPress={handleBookmarkToggle} disabled={bookmarkLoading}>
+          <TouchableOpacity
+            style={[styles.bookmarkBtn, { flexShrink: 0 }]}
+            onPress={handleBookmarkToggle}
+            disabled={bookmarkLoading}
+          >
             <Ionicons name={isBookmarked ? "bookmark" : "bookmark-outline"} size={24} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -358,7 +389,7 @@ const EventDetails_Unified = () => {
             position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
             backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center", zIndex: 999
           }}>
-            <Text style={{ color: "#fff", fontSize: 28, fontWeight: "bold", textAlign: "center", paddingHorizontal: 20 }}>
+            <Text style={{ color: "#fff", fontSize: 28, fontFamily: "DMSans-Bold", textAlign: "center", paddingHorizontal: 20 }}>
               This Event Has Been Cancelled
             </Text>
           </View>
@@ -370,7 +401,7 @@ const EventDetails_Unified = () => {
             {/* Status Text */}
             <View style={[styles.infoBox, { marginBottom: 10 }]}>
               <Text style={styles.infoText}>
-                This event is <Text style={{ fontWeight: "bold" }}>ongoing</Text>.
+                This event is <Text style={{ fontFamily: 'DMSans-Bold' }}>ongoing</Text>.
               </Text>
             </View>
 
@@ -382,23 +413,31 @@ const EventDetails_Unified = () => {
         {/* ================= CONCLUDED + FEEDBACK ================= */}
         {eventStatus === 'concluded' && (
           <View style={styles.infoColumn}>
-            {eventData.attendanceRecorded && (
-              <View style={[styles.infoBox, { marginBottom: 10 }]}>
-                <Text style={styles.infoText}>Your attendance has been recorded. Thank you!</Text>
-              </View>
-            )}
+            {/* Show concluded message */}
             <View style={[styles.infoBox, { marginBottom: 10 }]}>
-              <Text style={styles.infoText}>This event has **concluded**.</Text>
+              <Text style={styles.infoText}>This event has <Text style={{ fontFamily: 'DMSans-Bold' }}>concluded</Text>.</Text>
             </View>
-            {!hasSubmittedFeedback ? (
-              <TouchableOpacity style={styles.infoBox} onPress={() => router.push(`/tab_container/EventDetails_ZFeedback?eventId=${eventData._id}`)}>
-                <Text style={styles.infoText}>Please answer the feedback survey.</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={[styles.infoBox, { backgroundColor: "#e8e8e8" }]}>
-                <Text style={[styles.infoText, { color: "gray" }]}>You already submitted feedback. Thank you!</Text>
-              </View>
-            )}
+
+            {/* Only show attendance and feedback if user attended */}
+            {attendanceLogId ? (
+              <>
+                {/* Attendance recorded message */}
+                <View style={[styles.infoBox, { marginBottom: 10, backgroundColor: '#E8F5E9' }]}>
+                  <Text style={[styles.infoText, { color: '#2E7D32' }]}>✓ Your attendance has been recorded. Thank you!</Text>
+                </View>
+
+                {/* Feedback survey */}
+                {!hasSubmittedFeedback ? (
+                  <TouchableOpacity style={styles.infoBox} onPress={() => router.push(`/tab_container/EventDetails_ZFeedback?eventId=${eventData._id}`)}>
+                    <Text style={styles.infoText}>Please answer the feedback survey.</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={[styles.infoBox, { backgroundColor: "#e8e8e8", opacity: 0.6 }]} pointerEvents="none">
+                    <Text style={[styles.infoText, { color: "gray" }]}>✓ You already submitted feedback. Thank you!</Text>
+                  </View>
+                )}
+              </>
+            ) : null}
           </View>
         )}
 
@@ -432,7 +471,10 @@ const EventDetails_Unified = () => {
         </View>
         <Text style={styles.organizerDesc}>{eventData.organization_id?.org_description || eventData.organization_id?.description || "No description provided."}</Text>
 
-        <View style={{ height: 80 }} />
+        {/* ================= FEEDBACK COMMENTS (Concluded Events Only) ================= */}
+        {eventStatus === 'concluded' && feedbackComments.length > 0 && (
+          <FeedbackComments comments={feedbackComments} />
+        )}
       </ScrollView>
     </View>
   );

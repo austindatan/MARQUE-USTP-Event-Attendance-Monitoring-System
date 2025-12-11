@@ -44,12 +44,13 @@ const RatingStars = ({ rating, setRating }) => {
 
 const EventFeedback = () => {
   const router = useRouter();
-  const { eventId, eventName, eventImage: initialEventImage } = useLocalSearchParams(); 
+  const { eventId, eventName, eventImage: initialEventImage } = useLocalSearchParams();
   const [overall, setOverall] = useState(0);
   const [venue, setVenue] = useState(0);
   const [speaker, setSpeaker] = useState(0);
   const [experience, setExperience] = useState(0);
   const [comments, setComments] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authInfo, setAuthInfo] = useState({ userId: null, token: null });
   const [eventImageUrl, setEventImageUrl] = useState(null);
@@ -59,21 +60,21 @@ const EventFeedback = () => {
     if (!eventId) return;
 
     try {
-        const res = await fetch(`${BASE_URL}/events/event/${eventId}`);
-        const data = await res.json();
-        const eventObj = data.event || data;
+      const res = await fetch(`${BASE_URL}/events/event/${eventId}`);
+      const data = await res.json();
+      const eventObj = data.event || data;
 
-        if (eventObj && eventObj.event_image) {
-            let imageUrl = eventObj.event_image;
-            const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dhfgfpoav/image/upload/";
-            if (!imageUrl.startsWith("http")) {
-                imageUrl = `${CLOUDINARY_BASE_URL}${imageUrl}`;
-            }
-            
-            setEventImageUrl(imageUrl);
+      if (eventObj && eventObj.event_image) {
+        let imageUrl = eventObj.event_image;
+        const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dhfgfpoav/image/upload/";
+        if (!imageUrl.startsWith("http")) {
+          imageUrl = `${CLOUDINARY_BASE_URL}${imageUrl}`;
         }
+
+        setEventImageUrl(imageUrl);
+      }
     } catch (error) {
-        console.error("Error fetching event image:", error);
+      console.error("Error fetching event image:", error);
     }
   };
 
@@ -91,9 +92,9 @@ const EventFeedback = () => {
         return;
       }
       if (initialEventImage) {
-          setEventImageUrl(initialEventImage);
+        setEventImageUrl(initialEventImage);
       }
-      
+
       fetchEventImage();
     };
     loadData();
@@ -125,6 +126,7 @@ const EventFeedback = () => {
         event_organization: experience,
       },
       comment: comments,
+      is_anonymous: isAnonymous,
     };
 
     try {
@@ -223,6 +225,20 @@ const EventFeedback = () => {
           />
         </View>
 
+        {/* Anonymous Checkbox */}
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={() => setIsAnonymous(!isAnonymous)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.checkbox}>
+            {isAnonymous && (
+              <Ionicons name="checkmark" size={18} color="#0A0F51" />
+            )}
+          </View>
+          <Text style={styles.checkboxLabel}>Submit feedback anonymously</Text>
+        </TouchableOpacity>
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -265,6 +281,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginLeft: 10,
     fontSize: 16,
+    fontFamily: "DMSans-Regular",
   },
   headerImage: {
     width: "100%",
@@ -276,12 +293,14 @@ const styles = StyleSheet.create({
     color: "#111",
     paddingHorizontal: 20,
     marginTop: 20,
+    fontFamily: "DMSans-Bold",
   },
   subText: {
     fontSize: 13,
     color: "#777",
     paddingHorizontal: 20,
     marginBottom: 10,
+    fontFamily: "DMSans-Regular",
   },
   block: {
     backgroundColor: "#f5f6ff",
@@ -294,6 +313,7 @@ const styles = StyleSheet.create({
   question: {
     fontSize: 14,
     color: "#111",
+    fontFamily: "DMSans-Regular",
   },
   commentBox: {
     paddingHorizontal: 20,
@@ -307,6 +327,7 @@ const styles = StyleSheet.create({
     height: 120,
     fontSize: 13,
     textAlignVertical: "top",
+    fontFamily: "DMSans-Regular",
   },
   bottomButtonContainer: {
     position: "absolute",
@@ -330,5 +351,27 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginRight: 8,
     fontSize: 14,
+    fontFamily: "DMSans-Bold",
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 15,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#0A0F51',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: '#111',
+    fontFamily: 'DMSans-Regular',
   },
 });

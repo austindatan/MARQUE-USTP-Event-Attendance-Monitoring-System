@@ -3,10 +3,6 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../config';
 
-/**
- * Custom hook to check if there are unread notifications
- * @returns {boolean} hasUnread - Whether there are unread notifications
- */
 export const useUnreadNotifications = () => {
     const [hasUnread, setHasUnread] = useState(false);
 

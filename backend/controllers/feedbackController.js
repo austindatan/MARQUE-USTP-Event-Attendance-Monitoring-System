@@ -4,7 +4,7 @@ const Feedback = require("../models/Feedback");
 
 const submitFeedback = async (req, res) => {
     try {
-        const { event_id, ratings, comment } = req.body;
+        const { event_id, ratings, comment, is_anonymous } = req.body;
         const user_id = req.user.id; // comes from auth middleware
 
         // Check if already submitted
@@ -17,7 +17,8 @@ const submitFeedback = async (req, res) => {
             event_id,
             user_id,
             ratings,
-            comment
+            comment,
+            is_anonymous: is_anonymous || false
         });
 
         await newFeedback.save();
@@ -59,7 +60,32 @@ const checkIfFeedbackSubmitted = async (req, res) => {
 };
 
 
+const getFeedbackComments = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+
+        if (!eventId) {
+            return res.status(400).json({ message: "Event ID is required." });
+        }
+
+        // Fetch all feedback for this event, populate user details including profile image
+        const feedbacks = await Feedback.find({ event_id: eventId })
+            .populate('user_id', 'firstname lastname profile_image')
+            .select('ratings comment is_anonymous createdAt user_id event_id')
+            .sort({ createdAt: -1 }) // Most recent first
+            .lean();
+
+        res.status(200).json({ feedbacks });
+
+    } catch (error) {
+        console.error("Get Feedback Comments Error:", error);
+        res.status(500).json({ message: "Server error fetching feedback comments." });
+    }
+};
+
+
 module.exports = {
     submitFeedback,
-    checkIfFeedbackSubmitted
+    checkIfFeedbackSubmitted,
+    getFeedbackComments
 };

@@ -67,21 +67,21 @@ exports.acceptInvite = async (req, res) => {
 exports.getNotifications = async (req, res) => {
   try {
     const { studentId: studentNumber } = req.params;
-    console.log(`[NOTIF CONTROLLER] Received studentNumber: ${studentNumber}`);
+    // console.log(`[NOTIF CONTROLLER] Received studentNumber: ${studentNumber}`);
 
     // ⭐️ NEW LOG: Confirms we are about to hit the database ⭐️
-    console.log("[NOTIF CONTROLLER] Attempting Student.findOne query...");
+    // console.log("[NOTIF CONTROLLER] Attempting Student.findOne query...");
 
     // 1. Look up the Student document using the student_number string
     const student = await Student.findOne({ student_number: studentNumber });
 
     // ⭐️ LOG 3: This line will only appear if the query succeeded ⭐️
     if (!student) {
-      console.error(`[NOTIF CONTROLLER] Student not found for number: ${studentNumber}`);
+      // console.error(`[NOTIF CONTROLLER] Student not found for number: ${studentNumber}`);
       return res.status(404).json({ message: "Student record not found for this Student Number." });
     }
 
-    console.log(`[NOTIF CONTROLLER] Found Student ObjectId: ${student._id}`);
+    //console.log(`[NOTIF CONTROLLER] Found Student ObjectId: ${student._id}`);
 
     // 2. Query notifications using the Student's MongoDB ObjectId
     const notifications = await Notification.find({ user_id: student._id })
@@ -89,7 +89,7 @@ exports.getNotifications = async (req, res) => {
       .populate("event_id", "event_name event_image event_date start_time end_time")
       .sort({ createdAt: -1 });
 
-    console.log(`[NOTIF CONTROLLER] Notifications fetched: ${notifications.length}`);
+    // console.log(`[NOTIF CONTROLLER] Notifications fetched: ${notifications.length}`);
     res.status(200).json(notifications);
 
   } catch (error) {

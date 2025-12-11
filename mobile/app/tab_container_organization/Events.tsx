@@ -9,7 +9,7 @@ import { BASE_URL, CLOUD_NAME } from "../../config";
 import ScannerButton from '../components/ScannerButton';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const OFFICER_ROLES = ["Manager", "President"]; 
+const OFFICER_ROLES = ["Manager", "President"];
 
 const fixCloudinaryUrl = (url, cloudName) => {
     if (!url || url.startsWith("http")) {
@@ -39,8 +39,8 @@ const Events = () => {
     const [eventActive, setEventActive] = useState(false);
     const [within30Min, setWithin30Min] = useState(false);
 
-    const [studentId, setStudentId] = useState(null); 
-    const [userRole, setUserRole] = useState(null);
+    const [studentId, setStudentId] = useState(null);
+    const [userRole, setUserRole] = useState(null);
 
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showCancelledOverlay, setShowCancelledOverlay] = useState(false);
@@ -86,7 +86,7 @@ const Events = () => {
             setUserRole(null);
         }
         return fetchedStudentId;
-    }; 
+    };
 
     const fetchEventDetails = async (id) => {
         if (!id) {
@@ -142,10 +142,10 @@ const Events = () => {
         }
     };
 
-    const checkFollowStatus = async (orgId, currentStudentId) => { 
+    const checkFollowStatus = async (orgId, currentStudentId) => {
         if (!currentStudentId) return;
-        try {
-            const res = await fetch(`${BASE_URL}/api/followed-orgs/${currentStudentId}/ids`);
+        try {
+            const res = await fetch(`${BASE_URL}/api/followed-orgs/${currentStudentId}/ids`);
             if (!res.ok) return;
 
             const ids = await res.json();
@@ -156,7 +156,7 @@ const Events = () => {
     };
 
     const handleFollowToggle = async () => {
-        if (!eventData?.organization_id?._id || !studentId) return;
+        if (!eventData?.organization_id?._id || !studentId) return;
         const orgId = eventData.organization_id._id;
 
         const action = isFollowing ? "unfollow" : "follow";
@@ -233,8 +233,8 @@ const Events = () => {
             // Fetch student role and ID
             fetchStudentAndRole(organizationId).then((fetchedStudentId) => {
                 if (fetchedStudentId) {
-                    setStudentId(fetchedStudentId); 
-                    checkFollowStatus(organizationId, fetchedStudentId); 
+                    setStudentId(fetchedStudentId);
+                    checkFollowStatus(organizationId, fetchedStudentId);
                 }
             });
         }
@@ -299,18 +299,28 @@ const Events = () => {
                     />
 
                     <View style={styles.navRowContent}>
-                        <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }} onPress={handleBack}>
-                            <Ionicons name="arrow-back" size={18} color="#fff" />
-                            <Text style={[styles.navText, { color: "#fff" }]}>
+                        <TouchableOpacity
+                            style={{ flexDirection: "row", alignItems: "center", flex: 1, marginRight: 10 }}
+                            onPress={handleBack}
+                        >
+                            <Ionicons name="arrow-back" size={18} color="#fff" style={{ flexShrink: 0 }} />
+                            <Text
+                                style={[styles.navText, { color: "#fff", flex: 1 }]}
+                                numberOfLines={2}
+                                ellipsizeMode="tail"
+                            >
                                 {eventData.title || eventData.event_name}
                             </Text>
                         </TouchableOpacity>
 
-                        {isOfficer && ( 
-                    <TouchableOpacity style={styles.bookmarkBtn} onPress={() => router.push({ pathname: '/tab_container_organization/EditEvents', params: { eventId: eventId } })}>
-                        <Ionicons name="create" size={24} color="#fff" />
-                    </TouchableOpacity>
-                    )}
+                        {isOfficer && (
+                            <TouchableOpacity
+                                style={[styles.bookmarkBtn, { flexShrink: 0 }]}
+                                onPress={() => router.push({ pathname: '/tab_container_organization/EditEvents', params: { eventId: eventId } })}
+                            >
+                                <Ionicons name="create" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
 
@@ -420,8 +430,6 @@ const Events = () => {
                     <Text style={styles.organizerDesc}>
                         {eventData.organization_id?.org_description || eventData.organization_id?.description || "No description provided."}
                     </Text>
-
-                    <View style={{ height: 100 }} />
                 </ScrollView>
             </View>
             {eventActive && within30Min && (
@@ -435,35 +443,6 @@ const Events = () => {
                 />
             )}
 
-            {/* ===== Cancel / Resume Event Button ===== */}
-            {eventData.status !== "Concluded" && isOfficer && ( 
-                <TouchableOpacity
-                    style={{
-                        position: "absolute",
-                        bottom: 25,
-                        left: 20,
-                        right: 20,
-                        backgroundColor: eventData.status === "Cancelled" ? "#0A0F51" : "#ff4d4d",
-                        paddingVertical: 15,
-                        borderRadius: 12,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 0,
-                        elevation: 10,
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 4,
-                    }}
-                    onPress={() => setShowCancelModal(true)}
-                >
-                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-                        {eventData.status === "Cancelled" ? "Resume Event" : "Cancel Event"}
-                    </Text>
-                </TouchableOpacity>
-            )}
-
-            {/* ===== Confirmation Modal ===== */}
             {showCancelModal && (
                 <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
                     <View style={{ width: "80%", backgroundColor: "#fff", padding: 20, borderRadius: 15 }}>
@@ -485,10 +464,9 @@ const Events = () => {
                 </View>
             )}
 
-            {/* ===== Cancelled Overlay ===== */}
             {showCancelledOverlay && (
                 <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center", zIndex: 900 }}>
-                    <Text style={{ color: "#fff", fontSize: 26, fontWeight: "bold", textAlign: "center" }}>
+                    <Text style={{ color: "#fff", fontSize: 26, fontFamily: "DMSans-Bold", textAlign: "center" }}>
                         This Event Has Been Cancelled
                     </Text>
                 </View>

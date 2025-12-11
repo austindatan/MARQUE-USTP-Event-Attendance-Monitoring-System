@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header_Profile";
 import EventCardSL from "../components/Card_EventAttendance";
+import Card_Blank from "../components/Card_BlankProfile";
 import SidebarMenu from "../components/SidebarMenu";
 import LogoutModal from "../components/LogoutModal";
 import styles from "../styles/effects_profile";
@@ -61,7 +62,7 @@ const ProfilePage = () => {
       );
       setAttendance(res.data.records || []);
     } catch (err) {
-      console.log("❌ Error loading attendance:", err);
+      console.log("Error loading attendance:", err);
     }
   };
 
@@ -97,7 +98,7 @@ const ProfilePage = () => {
       alert("Avatar updated!");
       loadProfile();
     } catch (err) {
-      console.log("❌ Upload error:", err);
+      console.log("Upload error:", err);
       alert("Failed to upload avatar");
     }
   };
@@ -181,29 +182,37 @@ const ProfilePage = () => {
         <View style={styles.attendanceCard}>
           <View style={styles.cardContainer}>
             {attendance.length > 0 ? (
-              attendance.map((log) => {
-                const date = new Date(log.event?.date);
-                const day = date.getDate();
-                const month = date.toLocaleString("en-US", { month: "short" });
+              <>
+                {attendance.map((log) => {
+                  const date = new Date(log.event?.date);
+                  const day = date.getDate();
+                  const month = date.toLocaleString("en-US", { month: "short" });
 
-                const eventImageSource =
-                  log.event?.images?.length > 0
-                    ? { uri: log.event.images[0] }
-                    : { uri: "placeholder-image-uri" };
+                  const eventImageSource =
+                    log.event?.images?.length > 0
+                      ? { uri: log.event.images[0] }
+                      : { uri: "placeholder-image-uri" };
 
-                return (
-                  <EventCardSL
-                    key={log.attendance_log_id}
-                    image={eventImageSource}
-                    title={log.event?.name || log.event?.event_name || "No Title"}
-                    organization={log.event?.organization_id?.org_name || "Unknown Org"}
-                    orgLogo={{ uri: log.event?.organization_id?.pfp || null }}
-                    dateDay={day.toString()}
-                    dateMonth={month.toUpperCase()}
-                    onPress={() => router.push({ pathname: "/tab_container/EventDetails_Unified", params: { eventId: log.event?.id } })}
-                  />
-                );
-              })
+                  return (
+                    <EventCardSL
+                      key={log.attendance_log_id}
+                      image={eventImageSource}
+                      title={log.event?.name || log.event?.event_name || "No Title"}
+                      organization={log.event?.organization_id?.org_name || "Unknown Org"}
+                      orgLogo={{ uri: log.event?.organization_id?.pfp || null }}
+                      dateDay={day.toString()}
+                      dateMonth={month.toUpperCase()}
+                      onPress={() => router.push({ pathname: "/tab_container/EventDetails_Unified", params: { eventId: log.event?.id } })}
+                    />
+                  );
+                })}
+                {/* Add blank cards if not divisible by 3 */}
+                {attendance.length % 3 !== 0 && (
+                  Array.from({ length: 3 - (attendance.length % 3) }).map((_, index) => (
+                    <Card_Blank key={`blank-${index}`} />
+                  ))
+                )}
+              </>
             ) : (
               <Text style={{ color: "#fff", padding: 10, fontFamily: "DMSans-Medium" }}>
                 No attendance logs found.
