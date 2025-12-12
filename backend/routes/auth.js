@@ -10,20 +10,20 @@ const router = express.Router();
 // LOGIN
 router.post("/login", async (req, res) => {
   const { student_number, password } = req.body;
-  const loginId = student_number; // local variable
+  const loginId = student_number; 
 
   try {
     let user = null;
     let student = null;
 
-    // 1. Try to find the user via Student record (using student_number)
+    // find the user via Student record
     student = await Student.findOne({ student_number: loginId }).populate("users_id"); //
 
     if (student) {
       user = student.users_id; //
     }
 
-    // 2. If not found as a Student, try to find the user via Username (for Admins)
+    // If not found as a Student (for Admins)
     if (!user) {
       user = await User.findOne({ username: loginId }); //
     }
@@ -57,11 +57,35 @@ router.post("/login", async (req, res) => {
       message: "Login successful",
       token,
       user: userData,
-      // CRITICAL FIX: The response key is now "student_number"
       student_number: loginIdentifier,
     });
   } catch (error) {
     console.error("Login error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/user-details/:identifier", async (req, res) => {
+  const { identifier } = req.params;
+  
+  try {
+    const user = await User.findOne({ username: identifier });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Return the fields
+    res.json({
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      profile_image: user.profile_image,
+      role: user.role,
+    });
+
+  } catch (error) {
+    console.error("Error fetching generic user data:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
