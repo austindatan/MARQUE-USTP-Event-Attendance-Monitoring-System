@@ -16,9 +16,18 @@ const NotificationsScreen = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [studentObjectId, setStudentObjectId] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     loadUserIdAndNotifications();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadUserIdAndNotifications = async () => {
@@ -52,14 +61,22 @@ const NotificationsScreen = () => {
     return created.toLocaleDateString();
   };
 
-  const calculateTimeStatus = (eventDate, notificationTitle = "") => {
+  const calculateTimeStatus = (startTime, endTime, notificationTitle = "") => {
     const now = new Date();
-    const eventTime = new Date(eventDate);
-    const diffInMs = eventTime - now;
+    const eventStartTime = new Date(startTime);
+    const eventEndTime = endTime ? new Date(endTime) : null;
+
+    const diffInMs = eventStartTime - now;
     const diffInHours = Math.ceil(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.ceil(diffInHours / 24);
 
-    if (diffInMs < 0) return "This event has concluded";
+    if (eventEndTime && now > eventEndTime) {
+      return "This event has concluded";
+    }
+
+    if (now >= eventStartTime && (!eventEndTime || now <= eventEndTime)) {
+      return "This event is ongoing";
+    }
 
     if (notificationTitle.toLowerCase().includes("new event")) {
       if (diffInDays > 1) return `New exciting event: ${diffInDays} days from now`;
@@ -148,18 +165,33 @@ const NotificationsScreen = () => {
     const key = notification._id;
     const timeAgo = formatRelativeTime(notification.createdAt);
 
+
     if (notification.type === "event" && notification.event_id) {
       const eventData = notification.event_id;
       const eventImage = eventData?.event_image ? { uri: eventData.event_image } : null;
-      const timeStatus = calculateTimeStatus(eventData.start_time || eventData.event_date, notification.title);
-      const showConfirmation = notification.title.includes("Confirmation") || notification.title.includes("Registered") || notification.title.includes("Confirmed");
+      const timeStatus = calculateTimeStatus(
+        eventData.start_time || eventData.event_date,
+        eventData.end_time,
+        notification.title
+      );
+
+      const showConfirmation = notification.title.includes("Confirmation") ||
+        notification.title.includes("Registered") ||
+        notification.title.includes("Confirmed") ||
+        notification.title.includes("Feedback") ||
+        notification.title.includes("Concluded");
+
+      let confirmationMessage = "You have confirmed your attendance for this event.";
+      if (notification.title.includes("Feedback") || notification.title.includes("Concluded")) {
+        confirmationMessage = "A successful event! Please answer the feedback survey to help us improve.";
+      }
+
       return (
         <TouchableOpacity
           key={key}
           onPress={() => {
             handleMarkAsRead(notification._id);
             if (notification.type === "event" && notification.event_id) {
-              // router.push to event details
               router.push({
                 pathname: "/tab_container/EventDetails_Unified",
                 params: { eventId: eventData._id }
@@ -177,6 +209,7 @@ const NotificationsScreen = () => {
             message={notification.message}
             timeAgo={timeAgo}
             showConfirmation={showConfirmation}
+            confirmationMessage={confirmationMessage}
           />
         </TouchableOpacity>
       );
@@ -187,7 +220,6 @@ const NotificationsScreen = () => {
       return (
         <TouchableOpacity
           key={key}
-          // Disabled as per user request: "ONLY event card should be clickable"
           disabled={true}
           style={{ opacity: notification.is_read ? 0.5 : 1 }}
         >

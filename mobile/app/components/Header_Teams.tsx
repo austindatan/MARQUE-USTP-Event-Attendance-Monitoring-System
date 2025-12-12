@@ -44,10 +44,8 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
             resizeMode="contain"
           />
 
-          <TouchableOpacity>
-            <View style={styles.notif}>
-              <Ionicons name="notifications-outline" size={24} color="#fff" />
-            </View>
+          <TouchableOpacity onPress={onMenuPress}>
+            <Ionicons name="menu" size={30} color="#0A0F51" />
           </TouchableOpacity>
         </View>
       </View>

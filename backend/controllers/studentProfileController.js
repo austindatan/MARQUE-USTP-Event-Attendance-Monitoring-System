@@ -6,7 +6,6 @@ const mongoose = require('mongoose');
 const OrgOfficer = require('../models/Org_officer');
 const Organization = require('../models/Organization');
 
-// GET API
 exports.getStudentProfileByNumber = async (req, res) => {
   try {
     const student_number = req.params.student_number;
@@ -24,12 +23,10 @@ exports.getStudentProfileByNumber = async (req, res) => {
 
     const user = student.users_id || {};
 
-    // Fetch all org roles for this student
     const orgRoles = await OrgOfficer.find({ student_id: student._id })
       .populate('org_id', 'org_name')
       .lean();
 
-    // Determine highest role
     const priority = ["President", "Manager", "Committee"];
     let highestRole = null;
     for (let p of priority) {

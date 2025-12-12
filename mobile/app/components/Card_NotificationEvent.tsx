@@ -11,6 +11,7 @@ const NotificationCardEvent = ({
   orgName,
   timeStatus,
   showConfirmation,
+  confirmationMessage,
   onConfirmAttendance,
   onRejectAttendance,
 }) => {
@@ -40,7 +41,7 @@ const NotificationCardEvent = ({
       {showConfirmation && (
         <View style={styles.attendanceContainer}>
           <Text style={styles.attendanceMessage}>
-            You have confirmed your attendance for this event.
+            {confirmationMessage || "You have confirmed your attendance for this event."}
           </Text>
         </View>
       )}
