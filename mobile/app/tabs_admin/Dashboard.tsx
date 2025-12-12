@@ -14,7 +14,7 @@ interface AdminData {
     lastname: string;
     email: string;
     profile_image?: string;
-  }
+}
 
 const AdminDashboard = () => {
     const router = useRouter();
@@ -23,32 +23,40 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         const fetchAdminData = async () => {
-          try {
-            const storedStudentNumber = await AsyncStorage.getItem("student_number");
-            if (!storedStudentNumber) return;
+            try {
+                const storedIdentifier = await AsyncStorage.getItem("student_number");
+                if (!storedIdentifier) {
+                    console.log("Identifier not found, cannot fetch profile.");
+                    return;
+                }
+
+                const res = await fetch(`${BASE_URL}/api/auth/user-details/${storedIdentifier}`);
+                
+                if (!res.ok) {
+                    console.error("Fetch user data failed:", res.status);
+                    return;
+                }
     
-            const res = await fetch(`${BASE_URL}/api/student/id/${storedStudentNumber}`);
-            if (!res.ok) return;
-    
-            const data = await res.json();
-            if (data && data.firstname && data.lastname) {
-              setAdminData(data);
+                const data = await res.json();
+                
+                if (data && data.firstname && data.lastname) {
+                    setAdminData(data);
+                }
+            } catch (err) {
+                console.error("Error fetching admin data:", err);
             }
-          } catch (err) {
-            console.error("Error fetching admin data:", err);
-          }
         };
     
         fetchAdminData();
-      }, []);
+    }, []);
 
-      const handleLogout = async () => {
+    const handleLogout = async () => {
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("userRole");
         await AsyncStorage.removeItem("student_number");
         setLogoutModalVisible(false);
         router.replace("/login");
-      };
+    };
 
     return (
         <View style={styles.container}>
@@ -61,7 +69,7 @@ const AdminDashboard = () => {
                         resizeMode="cover"
                     />
                     <Text style={styles.profileName}>
-                        {adminData ? `${adminData.firstname} ${adminData.lastname}` : "Loading..."}
+                        {adminData ? adminData.firstname : "Loading..."}
                     </Text>
                     <Text style={styles.profileTitle}>Administrator</Text>
                     <Text style={styles.profileEmail}>{adminData?.email ?? ""}</Text>
@@ -127,5 +135,4 @@ const AdminDashboard = () => {
         </View>
     );
 };
-
 export default AdminDashboard;
