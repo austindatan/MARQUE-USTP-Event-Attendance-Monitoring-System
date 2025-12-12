@@ -7,38 +7,58 @@ require("dotenv").config();
 
 const router = express.Router();
 
-// ===============================
 // LOGIN
-// ===============================
 router.post("/login", async (req, res) => {
   const { student_number, password } = req.body;
+  const loginId = student_number; // local variable
 
   try {
-    const student = await Student.findOne({ student_number }).populate("users_id");
-    if (!student || !student.users_id) {
-      return res.status(400).json({ message: "Invalid Student ID or password" });
+    let user = null;
+    let student = null;
+
+    // 1. Try to find the user via Student record (using student_number)
+    student = await Student.findOne({ student_number: loginId }).populate("users_id"); //
+
+    if (student) {
+      user = student.users_id; //
     }
 
-    const user = student.users_id;
+    // 2. If not found as a Student, try to find the user via Username (for Admins)
+    if (!user) {
+      user = await User.findOne({ username: loginId }); //
+    }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Authentication Check
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid ID or password" }); //
+    }
+
+    // Compare the provided password with the stored hash
+    const isMatch = await bcrypt.compare(password, user.password); //
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid Student ID or password" });
+      return res.status(400).json({ message: "Invalid ID or password" }); //
     }
+
+    // Successful Login
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role }, //
       process.env.JWT_SECRET || "defaultsecret",
       { expiresIn: "1h" }
     );
 
     const { password: _, ...userData } = user._doc;
 
+    // Determine the identifier to send back
+    const loginIdentifier = student ? student.student_number : user.username; // Logic to handle Student or Admin
+
     res.json({
       message: "Login successful",
       token,
       user: userData,
-      student_number: student.student_number,
+      // CRITICAL FIX: The response key is now "student_number"
+      student_number: loginIdentifier,
     });
   } catch (error) {
     console.error("Login error:", error);

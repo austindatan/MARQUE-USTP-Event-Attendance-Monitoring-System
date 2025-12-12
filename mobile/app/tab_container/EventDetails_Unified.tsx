@@ -318,9 +318,31 @@ const EventDetails_Unified = () => {
 
   // --- SAFE DATA CALCULATIONS START HERE ---
   const eventDateObj = eventData.event_date ? new Date(eventData.event_date) : null;
-  const eventDate = eventDateObj
-    ? eventDateObj.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
-    : "Date N/A";
+  const endDateObj = eventData.end_date ? new Date(eventData.end_date) : null;
+
+  let eventDate = "Date N/A";
+  if (eventDateObj) {
+    if (endDateObj && eventDateObj.toDateString() !== endDateObj.toDateString()) {
+      // Multi-day event: show date range
+      const startDay = eventDateObj.getDate();
+      const endDay = endDateObj.getDate();
+      const startMonth = eventDateObj.toLocaleDateString("en-US", { month: "long" });
+      const endMonth = endDateObj.toLocaleDateString("en-US", { month: "long" });
+      const year = eventDateObj.getFullYear();
+
+      if (startMonth === endMonth) {
+        // Same month: "December 2-3, 2025"
+        eventDate = `${startMonth} ${startDay}-${endDay}, ${year}`;
+      } else {
+        // Different months: "December 30 - January 2, 2025"
+        eventDate = `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+      }
+    } else {
+      // Single day event
+      eventDate = eventDateObj.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+    }
+  }
+
   const eventDay = eventDateObj
     ? eventDateObj.toLocaleDateString("en-US", { weekday: "long" })
     : "";
@@ -457,18 +479,31 @@ const EventDetails_Unified = () => {
         <Text style={styles.aboutText}>{eventData.description || eventData.event_description}</Text>
 
         {/* ================= ORGANIZER ================= */}
-        <View style={styles.organizerCard}>
-          <View style={styles.organizerLeft}>
-            <Image source={organizerPfpSource} style={styles.organizerLogo} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">{eventData.organization_id?.org_name}</Text>
-              <Text style={styles.organizerLabel}>Organizers</Text>
+        <TouchableOpacity
+          onPress={() => {
+            if (eventData.organization_id?._id) {
+              console.log('[EventDetails] Navigating to ProfileSTU with orgId:', eventData.organization_id._id);
+              router.push({
+                pathname: "../tab_container_organization/ProfileSTU",
+                params: { orgId: eventData.organization_id._id }
+              });
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          <View style={styles.organizerCard}>
+            <View style={styles.organizerLeft}>
+              <Image source={organizerPfpSource} style={styles.organizerLogo} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">{eventData.organization_id?.org_name}</Text>
+                <Text style={styles.organizerLabel}>Organizers</Text>
+              </View>
             </View>
+            <TouchableOpacity style={[styles.followButton, isFollowing && { backgroundColor: "#ccc" }]} onPress={handleFollowToggle}>
+              <Text style={[styles.followText, isFollowing && { color: "#000" }]}>{isFollowing ? "Following" : "Follow"}</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={[styles.followButton, isFollowing && { backgroundColor: "#ccc" }]} onPress={handleFollowToggle}>
-            <Text style={[styles.followText, isFollowing && { color: "#000" }]}>{isFollowing ? "Following" : "Follow"}</Text>
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
         <Text style={styles.organizerDesc}>{eventData.organization_id?.org_description || eventData.organization_id?.description || "No description provided."}</Text>
 
         {/* ================= FEEDBACK COMMENTS (Concluded Events Only) ================= */}
