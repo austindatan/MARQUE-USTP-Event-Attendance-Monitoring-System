@@ -394,7 +394,7 @@ const Events = () => {
                             activeOpacity={isDownloadEnabled ? 0.8 : 1}
                             onPress={() => {
                                 if (isDownloadEnabled) {
-                                    const url = `${BASE_URL}/events/attendance/export/${eventId}`;
+                                    const url = `${BASE_URL}/api/attendance/export/${eventId}`;
                                     Linking.openURL(url).catch(err => console.error(err));
                                 } else {
                                     Alert.alert(
