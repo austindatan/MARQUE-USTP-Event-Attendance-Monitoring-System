@@ -27,10 +27,10 @@ interface Organization {
 
 interface Event {
   _id: string;
-  title: string;
+  event_name: string;
   description: string;
-  date: string;
-  image_url?: string;
+  event_date: string;
+  event_image?: string;
 }
 
 interface OrgProfileData {
@@ -42,8 +42,13 @@ interface OrgProfileData {
 }
 
 const ProfilePage = () => {
-  const { orgId, refresh } = useLocalSearchParams();
+  const params = useLocalSearchParams();
   const router = useRouter();
+
+  // Extract orgId - handle both string and array cases
+  const rawOrgId = params.orgId;
+  const orgId = Array.isArray(rawOrgId) ? rawOrgId[0] : rawOrgId;
+  const refresh = params.refresh;
 
   const [activeTab, setActiveTab] = useState<EventTabType>("Incoming");
   const [profileData, setProfileData] = useState<OrgProfileData | null>(null);
@@ -71,6 +76,7 @@ const ProfilePage = () => {
   const fetchOrgProfile = async () => {
     try {
       setLoading(true);
+      console.log('[ProfileSTU] Fetching profile for orgId:', orgId);
       const response = await axios.get(`${BASE_URL}/api/organizations/profile/${orgId}`);
       setProfileData(response.data);
       setError(null);
@@ -225,16 +231,16 @@ const ProfilePage = () => {
             <View>
               {incomingEvents.length > 0 ? (
                 incomingEvents.map((event) => {
-                  const { dateDay, dateMonth, orgDate } = formatDateForCard(event.date);
+                  const { dateDay, dateMonth, orgDate } = formatDateForCard(event.event_date);
                   return (
                     <EventCard
                       key={event._id}
                       image={
-                        event.image_url
-                          ? { uri: event.image_url }
+                        event.event_image
+                          ? { uri: event.event_image }
                           : "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"
                       }
-                      title={event.title}
+                      title={event.event_name}
                       orgLogo={
                         org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")
                       }
@@ -256,16 +262,16 @@ const ProfilePage = () => {
             <View>
               {concludedEvents.length > 0 ? (
                 concludedEvents.map((event) => {
-                  const { dateDay, dateMonth, orgDate } = formatDateForCard(event.date);
+                  const { dateDay, dateMonth, orgDate } = formatDateForCard(event.event_date);
                   return (
                     <EventCard
                       key={event._id}
                       image={
-                        event.image_url
-                          ? { uri: event.image_url }
+                        event.event_image
+                          ? { uri: event.event_image }
                           : "https://images.unsplash.com/photo-1529101091764-c3526daf38fe"
                       }
-                      title={event.title}
+                      title={event.event_name}
                       orgLogo={
                         org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")
                       }
