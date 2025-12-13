@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Marque",
+    "slug": "marque",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -13,10 +13,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#E6F4FE"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -50,7 +48,7 @@
         {
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for scanning QR codes."
         }
-      ],
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -59,7 +57,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f3982ca8-9d6d-4557-a182-f6c7cf768976"
+        "projectId": "60a36aff-143b-4975-8284-6a84a9995879"
       }
     }
   }
