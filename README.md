@@ -1,14 +1,14 @@
 # MARQUE – USTP Event Attendance Monitoring System (Mobile Application)
 
-## 📱 Project Overview
+## Project Overview
 
-**MARQUE (Monitoring and Recording of Queued Events)** is a mobile-based **Event Attendance Monitoring System** developed for the **University of Science and Technology of Southern Philippines (USTP)**. The application is designed to provide reliable, real-time to near real-time attendance tracking for university events, improving efficiency, accuracy, and data management.
+**MARQUE** is a mobile-based **USTP Event Attendance Monitoring System** developed for the **University of Science and Technology of Southern Philippines (USTP)**. The application is designed to provide reliable, real-time to near real-time attendance tracking for university events, improving efficiency, accuracy, and data management.
 
 MARQUE enables administrators, organization officers, and committees to manage events and monitor attendance, while allowing students to easily view events, receive notifications, and confirm participation through secure and streamlined processes.
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 * Secure login with role-based authentication
 * Mobile-friendly navigation and interface
@@ -22,9 +22,9 @@ MARQUE enables administrators, organization officers, and committees to manage e
 
 ---
 
-## 👥 User Roles and Permissions
+## User Roles and Permissions
 
-### 🎓 Student
+### Student
 
 * View upcoming and ongoing events
 * View event details
@@ -35,11 +35,11 @@ MARQUE enables administrators, organization officers, and committees to manage e
 * Upload photo proof when required
 * Set or update email address (optional)
 
-> ❌ Students cannot join organizations or access organization-side features.
+> Students cannot join organizations or access organization-side features.
 
 ---
 
-### 👑 Administrator
+### Administrator
 
 * Create, edit, and delete user accounts
 * Assign and manage user roles (Admin, President, Manager, Committee, Student)
@@ -50,7 +50,7 @@ MARQUE enables administrators, organization officers, and committees to manage e
 
 ---
 
-### 🏛️ President
+### President
 
 * Manage **one assigned organization**
 * Add, edit, and cancel events
@@ -62,7 +62,7 @@ MARQUE enables administrators, organization officers, and committees to manage e
 
 ---
 
-### 📋 Manager
+### Manager
 
 * Manage events for assigned organization(s)
 * Add, edit, and cancel events
@@ -73,17 +73,17 @@ MARQUE enables administrators, organization officers, and committees to manage e
 
 ---
 
-### 🧑‍💼 Committee
+### Committee
 
 * Scan QR codes to record attendance
 * Verify uploaded photo proof
 * View assigned event details
 
-> ❌ Committee members cannot add, edit, or delete events, and cannot assign roles.
+> Committee members cannot add, edit, or delete events, and cannot assign roles.
 
 ---
 
-## 🛠️ System Modules (Based on Jira Sprints)
+## System Modules (Based on Jira Sprints)
 
 * Authentication and Role Management
 * User and Organization Management
@@ -98,7 +98,7 @@ MARQUE enables administrators, organization officers, and committees to manage e
 
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 ### Mobile Application
 
@@ -120,7 +120,7 @@ MARQUE enables administrators, organization officers, and committees to manage e
 
 ---
 
-## 🧩 Installation and Setup
+## Installation and Setup
 
 ### Prerequisites
 
@@ -159,7 +159,7 @@ npm start
 
 ---
 
-## ⚠️ Limitations and Known Issues
+## Limitations and Known Issues
 
 The following limitations are acknowledged based on the current implementation:
 
@@ -174,7 +174,7 @@ These limitations are subject to future improvements.
 
 ---
 
-## 🔄 System Behavior Notes
+## System Behavior Notes
 
 * Event status automatically updates once an event is concluded
 * Notifications are shown only for relevant events
@@ -184,13 +184,13 @@ These limitations are subject to future improvements.
 
 ---
 
-## 🔐 Security and Privacy
+## Security and Privacy
 
 MARQUE follows data privacy principles by collecting only the minimum amount of personal information necessary for attendance monitoring. All data is handled securely and used strictly for official academic and institutional purposes in accordance with USTP policies and applicable data protection laws.
 
 ---
 
-## 🏫 Project Information
+## Project Information
 
 * **Project Name:** MARQUE – USTP Event Attendance Monitoring System
 * **Platform:** Mobile Application
@@ -199,10 +199,10 @@ MARQUE follows data privacy principles by collecting only the minimum amount of 
 
 ---
 
-## 📄 License
+## License
 
 This project is intended for **academic and institutional use only** under USTP guidelines.
 
 ---
 
-⭐ *MARQUE streamlines event attendance management—making USTP events smarter, faster, and more reliable.*
+ *MARQUE streamlines event attendance management—making USTP events smarter, faster, and more reliable.*
