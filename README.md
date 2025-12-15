@@ -1,8 +1,8 @@
-# MARQUE – USTP Event Attendance Monitoring System
+# MARQUE – USTP Event Attendance Monitoring System (Mobile Application)
 
 ## Project Overview
 
-**MARQUE** is a mobile-based **Event Attendance Monitoring System** developed for the **University of Science and Technology of Southern Philippines (USTP)**. The mobile application is designed to provide reliable, real-time to near real-time attendance tracking for university events, improving efficiency, accuracy, and data management.
+**MARQUE (Monitoring and Recording of Queued Events)** is a mobile-based **Event Attendance Monitoring System** developed for the **University of Science and Technology of Southern Philippines (USTP)**. The application is designed to provide reliable, real-time to near real-time attendance tracking for university events, improving efficiency, accuracy, and data management.
 
 MARQUE enables administrators, organization officers, and committees to manage events and monitor attendance, while allowing students to easily view events, receive notifications, and confirm participation through secure and streamlined processes.
 
@@ -24,6 +24,18 @@ MARQUE enables administrators, organization officers, and committees to manage e
 
 ## User Roles and Permissions
 
+The MARQUE Mobile Application supports **five (5) distinct user roles**, each with clearly defined access levels and responsibilities:
+
+| Role          | Description                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| **Admin**     | Full system control; manages users, roles, and organizations                             |
+| **President** | Oversees and manages events for one assigned organization                                |
+| **Manager**   | Assists in event operations and reporting; may belong to multiple organizations          |
+| **Committee** | Handles on-site attendance via QR scanning and photo-proof verification                  |
+| **Student**   | Event participant with access to viewing events, notifications, attendance, and feedback |
+
+---
+
 ### Student
 
 * View upcoming and ongoing events
@@ -35,7 +47,7 @@ MARQUE enables administrators, organization officers, and committees to manage e
 * Upload photo proof when required
 * Set or update email address (optional)
 
-> Students cannot join organizations or access organization-side features.
+>  Students cannot join organizations or access organization-side features.
 
 ---
 
@@ -79,7 +91,7 @@ MARQUE enables administrators, organization officers, and committees to manage e
 * Verify uploaded photo proof
 * View assigned event details
 
-> Committee members cannot add, edit, or delete events, and cannot assign roles.
+>  Committee members cannot add, edit, or delete events, and cannot assign roles.
 
 ---
 
@@ -205,4 +217,4 @@ This project is intended for **academic and institutional use only** under USTP 
 
 ---
 
- *MARQUE streamlines event attendance management—making USTP events smarter, faster, and more reliable.*
+*MARQUE streamlines event attendance management—making USTP events smarter, faster, and more reliable.*
