@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**MARQUE (Monitoring and Recording of Queued Events)** is a mobile-based **Event Attendance Monitoring System** developed for the **University of Science and Technology of Southern Philippines (USTP)**. The application is designed to provide reliable, real-time to near real-time attendance tracking for university events, improving efficiency, accuracy, and data management.
+**MARQUE** is a mobile-based **Event Attendance Monitoring System** developed for the **University of Science and Technology of Southern Philippines (USTP)**. The application is designed to provide reliable, real-time to near real-time attendance tracking for university events, improving efficiency, accuracy, and data management.
 
 MARQUE enables administrators, organization officers, and committees to manage events and monitor attendance, while allowing students to easily view events, receive notifications, and confirm participation through secure and streamlined processes.
 
