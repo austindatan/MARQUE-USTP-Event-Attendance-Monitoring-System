@@ -95,22 +95,16 @@ The MARQUE Mobile Application supports **five (5) distinct user roles**, each wi
 
 ---
 
-## System Modules (Based on Jira Sprints)
+## System Modules
 
 * Authentication and Role Management
 * User and Organization Management
 * Event Management
 * Attendance Logging
 * QR Code Scanner
-* Photo Proof Upload
-* Feedback System
-* Notifications
-* Search and Filter
 * Reports and Attendance Summary
 
 ---
-
-## Tech Stack
 
 ### Mobile Application
 
@@ -183,22 +177,6 @@ The following limitations are acknowledged based on the current implementation:
 * Offline attendance recording is not supported
 
 These limitations are subject to future improvements.
-
----
-
-## System Behavior Notes
-
-* Event status automatically updates once an event is concluded
-* Notifications are shown only for relevant events
-* Feedback submission is disabled if the user did not attend the event
-* Organization-specific filtering is enforced across roles
-* Join Organization feature is removed
-
----
-
-## Security and Privacy
-
-MARQUE follows data privacy principles by collecting only the minimum amount of personal information necessary for attendance monitoring. All data is handled securely and used strictly for official academic and institutional purposes in accordance with USTP policies and applicable data protection laws.
 
 ---
 
