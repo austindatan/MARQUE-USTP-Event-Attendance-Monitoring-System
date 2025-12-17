@@ -40,15 +40,12 @@ const EditUser = () => {
   const [departments, setDepartments] = useState([]);
   const [orgs, setOrgs] = useState([]);
 
-  // CHANGED: Multi-role support
   const [userRoles, setUserRoles] = useState([]);
-  // Each role: { role: string, org_id: string, org_name: string, org_pfp: string }
 
   const [loadingData, setLoadingData] = useState(true);
   const [collegeModalVisible, setCollegeModalVisible] = useState(false);
   const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
 
-  // NEW: Add role modal states
   const [addRoleModalVisible, setAddRoleModalVisible] = useState(false);
   const [tempRole, setTempRole] = useState("Student");
   const [tempOrgId, setTempOrgId] = useState("");
@@ -89,7 +86,6 @@ const EditUser = () => {
         setCollegeId(String(student.college_id || ''));
         setProfileImage({ uri: student.profile_image, local: false });
 
-        // CHANGED: Load ALL roles from memberships
         const membershipRes = await axios.get(`${BASE_URL}/api/memberships/student/${student._id}`);
         const roles = membershipRes.data.map(membership => ({
           role: membership.role,
@@ -149,12 +145,9 @@ const EditUser = () => {
 
 
       try {
-        // --- MODIFIED API CALL to use multiple IDs ---
-        // You would need to implement this new endpoint on your server
         const deptIdsString = departmentIdsToQuery.join(',');
         const res = await axios.get(`${BASE_URL}/api/student/organizations/by-departments?departmentIds=${deptIdsString}`);
 
-        // Optional: Filter out any duplicates if they exist, though they shouldn't if your logic is clean
         const uniqueOrgs = res.data.reduce((acc, current) => {
           const x = acc.find(item => item._id === current._id);
           if (!x) {
@@ -265,7 +258,7 @@ const EditUser = () => {
     }
   };
 
-  // NEW: Role management functions
+  // Role management functions
   const handleAddRole = () => {
     if (tempRole !== 'Student' && !tempOrgId) {
       Alert.alert("Missing Organization", "Please select an organization for this role.");
