@@ -24,8 +24,6 @@ const {
 
 const { uploadEventImages } = require('./cloudinaryConfig');
 
-router.get('/test-conclusion/:eventId', testConclusionNotification);
-
 router.get('/search', eventController.searchEvents);
 router.get('/ongoing', getOngoingEvents);
 
