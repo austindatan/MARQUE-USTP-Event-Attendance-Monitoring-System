@@ -1,11 +1,9 @@
-// controllers/feedbackController.js
-
 const Feedback = require("../models/Feedback");
 
 const submitFeedback = async (req, res) => {
     try {
         const { event_id, ratings, comment, is_anonymous } = req.body;
-        const user_id = req.user.id; // comes from auth middleware
+        const user_id = req.user.id; // from auth middleware
 
         // Check if already submitted
         const exists = await Feedback.findOne({ event_id, user_id });

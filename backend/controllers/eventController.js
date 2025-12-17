@@ -12,7 +12,7 @@ const autoUpdateEventStatuses = async () => {
   const now = new Date();
 
   try {
-    // 1. Upcoming → Ongoing
+    // Upcoming → Ongoing
     await Event.updateMany(
       {
         status: "Upcoming",
@@ -22,7 +22,7 @@ const autoUpdateEventStatuses = async () => {
       { $set: { status: "Ongoing" } }
     );
 
-    // 2. Ongoing → Concluded
+    // Ongoing → Concluded
     await Event.updateMany(
       {
         status: "Ongoing",
@@ -116,7 +116,7 @@ const getFilteredEvents = async (req, res) => {
 
     if (orgObjectIds.length === 0) return res.status(200).json([]);
 
-    // ❗ Return ALL events from these orgs (Upcoming, Ongoing, Concluded)
+    // Return ALL events from these orgs (Upcoming, Ongoing, Concluded)
     const filteredEvents = await Event.find({
       organization_id: { $in: orgObjectIds }
     })
@@ -227,7 +227,7 @@ const getConcludedEventsByOrganization = async (req, res) => {
 
     const now = new Date();
 
-    // 1️⃣ Update events that have ended but are not yet concluded
+    // Update events that have ended but are not yet concluded
     await Event.updateMany(
       {
         organization_id: orgId,
@@ -237,7 +237,7 @@ const getConcludedEventsByOrganization = async (req, res) => {
       { $set: { status: "Concluded" } }
     );
 
-    // 2️⃣ Fetch concluded and cancelled events
+    // Fetch concluded and cancelled events
     const events = await Event.find({
       organization_id: orgId,
       $or: [
@@ -310,15 +310,13 @@ const getFollowedOrgEvents = async (req, res) => {
   }
 };
 
-// =========================
 // GET ALL EVENTS OF AN ORGANIZATION BY STATUS
-// =========================
 const getOrgEventsByStatus = async (req, res) => {
   try {
     await autoUpdateEventStatuses();
 
     const { organizationId } = req.params;
-    const { status } = req.query; // optional: "Upcoming", "Ongoing", "Concluded"
+    const { status } = req.query; // "Upcoming", "Ongoing", "Concluded"
 
     // Build query
     let query = { organization_id: organizationId };
@@ -414,9 +412,7 @@ const getEventById = async (req, res) => {
   }
 };
 
-/* ============================================================
-    HELPER: CHECK IF EVENT IS ACTIVE
-============================================================ */
+/* CHECK IF EVENT IS ACTIVE */
 const isEventActive = (event) => {
   if (!event) return false;
 
@@ -519,9 +515,9 @@ const createEvent = async (req, res) => {
 
     const savedEvent = await newEvent.save();
 
-    // --- NOTIFICATION LOGIC ---
+    // NOTIFICATION LOGIC
     try {
-      // 1. Get Org details (for Department & Name)
+      // Get Org details (for Department & Name)
       const org = await Organization.findById(organization_id).populate({
         path: 'department_id',
         populate: {
@@ -530,7 +526,7 @@ const createEvent = async (req, res) => {
       });
 
       if (org) {
-        // 2. Identify Target Students
+        // Identify Target Students
         let targetStudentIds = new Set();
 
         if (org.org_type === "Mother Organization") {
@@ -543,7 +539,6 @@ const createEvent = async (req, res) => {
           }
         } else {
           // Unit / FAESO -> Notify Department Members + Followers
-
           // A. Department Members
           if (org.department_id) {
             const deptStudents = await Student.find({ department_id: org.department_id }).select("_id");
@@ -551,7 +546,7 @@ const createEvent = async (req, res) => {
           }
 
           // B. Followers (map User ID -> Student ID)
-          // DISCOVERY: FollowedOrgs stores STUDENT IDs in the 'user_id' field
+          // FollowedOrgs stores STUDENT IDs in the 'user_id' field
           const followers = await FollowedOrgs.find({ organization_id }).select("user_id");
           const followerStudentIds = followers.map(f => f.user_id);
 
@@ -561,7 +556,7 @@ const createEvent = async (req, res) => {
         }
 
 
-        // 3. Create Notifications
+        // Create Notifications
         const notifications = Array.from(targetStudentIds).map(studentId => ({
           user_id: studentId,
           organization_id,
@@ -581,7 +576,6 @@ const createEvent = async (req, res) => {
     } catch (notifErr) {
       console.error("Error creating notifications for new event:", notifErr);
     }
-    // ---------------------------
 
     res.status(201).json({ message: "Event created successfully", event: savedEvent });
   } catch (err) {
@@ -603,7 +597,7 @@ const updateEvent = async (req, res) => {
       venue_details,
       is_mandatory,
       event_date,
-      end_date,        // <-- ADDED
+      end_date,
       start_time,
       end_time,
     } = req.body;
@@ -613,7 +607,7 @@ const updateEvent = async (req, res) => {
 
     // Convert to Date objects
     const eventDateUTC = new Date(event_date);
-    const endDateUTC = new Date(end_date);    // <-- ADDED
+    const endDateUTC = new Date(end_date);
     const startTimeUTC = new Date(start_time);
     const endTimeUTC = new Date(end_time);
 
@@ -640,7 +634,7 @@ const updateEvent = async (req, res) => {
       venue_details,
       is_mandatory,
       event_date: eventDateUTC,  // START DATE
-      end_date: endDateUTC,      // <-- ADDED
+      end_date: endDateUTC,  // END DATE
       start_time: startTimeUTC,
       end_time: endTimeUTC,
       status,

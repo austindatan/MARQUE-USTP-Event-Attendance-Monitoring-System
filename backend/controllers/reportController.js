@@ -1,4 +1,3 @@
-// controllers/reportController.js
 const ExcelJS = require("exceljs");
 const axios = require("axios");
 const mongoose = require("mongoose");
@@ -7,9 +6,8 @@ const Event = require("../models/Event");
 const Feedback = require("../models/Feedback");
 const AttendanceLog = require("../models/Attendance_log");
 
-// --------------------------------------------------------
+
 // STYLING CONSTANTS
-// --------------------------------------------------------
 const STYLES = {
     header: {
         font: { size: 16, bold: true, color: { argb: "FFFFFF" } },
@@ -48,9 +46,7 @@ const STYLES = {
     },
 };
 
-// --------------------------------------------------------
 // QUICKCHART API — Generate PNG Buffer
-// --------------------------------------------------------
 async function generateChart(chartConfig) {
     const url = "https://quickchart.io/chart";
 
@@ -86,9 +82,8 @@ async function generateChart(chartConfig) {
     }
 }
 
-// --------------------------------------------------------
+
 // TRENDLINE — Check-ins every 15 minutes
-// --------------------------------------------------------
 function computeTrendline(logs) {
     if (!logs.length) return { labels: ["No Data"], data: [0] };
 
@@ -125,9 +120,7 @@ function computeTrendline(logs) {
     return { labels, data };
 }
 
-// --------------------------------------------------------
 // HELPER: Add section with title and spacing
-// --------------------------------------------------------
 function addSection(sheet, currentRow, title) {
     sheet.mergeCells(`A${currentRow}`, `H${currentRow}`);
     const cell = sheet.getCell(`A${currentRow}`);
@@ -137,9 +130,7 @@ function addSection(sheet, currentRow, title) {
     return currentRow + 1;
 }
 
-// --------------------------------------------------------
 // HELPER: Add table rows
-// --------------------------------------------------------
 function addTableRow(sheet, row, colA, colB, isHeader = false) {
     const style = isHeader ? STYLES.tableHeader : STYLES.tableData;
     sheet.getCell(`A${row}`).value = colA;
@@ -151,9 +142,7 @@ function addTableRow(sheet, row, colA, colB, isHeader = false) {
     sheet.getRow(row).height = isHeader ? 20 : 18;
 }
 
-// --------------------------------------------------------
 // MAIN: DOWNLOAD EXCEL REPORT
-// --------------------------------------------------------
 exports.downloadEventReport = async (req, res) => {
     try {
         const { eventId } = req.params;
@@ -207,9 +196,7 @@ exports.downloadEventReport = async (req, res) => {
                 (attendanceByProgram[program] || 0) + 1;
         }
 
-        // ---------------------------
-        // 1. FEEDBACK DATA PREP
-        // ---------------------------
+        // FEEDBACK DATA PREP
         const avgRatings = {
             overall_experience: 0,
             venue_facilities: 0,
@@ -254,9 +241,7 @@ exports.downloadEventReport = async (req, res) => {
         };
         const feedbackChartBuffer = await generateChart(feedbackChartConfig);
 
-        // ---------------------------
-        // 2. ATTENDANCE BY PROGRAM DATA PREP
-        // ---------------------------
+        // ATTENDANCE BY PROGRAM DATA PREP
         const programLabels = Object.keys(attendanceByProgram);
         const programValues = Object.values(attendanceByProgram).map(Number);
         const hasAttendanceData = programLabels.length > 0;
@@ -276,9 +261,7 @@ exports.downloadEventReport = async (req, res) => {
         };
         const attendanceChartBuffer = await generateChart(attendanceChartConfig);
 
-        // ---------------------------
-        // 3. TRENDLINE BAR CHART DATA PREP
-        // ---------------------------
+        // TRENDLINE BAR CHART DATA PREP
         const trend = computeTrendline(attendanceLogs);
 
         const trendlineChartConfig = {
@@ -292,9 +275,7 @@ exports.downloadEventReport = async (req, res) => {
         };
         const trendlineChartBuffer = await generateChart(trendlineChartConfig);
 
-        // ---------------------------
         // CREATE EXCEL WORKBOOK
-        // ---------------------------
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet("Event Report");
 
@@ -309,7 +290,7 @@ exports.downloadEventReport = async (req, res) => {
 
         let currentRow = 1;
 
-        // ========== REPORT HEADER ==========
+        // REPORT HEADER
         sheet.mergeCells(`A${currentRow}`, `H${currentRow}`);
         const headerCell = sheet.getCell(`A${currentRow}`);
         headerCell.value = `${event.event_name} – Event Report`;
@@ -326,7 +307,7 @@ exports.downloadEventReport = async (req, res) => {
         currentRow++;
         currentRow++;
 
-        // ========== SECTION 1: FEEDBACK SUMMARY ==========
+        // SECTION 1: FEEDBACK SUMMARY
         currentRow = addSection(sheet, currentRow, "1. Feedback Summary");
         currentRow++;
 
@@ -374,7 +355,7 @@ exports.downloadEventReport = async (req, res) => {
 
         currentRow += 20;
 
-        // ========== SECTION 2: ATTENDANCE BY PROGRAM ==========
+        // SECTION 2: ATTENDANCE BY PROGRAM
         currentRow = addSection(sheet, currentRow, "2. Attendance by Program");
         currentRow++;
 
@@ -422,7 +403,7 @@ exports.downloadEventReport = async (req, res) => {
 
         currentRow += 20;
 
-        // ========== SECTION 3: ATTENDANCE TREND ==========
+        // SECTION 3: ATTENDANCE TREND
         currentRow = addSection(
             sheet,
             currentRow,
@@ -483,9 +464,7 @@ exports.downloadEventReport = async (req, res) => {
             sheet.getCell(`D${currentRow}`).value = "Chart failed to generate.";
         }
 
-        // ---------------------------
         // SEND EXCEL FILE
-        // ---------------------------
         const buffer = await workbook.xlsx.writeBuffer();
 
         const fileName = `${event.event_name.replace(

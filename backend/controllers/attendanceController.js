@@ -177,7 +177,7 @@ const getAttendanceHistory = async (req, res) => {
           name: `${log.user_id.firstname} ${log.user_id.lastname}`,
           student_number: student?.student_number || "",
           program: student?.department_id?.department_code || "",
-          status: log.status, // <--- ADDED THIS FIELD
+          status: log.status,
           date: formattedDate,  // MM-DD-YYYY
           time: formattedTime,  // HH:mm (now 12-hour)
         };
@@ -253,7 +253,7 @@ const getAttendanceLogStatus = async (req, res) => {
       return res.status(400).json({ message: "Missing required parameters: event_id or student_number" });
     }
 
-    // 1. Find the student record to get the MongoDB user_id
+    // Find the student record to get the MongoDB user_id
     const student = await Student.findOne({ student_number }).populate("users_id");
 
     if (!student || !student.users_id) {
@@ -262,7 +262,7 @@ const getAttendanceLogStatus = async (req, res) => {
 
     const user_id = student.users_id._id;
 
-    // 2. Find the attendance log for this user and event
+    // Find the attendance log for this user and event
     // The client expects the full log object to check the status
     const log = await AttendanceLog.findOne({ event_id, user_id });
 
@@ -270,7 +270,7 @@ const getAttendanceLogStatus = async (req, res) => {
       return res.status(200).json({ message: "Attendance log not found", log: null });
     }
 
-    // 3. Return the log object (the client is looking for log.photoproof_status and log._id)
+    // Return the log object (the client is looking for log.photoproof_status and log._id)
     return res.status(200).json({
       message: "Attendance log retrieved successfully",
       log: log, // Return the full log object
@@ -487,9 +487,7 @@ const registerOrGetAttendanceLog = async (req, res) => {
 
 
 
-/* ============================================================
-    EXPORT ATTENDANCE LOGS AS PDF
-============================================================ */
+/* EXPORT ATTENDANCE LOGS AS PDF */
 const PDFDocument = require("pdfkit");
 const path = require("path");
 
@@ -590,7 +588,7 @@ const exportAttendancePDF = async (req, res) => {
       // Student No.
       doc.text(row.student_number, columns[0].x, currentY, { width: columns[0].width, align: "left" });
 
-      // Name (This is the longest field, use it to determine row height)
+      // Name
       // We use doc.text() and capture the resulting height
       const nameHeight = doc.text(row.name, columns[1].x, currentY, { width: columns[1].width, align: "left", continued: false }).currentLineHeight();
 
@@ -616,14 +614,12 @@ const exportAttendancePDF = async (req, res) => {
 
 
 
-/* ============================================================
-    EXPORTS
-============================================================ */
+/* EXPORTS */
 module.exports = {
   registerAttendance,
   getAttendanceHistory,
   isEventWithin1Hour,
-  searchAttendanceLogs, // export Event model if needed for routes
+  searchAttendanceLogs,
   getAttendanceLogStatus,
   uploadPhotoproof,
   exportAttendancePDF,

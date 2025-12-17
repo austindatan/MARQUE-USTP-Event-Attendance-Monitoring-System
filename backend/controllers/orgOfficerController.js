@@ -23,9 +23,9 @@ exports.getJoinedOrganizations = async (req, res) => {
 
         const organizations = officerLinks.map(link => ({
             _id: link.org_id._id,
-            org_name: link.org_id.org_name,             // ✔ renamed for frontend
+            org_name: link.org_id.org_name,
             description: link.org_id.description || "",
-            pfp: link.org_id.pfp || null,           // ✔ include pfp
+            pfp: link.org_id.pfp || null,
             role: link.role,
             date_joined: link.date_joined,
         }));
@@ -62,7 +62,7 @@ exports.getAvailableOrganizations = async (req, res) => {
     }
 };
 
-// --- SEND INVITE (organization_id must be provided) ---
+// SEND INVITE (organization_id must be provided)
 exports.sendInvite = async (req, res) => {
     const { sender_student_number, target_student_id, role, organization_id } = req.body;
     console.log("sendInvite called:", { sender_student_number, target_student_id, role, organization_id });
@@ -78,7 +78,7 @@ exports.sendInvite = async (req, res) => {
     }
 
     try {
-        // 1. LOOKUP sender student _id
+        // LOOKUP sender student _id
         const senderStudent = await Student.findOne({ student_number: sender_student_number }).select('_id').lean();
         if (!senderStudent) {
             console.error("Sender student not found for number:", sender_student_number);
@@ -86,13 +86,13 @@ exports.sendInvite = async (req, res) => {
         }
         const sender_student_id = senderStudent._id;
 
-        // 2. VERIFY sender is officer of the organization
+        // VERIFY sender is officer of the organization
         const senderOfficer = await OrgOfficer.findOne({ student_id: sender_student_id, org_id: organization_id });
         if (!senderOfficer) {
             return res.status(403).json({ message: "You are not authorized to invite for this organization." });
         }
 
-        // 3. Prevent duplicate invite
+        // Prevent duplicate invite
         const existingInvite = await Notification.findOne({
             user_id: target_student_id,
             organization_id: organization_id,
@@ -103,7 +103,7 @@ exports.sendInvite = async (req, res) => {
             return res.status(409).json({ message: `Student already has a pending invitation as ${existingInvite.role}.`, role: existingInvite.role });
         }
 
-        // 4. Create notification
+        // Create notification
         const notification = await Notification.create({
             user_id: target_student_id,
             organization_id: organization_id,
@@ -123,7 +123,7 @@ exports.sendInvite = async (req, res) => {
     }
 };
 
-// --- NEW: GET Current Outstanding Invites (from the sender's organization) ---
+// GET Current Outstanding Invites (from the sender's organization)
 exports.getOutstandingInvites = async (req, res) => {
     try {
         const { orgId } = req.params;
@@ -136,12 +136,12 @@ exports.getOutstandingInvites = async (req, res) => {
         const invites = await Notification.find({
             organization_id: orgId,
             type: "invite",
-            // Add any other filter needed to ensure it's "pending" (e.g., is_resolved: false)
+            // Add any other filter needed to ensure it's "pending"
         }).select('user_id role');
 
         // Map the results to a simpler object { student_id: role } for fast lookup on the client
         const inviteMap = invites.reduce((acc, invite) => {
-            // Note: user_id is the recipient student's _id
+            // user_id is the recipient student's _id
             acc[invite.user_id.toString()] = invite.role;
             return acc;
         }, {});
@@ -154,7 +154,7 @@ exports.getOutstandingInvites = async (req, res) => {
     }
 };
 
-// --- ACCEPT INVITE ---
+// ACCEPT INVITE
 exports.acceptInvite = async (req, res) => {
     const { notification_id, student_id } = req.body;
     console.log("acceptInvite called:", { notification_id, student_id });
@@ -189,7 +189,7 @@ exports.acceptInvite = async (req, res) => {
     }
 };
 
-// --- CANCEL INVITE ---
+// CANCEL INVITE
 exports.cancelInvite = async (req, res) => {
     const { target_student_id, orgId } = req.body;
 
@@ -215,7 +215,7 @@ exports.cancelInvite = async (req, res) => {
     }
 };
 
-// --- CHANGE ROLE ---
+// CHANGE ROLE
 exports.changeRole = async (req, res) => {
     const { student_id, new_role } = req.body;
     console.log("changeRole called:", { student_id, new_role });
@@ -253,7 +253,7 @@ exports.changeRole = async (req, res) => {
     }
 };
 
-// --- REMOVE USER ---
+// REMOVE USER
 exports.removeUser = async (req, res) => {
     const { student_id } = req.body;
     console.log("removeUser called:", student_id);

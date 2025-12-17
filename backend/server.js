@@ -60,10 +60,6 @@ app.use("/api/feedback", feedbackRoutes);
 const orgOfficerRoutes = require('./routes/orgOfficerRoutes');
 app.use('/api/memberships', orgOfficerRoutes);
 
-// Join request route
-const joinRequestRoutes = require('./routes/joinRequestRoutes');
-app.use('/api/join-request', joinRequestRoutes);
-
 // Bookmark
 const bookmarkRoutes = require('./routes/bookmarkRoutes');
 app.use("/api/bookmarks", bookmarkRoutes);
