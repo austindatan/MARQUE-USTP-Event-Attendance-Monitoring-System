@@ -21,9 +21,7 @@ import AdminSidebarMenu from '../components/SidebarMenu_Admin';
 import StudentLinear from '../components/Card_StudentLinear';
 import { BASE_URL } from "../../config";
 
-// ======================================================
-// 1. CUSTOM MODAL (LogoutModal-style)
-// ======================================================
+
 const UserActionModal = ({ visible, onClose, onConfirm, title, message, confirmText, cancelText = "Cancel" }) => {
   const LOGO = require("../../assets/images/marque/MARQUE_whitelogo.png");
 
@@ -65,9 +63,7 @@ const UserActionModal = ({ visible, onClose, onConfirm, title, message, confirmT
   );
 };
 
-// ======================================================
-// MAIN COMPONENT
-// ======================================================
+
 const ManageUsers = () => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
