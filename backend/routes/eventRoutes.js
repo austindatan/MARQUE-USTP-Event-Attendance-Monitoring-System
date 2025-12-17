@@ -23,7 +23,6 @@ const {
 } = eventController;
 
 const { uploadEventImages } = require('./cloudinaryConfig');
-const { testConclusionNotification } = require('../controllers/testConclusionNotification');
 
 router.get('/test-conclusion/:eventId', testConclusionNotification);
 
