@@ -70,7 +70,7 @@ exports.updateStudentProfile = async (req, res) => {
       middlename,
       email,
       contact_number,
-      roles, // NEW: Array of role objects
+      roles,
       department_id,
       college_id
     } = req.body;
@@ -279,7 +279,7 @@ exports.deleteStudentProfile = async (req, res) => {
     res.status(200).json({ message: "Student and associated user successfully deleted." });
 
   } catch (err) {
-    console.error("🔥 Error deleting student:", err);
+    console.error("Error deleting student:", err);
     res.status(500).json({ message: "Server error during deletion." });
   }
 };
@@ -287,27 +287,26 @@ exports.deleteStudentProfile = async (req, res) => {
 // GET API to fetch organizations by multiple department IDs
 exports.getOrganizationsByDepartmentIds = async (req, res) => {
   try {
-    const { departmentIds } = req.query; // Get the comma-separated string
+    const { departmentIds } = req.query;
 
     if (!departmentIds) {
-      // This is the most likely cause of the 400 error in a newly implemented route
       return res.status(400).json({ message: 'Missing departmentIds query parameter' });
     }
 
-    // 1. Split the string into an array of strings
+    // Split the string into an array of strings
     const stringIds = departmentIds.split(',');
 
-    // 2. Map the string array to Mongoose ObjectIds
+    // Map the string array to Mongoose ObjectIds
     const validObjectIds = stringIds
       .map(id => id.trim())
-      .filter(id => mongoose.Types.ObjectId.isValid(id)) // Crucial validation
+      .filter(id => mongoose.Types.ObjectId.isValid(id)) 
       .map(id => new mongoose.Types.ObjectId(id));
 
     if (validObjectIds.length === 0) {
       return res.status(400).json({ message: 'No valid department IDs provided.' });
     }
 
-    // 3. Query using the $in operator to find organizations matching ANY of the IDs
+    // Query using the $in operator to find organizations matching ANY of the IDs
     const organizations = await Organization.find({
       department_id: { $in: validObjectIds }
     });
@@ -328,7 +327,7 @@ exports.updateStudentEmail = async (req, res) => {
       return res.status(400).json({ message: 'Email field is required.' });
     }
 
-    // Simple client-side validation check (can be expanded)
+    // Simple client-side validation check
     if (!/\S+@\S+\.\S+/.test(email.trim())) {
       return res.status(400).json({ message: 'Please enter a valid email address.' });
     }

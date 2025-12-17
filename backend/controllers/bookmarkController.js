@@ -3,9 +3,7 @@ const Event = require("../models/Event");
 const Student = require("../models/Student");
 const mongoose = require('mongoose'); 
 
-// ===========================
-// GET BOOKMARKS (Fixed)
-// ===========================
+// GET BOOKMARKS
 exports.getBookmarks = async (req, res) => {
   try {
     const student_number = req.params.student_number;
@@ -19,17 +17,17 @@ exports.getBookmarks = async (req, res) => {
     const bookmarks = await Bookmark.find({ user_id })
       .populate({
         path: "event_id",
-        // Ensure Organization ID is populated for the card details
+        // Organization ID is populated for the card details
         select: "event_name event_date event_image event_images organization_id", 
         populate: {
             path: 'organization_id',
-            // ⭐️ FIX: Select 'org_name' for the name and 'pfp' for the logo
+            // Select 'org_name' for the name and 'pfp' for the logo
             select: 'org_name pfp' 
         }
       })
       .sort({ createdAt: -1 }); // Added sorting from the second controller
 
-    // Optional: Filter out bookmarks where event_id is null (deleted events)
+    // Filter out bookmarks where event_id is null (deleted events)
     const validBookmarks = bookmarks.filter(b => b.event_id !== null);
 
     res.json(validBookmarks);
@@ -39,10 +37,8 @@ exports.getBookmarks = async (req, res) => {
   }
 };
 
-// ===========================
+
 // ADD BOOKMARK
-// (Used by client when adding a bookmark via student_number)
-// ===========================
 exports.addBookmark = async (req, res) => {
   try {
     const { event_id } = req.body;
@@ -60,17 +56,15 @@ exports.addBookmark = async (req, res) => {
     const bookmark = new Bookmark({ user_id, event_id });
     await bookmark.save();
 
-    res.status(201).json({ message: "Bookmark added", bookmark }); // Use 201 Created status
+    res.status(201).json({ message: "Bookmark added", bookmark });
   } catch (err) {
     console.error("Error adding bookmark:", err.message, err.stack);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// ===========================
+
 // REMOVE BOOKMARK
-// (Used by Bookmark_Page.tsx)
-// ===========================
 exports.removeBookmark = async (req, res) => {
   try {
     const student_number = req.params.student_number;
@@ -95,10 +89,8 @@ exports.removeBookmark = async (req, res) => {
   }
 };
 
-// ===========================
-// CHECK IF EVENT IS BOOKMARKED (New, useful function)
-// This uses student_number like the rest of the controller
-// ===========================
+
+// CHECK IF EVENT IS BOOKMARKED 
 exports.checkBookmark = async (req, res) => {
     try {
         const student_number = req.params.student_number;

@@ -5,7 +5,7 @@ const getAllOrganizations = async (req, res) => {
         // Fetch all organizations
         const exploreorganizations = await exploreOrganization.find({})
             .select('org_name pfp description') // Select the fields the card needs
-            .sort({ org_name: 1 }); // Optional: Sort alphabetically
+            .sort({ org_name: 1 }); // Sort alphabetically
 
         res.status(200).json(exploreorganizations);
     } catch (err) {

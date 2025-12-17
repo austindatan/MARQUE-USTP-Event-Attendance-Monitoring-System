@@ -92,7 +92,7 @@ exports.addOrganization = async (req, res) => {
     res.status(201).json({ message: "Organization created successfully", organization: newOrg });
 
   } catch (err) {
-    console.error("🔥 UNHANDLED ERROR:", err);
+    console.error("UNHANDLED ERROR:", err);
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
