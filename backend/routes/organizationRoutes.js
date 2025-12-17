@@ -8,7 +8,6 @@ const Event = require("../models/Event");
 // multer Cloudinary
 const { uploadOrgImages } = require('./cloudinaryConfig');
 
-// GET /api/organizations/profile/:orgId
 router.get('/profile/:orgId', async (req, res) => {
   try {
     const orgId = req.params.orgId;
@@ -71,7 +70,6 @@ router.put(
   organizationController.updateOrganizationProfile
 );
 
-// DELETE /api/organizations/:orgId
 router.delete('/:orgId', async (req, res) => {
   try {
     const { orgId } = req.params;
