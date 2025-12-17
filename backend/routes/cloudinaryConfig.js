@@ -8,13 +8,10 @@
     api_secret: process.env.CLOUDINARY_API_SECRET
   });
 
-  // 📁 cloudinaryconfig.js - Event images storage (FIXED)
   const eventStorage = new CloudinaryStorage({
     cloudinary,
     params: {
       folder: 'MARQUE Events/EVENTS COVER PAGE',
-      // ⭐ CRITICAL FIX: Change from hardcoded 'png' to 'jpg' or 'auto' 
-      // 'jpg' is generally safer for cover photos.
       format: async (req, file) => 'jpg', 
       public_id: (req, file) => 'event-' + Date.now()
     }

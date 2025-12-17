@@ -5,7 +5,7 @@ const College = require('../models/College');
 // GET all colleges
 router.get('/colleges', async (req, res) => {
   try {
-    const colleges = await College.find(); // Fetch all colleges
+    const colleges = await College.find(); 
     res.status(200).json(colleges);
   } catch (err) {
     console.error("Error fetching colleges:", err);

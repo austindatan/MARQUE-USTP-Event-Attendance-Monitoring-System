@@ -25,7 +25,6 @@ const {
 const { uploadEventImages } = require('./cloudinaryConfig');
 const { testConclusionNotification } = require('../controllers/testConclusionNotification');
 
-// TEST ENDPOINT - Remove in production
 router.get('/test-conclusion/:eventId', testConclusionNotification);
 
 router.get('/search', eventController.searchEvents);
@@ -38,12 +37,11 @@ router.get("/all/concluded", getAllConcludedEvents);
 router.get('/organization/:orgId/upcoming', eventController.getUpcomingEventsByOrganization);
 router.get('/organization/:orgId/concluded', eventController.getConcludedEventsByOrganization);
 
-// Change .array(...) to .single('event_image')
 router.post('/create', uploadEventImages.single('event_image'), createEvent);
 router.put('/:eventId', uploadEventImages.single('event_image'), updateEvent);
 router.delete('/:id', deleteEvent);
 
-// Optional: Check if event is active and/or within first 30 minutes
+// Check if event is active and/or within first 1 hour time window
 router.get('/event-status/:id', eventController.getEventStatus);
 
 // CANCEL and RESUME event
