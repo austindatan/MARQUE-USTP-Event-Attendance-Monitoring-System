@@ -59,14 +59,20 @@ This README and accompanying documentation serve as a guide for developers, test
 
 ## Key Features
 
-* Role-based authentication (Admin, President, Manager, Committee, Student)
-* QR code attendance scanning
-* Photo proof upload and verification
-* Real-time attendance logs
-* Event creation, editing, and cancellation
-* Notifications for events and updates
-* Attendance reports and feedback collection
-* Secure and controlled access per role
+1. QR Code Scanner for Attendance Logging
+The system utilizes a QR code scanner to accurately record event attendance. This feature allows committees to scan participant QR codes in real time, ensuring fast, secure, and error-free attendance logging.
+
+2. Downloadable Event Analytics and Reports
+MARQUE provides downloadable event analytics files that summarize attendance data, participant statistics, and event performance. These reports can be used for documentation, evaluation, and decision-making purposes.
+
+3. Feedback Collection Module
+The system includes a feedback feature that allows participants to submit comments and evaluations after attending an event. This helps organizations assess event effectiveness and improve future activities.
+
+4. CRUD (Create, Read, Update, Delete) Operations
+Authorized users can perform CRUD operations for managing events, users, organizations, and attendance records. This ensures flexible and efficient data management within the system.
+
+5. Notification System
+MARQUE features a notification module that informs users about upcoming events, attendance status, important updates, and system announcements in real time.
 
 ---
 
