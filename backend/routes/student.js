@@ -26,8 +26,6 @@ router.get("/all", async (req, res) => {
             .populate("org_id", "org_name pfp") 
             .lean();
         
-
-        // Create a quick map from Student ID to Role data
         const studentIdToRole = managers.reduce((map, manager) => {
           const studentId = manager.student_id.toString();
             if (!map[studentId]) {
@@ -83,11 +81,9 @@ router.get("/all", async (req, res) => {
             })
             .filter(user => {
                 if (filter === 'roles') {
-                    // Filter: Students w/ Roles
                     return user.hasRole;
                 }
                 if (filter === 'all') {
-                    // Filter: Standard Students (no role)
                     return !user.hasRole;
                 }
                 return true; 
@@ -113,8 +109,8 @@ router.get("/officers/all", async (req, res) => {
         }
 
         // Fetch Organization to determine filtering rules
-        const Organization = mongoose.model('Organization'); // Ensure models are accessible
-        const OrgOfficer = mongoose.model('Org_officer'); // Ensure models are accessible
+        const Organization = mongoose.model('Organization'); 
+        const OrgOfficer = mongoose.model('Org_officer'); 
 
         const org = await Organization.findById(orgId)
             .populate({
@@ -133,10 +129,6 @@ router.get("/officers/all", async (req, res) => {
 
         console.log(`Org Type: ${orgType}`);
 
-        // ------------------------------------------------------------
-        // 1. IMPROVEMENT: Fetch Org Officers for *THIS* Organization ONLY
-        //    (This improves efficiency and simplifies Step 5 logic.)
-        // ------------------------------------------------------------
         const officers = await OrgOfficer.find({ org_id: orgId }) 
             .populate("org_id", "org_name pfp")
             .lean();
@@ -152,10 +144,7 @@ router.get("/officers/all", async (req, res) => {
             return map;
         }, {});
 
-        // --------------------------------------------
-        // 2. Fetch Students with full population
-        // --------------------------------------------
-        const Student = mongoose.model('Student'); // Ensure model is accessible
+        const Student = mongoose.model('Student'); 
         let students = await Student.find({})
             .populate("users_id", "firstname lastname email profile_image")
             .populate({
@@ -165,9 +154,6 @@ router.get("/officers/all", async (req, res) => {
             })
             .lean();
 
-        // --------------------------------------------
-        // 3. Apply Organization Type Filter (Correct - As requested)
-        // --------------------------------------------
         students = students.filter(student => {
             const studentDeptId = student.department_id?._id?.toString();
             const studentCollegeId = student.department_id?.college_id?._id?.toString();
@@ -185,9 +171,6 @@ router.get("/officers/all", async (req, res) => {
             return false;
         });
 
-        // --------------------------------------------
-        // 4. Build Detailed User List
-        // --------------------------------------------
         let detailedUsers = students.map(student => {
             const user = student.users_id;
             const dept = student.department_id;
@@ -213,18 +196,11 @@ router.get("/officers/all", async (req, res) => {
             };
         });
 
-        // ------------------------------------------------------------
-        // 5. FIX: Filter Students based on 'all' (Available) vs 'roles' (Officers)
-        // ------------------------------------------------------------
         if (filter === 'roles') {
-            // "Students w/ Roles" tab: Show only students who ARE officers of this specific org.
-            // Since studentIdToRole only contained officers of this org, we filter for those who have a role.
             detailedUsers = detailedUsers.filter(u => u.hasRole);
         }
 
         if (filter === 'all') {
-            // "Students" tab: Show only students who are NOT officers of this specific org 
-            // (i.e., those who are available to be invited).
             detailedUsers = detailedUsers.filter(u => !u.hasRole);
         }
 
@@ -273,7 +249,7 @@ router.get("/id/:student_number", async (req, res) => {
       department_name: department?.department_name || "",
       department_code: department?.department_code || "",
 
-      // NEW: college ID included
+      // college ID included
       college_id: department?.college_id?._id || null,
       college_name: department?.college_id?.college_name || "",
 
