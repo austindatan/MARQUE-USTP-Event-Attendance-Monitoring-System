@@ -10,26 +10,7 @@ This repository/documentation focuses on the **MARQUE Mobile Application**, whic
 
 ---
 
-## Table of Contents
-
-* Introduction
-* Overview
-* Purpose
-* Features
-* User Roles
-* Installation & Setup
-* Test Credentials
-* System Requirements
-* Access Control
-* Navigation
-* Role-Based Usage
-* Troubleshooting & Support
-* Limitations
-* Acknowledgements
-
----
-
-## Introduction
+## About
 
 The MARQUE Mobile Application is a core component of the MARQUE system, designed to provide reliable, real-time to near real-time updates on event attendance, participant verification, and system activity. It enables authorized users to manage events, record attendance, and generate reports using mobile devices connected to the internet.
 
@@ -132,7 +113,6 @@ MARQUE supports **five (5) user roles**:
 
 ### Hardware
 
-* Minimum **4 GB RAM**
 * Stable internet connection required
 
 ### Additional Requirements
