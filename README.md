@@ -1,198 +1,212 @@
-# MARQUE – USTP Event Attendance Monitoring System (Mobile Application)
+# MARQUE – USTP Event Attendance Monitoring System
 
-## Project Overview
+**A USTP-CDO Event Attendance Monitoring System**
 
-**MARQUE** is a mobile-based **Event Attendance Monitoring System** developed for the **University of Science and Technology of Southern Philippines (USTP)**. The application is designed to provide reliable, real-time to near real-time attendance tracking for university events, improving efficiency, accuracy, and data management.
+## Mobile Application
 
-MARQUE enables administrators, organization officers, and committees to manage events and monitor attendance, while allowing students to easily view events, receive notifications, and confirm participation through secure and streamlined processes.
+MARQUE is a mobile-based **Event Attendance Monitoring System** developed for the **University of Science and Technology of Southern Philippines (USTP)**. The system streamlines event attendance tracking using QR codes, role-based access control, and real-time data processing to improve accuracy, efficiency, and transparency in university-wide events.
+
+This repository/documentation focuses on the **MARQUE Mobile Application**, which supports administrators, organization officers, committees, and students in managing and participating in events.
+
+---
+
+## Table of Contents
+
+* Introduction
+* Overview
+* Purpose
+* Features
+* User Roles
+* Installation & Setup
+* Test Credentials
+* System Requirements
+* Access Control
+* Navigation
+* Role-Based Usage
+* Troubleshooting & Support
+* Limitations
+* Acknowledgements
+
+---
+
+## Introduction
+
+The MARQUE Mobile Application is a core component of the MARQUE system, designed to provide reliable, real-time to near real-time updates on event attendance, participant verification, and system activity. It enables authorized users to manage events, record attendance, and generate reports using mobile devices connected to the internet.
+
+The application reduces manual attendance processes while ensuring secure and role-based access to event data, in compliance with institutional data privacy principles.
+
+---
+
+## Overview
+
+MARQUE allows USTP stakeholders to:
+
+* Create and manage events
+* Track attendance using QR code scanning
+* Verify participation through photo proof
+* Generate attendance reports
+* Collect post-event feedback
+
+All features are accessible based on assigned user roles, ensuring controlled and secure system usage.
+
+---
+
+## Purpose
+
+This README and accompanying documentation serve as a guide for developers, testers, and evaluators to understand the scope, functionality, and setup of the MARQUE Mobile Application. It outlines system features, role-based access, installation steps, and operational guidelines.
 
 ---
 
 ## Key Features
 
-* Secure login with role-based authentication
-* Mobile-friendly navigation and interface
-* Event creation, editing, and cancellation
-* QR Code–based attendance scanning
+* Role-based authentication (Admin, President, Manager, Committee, Student)
+* QR code attendance scanning
 * Photo proof upload and verification
 * Real-time attendance logs
+* Event creation, editing, and cancellation
 * Notifications for events and updates
-* Attendance reports and downloadable records
-* Feedback collection for attended events only
+* Attendance reports and feedback collection
+* Secure and controlled access per role
 
 ---
 
-## User Roles and Permissions
+## User Roles
 
-The MARQUE Mobile Application supports **five (5) distinct user roles**, each with clearly defined access levels and responsibilities:
+MARQUE supports **five (5) user roles**:
 
-| Role          | Description                                                                              |
-| ------------- | ---------------------------------------------------------------------------------------- |
-| **Admin**     | Full system control; manages users, roles, and organizations                             |
-| **President** | Oversees and manages events for one assigned organization                                |
-| **Manager**   | Assists in event operations and reporting; may belong to multiple organizations          |
-| **Committee** | Handles on-site attendance via QR scanning and photo-proof verification                  |
-| **Student**   | Event participant with access to viewing events, notifications, attendance, and feedback |
-
----
-
-### Student
-
-* View upcoming and ongoing events
-* View event details
-* Receive event notifications
-* View attendance summary in profile
-* Click events from attendance summary to view details
-* Submit feedback **only if attended the event**
-* Upload photo proof when required
-* Set or update email address (optional)
-
->  Students cannot join organizations or access organization-side features.
+| Role          | Description                                                    |
+| ------------- | -------------------------------------------------------------- |
+| **Admin**     | Manages users, roles, and organizations                        |
+| **President** | Oversees events for one assigned organization                  |
+| **Manager**   | Assists event management; may belong to multiple organizations |
+| **Committee** | Handles on-site attendance and verification                    |
+| **Student**   | Participates in events and submits feedback                    |
 
 ---
 
-### Administrator
+## Installation & Setup
 
-* Create, edit, and delete user accounts
-* Assign and manage user roles (Admin, President, Manager, Committee, Student)
-* View all users, including users with multiple roles
-* Add, edit, and delete organizations
-* View organization lists
-* Manage system authentication and access control
+### APK Installation (Android)
 
----
+1. Locate the **MARQUE APK** from the Jira Deployment Box.
+2. Enable installation from unknown sources:
 
-### President
+   * Settings → Security → Install unknown apps
+3. Install the APK on your Android device.
+4. Launch the app using **Expo Go** to enable full functionality.
 
-* Manage **one assigned organization**
-* Add, edit, and cancel events
-* Invite Managers and Committee members within the organization
-* Fix QR scanner time window
-* Filter students by department or organization
-* View and download attendance reports
-* View feedback summaries and attendance analytics
+**Note:**
+
+* The APK deployment is available for **19 days only**.
+* Expo Go is used due to the free trial deployment setup.
 
 ---
 
-### Manager
+## Test Credentials
 
-* Manage events for assigned organization(s)
-* Add, edit, and cancel events
-* Invite Committee members
-* Fix QR scanner time window
-* View and download attendance reports
-* Monitor attendance logs
+| Role      | Name    | Username   | Password     |
+| --------- | ------- | ---------- | ------------ |
+| Admin     | Admin   | Admin      | 12345        |
+| President | Angelo  | 2023300660 | helloword17A |
+| Manager   | Zyrile  | 2023300181 | 12345678     |
+| Committee | Rabi    | 2023300123 | rabibaho     |
+| Student   | Sabrina | 2023300120 | 12345        |
 
----
-
-### Committee
-
-* Scan QR codes to record attendance
-* Verify uploaded photo proof
-* View assigned event details
-
->  Committee members cannot add, edit, or delete events, and cannot assign roles.
+> For testing purposes only. Do not share credentials publicly.
 
 ---
 
-## System Modules
+## System Requirements
 
-* Authentication and Role Management
-* User and Organization Management
-* Event Management
-* Attendance Logging
-* QR Code Scanner
-* Reports and Attendance Summary
+### Software
 
----
+* **Android:** Minimum Android 9.0 (Oreo and above)
+* **iOS:** Not yet supported
+* **Windows App:** Not supported
 
-### Mobile Application
+### Hardware
 
-* **Framework:** React Native (Expo)
-* **Navigation:** Expo Router, React Navigation
-* **Language:** TypeScript / JavaScript
-* **UI & Styling:** Expo Vector Icons, Lucide Icons, React Native Size Matters
-* **State & Storage:** Async Storage
-* **API Communication:** Axios
-* **Authentication:** JWT-based authentication
-* **QR & Media:** Expo Camera, Expo Image Picker, Expo Image Manipulator
-* **Location Support:** Expo Location (if enabled)
+* Minimum **4 GB RAM**
+* Stable internet connection required
 
-### Development Tools
+### Additional Requirements
 
-* **Package Manager:** npm
-* **Linting:** ESLint (Expo config)
-* **Platform Support:** Android, iOS, Web (Expo)
+* Google services updated
+* App permissions enabled (camera, storage)
+* Internet connection required for all core features
 
 ---
 
-## Installation and Setup
+## Access Control
 
-### Prerequisites
-
-* Node.js (LTS version recommended)
-* npm or yarn
-* Expo CLI
-* Android Studio (for Android emulator) or Xcode (for iOS simulator)
-
-### Installation Steps
-
-1. Clone the repository:
-
-```bash
-git clone <repository-url>
-cd mobile
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Start the Expo development server:
-
-```bash
-npm start
-```
-
-4. Run the application:
-
-* Scan the QR code using **Expo Go** (Android / iOS), or
-* Press `a` to run on Android emulator
-* Press `i` to run on iOS simulator
-* Press `w` to run on web
+* Access is strictly role-based
+* Role assignment and modification are handled by Admin users
+* Unauthorized access is restricted
+* Accounts may be revoked upon role removal or policy violations
 
 ---
 
-## Limitations and Known Issues
+## Navigation
 
-The following limitations are acknowledged based on the current implementation:
+* Users are redirected to the **Events Tab** after login
+* Navigation includes:
 
-* Analytics reports are available in **downloadable format only** (no in-app charts)
-* Attendance spreadsheet export may experience issues under certain conditions
-* Multi-day event date display may have formatting limitations
-* Feedback comments viewing is limited in the current UI
-* Some organization-specific filters depend on correct role and organization assignment
-* Offline attendance recording is not supported
-
-These limitations are subject to future improvements.
+  * Events
+  * Attendance
+  * Notifications
+  * Profile
+* Logout is accessible via the **Profile Tab**
 
 ---
 
-## Project Information
+## Role-Based Usage
 
-* **Project Name:** MARQUE – USTP Event Attendance Monitoring System
-* **Platform:** Mobile Application
-* **Institution:** University of Science and Technology of Southern Philippines
-* **Project Type:** Software Engineering Project
+Each role has a dedicated workflow:
 
----
-
-## License
-
-This project is intended for **academic and institutional use only** under USTP guidelines.
+* **Admin:** User & organization management
+* **President:** Event creation, reports, analytics
+* **Manager:** Event support and attendance monitoring
+* **Committee:** QR scanning and photo proof verification
+* **Student:** Event participation and feedback submission
 
 ---
 
-*MARQUE streamlines event attendance management—making USTP events smarter, faster, and more reliable.*
+## Troubleshooting & Support
+
+Common issues include:
+
+* App crashes or failure to launch
+* Internet connectivity problems
+* Login or account issues
+* Missing data or permissions
+
+Recommended actions:
+
+* Restart device
+* Clear app cache
+* Reinstall app
+* Verify permissions and internet connection
+
+---
+
+## Limitations
+
+* Internet-dependent functionality
+* Analytics available primarily via downloadable reports
+* iOS support pending
+* APK availability limited to deployment period
+
+---
+
+## Acknowledgements
+
+This project was developed as part of a **Software Engineering academic requirement** at USTP. We extend our sincere gratitude to:
+
+* **Sir Cyfred Odarve**, Software Engineering Instructor
+* **Sir John Harvey C. Babia**, Elective 1 Instructor (Database Management)
+* The **USTP IT Department**
+* Participating USTP student organizations
+* The **Retuertas family** for their support
+* All project members, testers, and contributors
+
+MARQUE represents teamwork, technical learning, and a shared commitment to improving event attendance management at USTP.
