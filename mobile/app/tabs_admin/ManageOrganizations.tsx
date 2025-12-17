@@ -27,14 +27,13 @@ const ManageOrganizations = () => {
   };
 
   const handleEditPress = (orgId) => {
-    // Navigate to the Add/Edit Organization page with orgId
     router.push({
       pathname: "/tabs_admin/AddOrganization",
       params: { orgId }
     });
   };
 
-  // 🔥 Fetch Organizations
+  // Fetch Organizations
   const fetchOrganizations = async () => {
     setIsLoading(true);
     setError(null);

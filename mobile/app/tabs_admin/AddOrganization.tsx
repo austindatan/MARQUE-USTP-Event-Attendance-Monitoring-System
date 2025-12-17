@@ -60,7 +60,7 @@ const EditOrganization = () => {
       }
 
       try {
-        // FIX 3: Update to /api/organizations/:orgId
+        // Update to /api/organizations/:orgId
         const res = await axios.get(`${BASE_URL}/api/organizations/${orgId}`);
         const org = res.data.organization || res.data;
 
@@ -75,8 +75,8 @@ const EditOrganization = () => {
         setDepartment(
           org.department_id?._id ||
           org.department?._id ||
-          org.department_id ||         // some backends return only the ID
-          org.department ||            // fallback
+          org.department_id ||        
+          org.department ||            
           ""
         );
         setDescription(org.description);
@@ -104,7 +104,7 @@ const EditOrganization = () => {
     const fetchDepartments = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/departments`);
-        setDepartments(res.data); // res.data should be array of { _id, name }
+        setDepartments(res.data); 
       } catch (err) {
         console.error("Failed to fetch departments:", err);
         Alert.alert("Error", "Failed to load departments.");
@@ -163,13 +163,11 @@ const EditOrganization = () => {
 
     try {
       if (isEdit) {
-        // FIX 1: Update to /api/organizations/:orgId
         await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         Alert.alert("Updated", "Organization updated successfully.");
       } else {
-        // FIX 2: Update to /api/organizations (remove /create)
         await axios.post(`${BASE_URL}/api/organizations`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
@@ -196,7 +194,7 @@ const EditOrganization = () => {
             try {
               await axios.delete(`${BASE_URL}/api/organizations/${orgId}`);
               Alert.alert("Deleted", "Organization deleted successfully.");
-              router.back(); // go back to manage organizations page
+              router.back(); 
             } catch (err) {
               console.error(err);
               Alert.alert("Error", "Failed to delete organization.");
