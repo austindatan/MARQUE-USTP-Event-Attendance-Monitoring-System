@@ -1,11 +1,9 @@
-// controllers/attendanceController.js
-
 const AttendanceLog = require("../models/Attendance_log");
 const Student = require("../models/Student");
 const User = require("../models/User");
 const Department = require("../models/Department");
 const Notification = require("../models/Notification");
-const Event = require("../models/Event"); // <--- ADD THIS LINE
+const Event = require("../models/Event");
 const { cloudinary } = require('../routes/cloudinaryConfig');
 
 
@@ -573,7 +571,7 @@ const exportAttendancePDF = async (req, res) => {
     });
 
     doc.moveDown(0.2);
-    currentY = doc.y; // Update Y after header text
+    currentY = doc.y;
 
     // Separator line
     doc.moveTo(startX, currentY).lineTo(endX, currentY).stroke();
