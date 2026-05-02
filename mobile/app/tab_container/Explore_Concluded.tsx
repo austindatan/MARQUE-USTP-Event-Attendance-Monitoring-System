@@ -71,7 +71,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
 
   const handleMomentumScrollEnd = (e) => {
     const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
-    const paddingToBottom = 300; 
+    const paddingToBottom = 300;
     if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
       if (visibleCount < events.length && !isLoadingMore) {
         setIsLoadingMore(true);

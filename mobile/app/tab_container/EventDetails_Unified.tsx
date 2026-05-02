@@ -9,6 +9,7 @@ import styles from "../styles/page_eventdetails";
 import { BASE_URL, CLOUD_NAME } from "../../config";
 import axios from "axios";
 import FeedbackComments from "../components/FeedbackComments";
+import Skeleton_EventDetails from "../components/Skeleton_EventDetails";
 
 const fixCloudinaryUrl = (url, cloudName) => {
   if (!url || url.startsWith("http")) return url;
@@ -294,11 +295,16 @@ const EventDetails_Unified = () => {
       checkBookmarkStatus();
       fetchPhotoProofStatus(eventId);
       fetchStudentId();
-      if (eventStatus === 'concluded') {
-        fetchFeedbackComments();
-      }
-    } else setLoading(false);
-  }, [eventId, fetchPhotoProofStatus, eventStatus]));
+    } else {
+      setLoading(false);
+    }
+  }, [eventId, fetchPhotoProofStatus]));
+
+  useEffect(() => {
+    if (eventStatus === 'concluded') {
+      fetchFeedbackComments();
+    }
+  }, [eventStatus]);
 
   useEffect(() => {
     if (eventData?.organization_id?._id && userId) checkFollowStatus(eventData.organization_id._id);
@@ -308,12 +314,7 @@ const EventDetails_Unified = () => {
 
   // 💡 CRITICAL FIX: Render a loading screen if eventData is null
   if (loading || !eventData) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color="#0A0F51" />
-        <Text style={{ marginTop: 10, color: '#0A0F51' }}>Loading Event Details...</Text>
-      </View>
-    );
+    return <Skeleton_EventDetails />;
   }
 
   // --- SAFE DATA CALCULATIONS START HERE ---

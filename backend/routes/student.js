@@ -9,12 +9,12 @@ const OrgOfficer = require("../models/Org_officer.js");
 const Organization = require('../models/Organization');
 const authMiddleware = require('../middleware/auth');
 
-console.log("✅ student.js router loaded");
+console.log("student.js router loaded");
 
 router.get("/all", async (req, res) => {
     // for students with roles
     const { filter } = req.query; 
-    console.log(`🔍 Route hit: /api/student/users/all with filter: ${filter}`);
+    console.log(`Route hit: /api/student/users/all with filter: ${filter}`);
 
     try {
       const safeImage = (img) =>
@@ -102,7 +102,7 @@ router.get("/all", async (req, res) => {
 router.get("/officers/all", async (req, res) => {
     const { filter, orgId } = req.query;
 
-    console.log(`🔍 Route hit: /api/student/users/all`, { filter, orgId });
+    console.log(`Route hit: /api/student/users/all`, { filter, orgId });
 
     try {
         if (!orgId) {
@@ -216,7 +216,7 @@ router.get("/officers/all", async (req, res) => {
 
 router.get("/id/:student_number", async (req, res) => {
   const student_number = req.params.student_number;
-  console.log("🔍 Route hit: /api/student/id/:student_number =", student_number);
+  console.log("Route hit: /api/student/id/:student_number =", student_number);
 
   try {
     const student = await Student.findOne({ student_number })
@@ -265,7 +265,7 @@ router.get("/id/:student_number", async (req, res) => {
 // Fetch organizations by a list of department IDs
 router.get("/organizations/by-departments", async (req, res) => {
   const { departmentIds } = req.query;
-  console.log("🔍 Route hit: /api/student/organizations/by-departments with IDs:", departmentIds);
+  console.log("Route hit: /api/student/organizations/by-departments with IDs:", departmentIds);
 
   if (!departmentIds) {
     return res.json([]);
