@@ -8,11 +8,14 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header_Profile";
 import EventCardSL from "../components/Card_EventAttendance";
 import Card_Blank from "../components/Card_BlankProfile";
+import EmptyCard from "../components/Card_Empty";
+import Skeleton_Profile from "../components/Skeleton_Profile";
 import SidebarMenu from "../components/SidebarMenu";
 import LogoutModal from "../components/LogoutModal";
 import styles from "../styles/effects_profile";
@@ -30,6 +33,7 @@ const ProfilePage = () => {
   const hasUnread = useUnreadNotifications();
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [studentNumber, setStudentNumber] = useState(null);
   const [profile, setProfile] = useState(null);
   const [attendance, setAttendance] = useState([]);
@@ -134,6 +138,14 @@ const ProfilePage = () => {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    if (studentNumber) {
+      await Promise.all([loadProfile(), loadAttendance()]);
+    }
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     loadStudentNumber();
   }, []);
@@ -153,18 +165,7 @@ const ProfilePage = () => {
   }, [profile]);
 
   if (loading || !profile) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#fff",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Text>Loading profile...</Text>
-      </View>
-    );
+    return <Skeleton_Profile />;
   }
 
   const handleLogout = () => {
@@ -187,7 +188,12 @@ const ProfilePage = () => {
     <View style={styles.container}>
       <Header onMenuPress={toggleMenu} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.profileHeader}>
           <Image
             source={{ uri: profile?.profile_image }}
@@ -212,22 +218,22 @@ const ProfilePage = () => {
           <View style={styles.row}>
             <Text style={styles.label}>Email</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={styles.value}>
-                    {profile.email || 'No email set'}
-                </Text>
-                <TouchableOpacity 
-                    onPress={() => {
-                        setTempEmail(profile.email || ''); // Set current value before opening
-                        setIsEmailModalVisible(true);
-                    }}
-                    style={{ marginLeft: 10 }}
-                >
-                    <Ionicons 
-                        name={profile.email ? "pencil" : "add-circle-outline"} 
-                        size={20} 
-                        color="#0A0F51" 
-                    />
-                </TouchableOpacity>
+              <Text style={styles.value}>
+                {profile.email || 'No email set'}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setTempEmail(profile.email || ''); // Set current value before opening
+                  setIsEmailModalVisible(true);
+                }}
+                style={{ marginLeft: 10 }}
+              >
+                <Ionicons
+                  name={profile.email ? "pencil" : "add-circle-outline"}
+                  size={20}
+                  color="#0A0F51"
+                />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -322,7 +328,7 @@ const ProfilePage = () => {
             <Text style={styles.modalTitle}>
               {profile.email ? 'Edit Email' : 'Add Email'}
             </Text>
-            
+
             <TextInput
               style={styles.input}
               placeholder="Enter your email address"

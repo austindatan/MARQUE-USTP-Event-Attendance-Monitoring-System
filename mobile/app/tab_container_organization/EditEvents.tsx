@@ -1,11 +1,11 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView, TextInput, Modal, ActivityIndicator, Alert, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import axios from "axios";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { apiFetch, apiFetchForm } from "../../utils/apiFetch";
 import { BASE_URL } from "../../config";
 
 import Header from "../components/Header_Normal";
@@ -48,10 +48,10 @@ const EditEvents = () => {
 
     const fetchEvent = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/events/event/${event_id}`);
-        const ev = res.data.event || res.data;
+        const res = await apiFetch(`/events/event/${event_id}`);
+        const ev = res.event || res;
 
-        console.log("EVENT RESPONSE:", res.data);
+        console.log("EVENT RESPONSE:", res);
 
         if (!ev || !ev.event_name) {
           console.error("Event data is missing or incomplete:", ev);
@@ -169,21 +169,17 @@ const EditEvents = () => {
 
     try {
       if (isEdit) {
-        await axios.put(`${BASE_URL}/events/${event_id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await apiFetchForm("PUT", `/events/${event_id}`, formData);
         Alert.alert("Updated", "Event updated successfully.");
       } else {
-        await axios.post(`${BASE_URL}/events/create`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await apiFetchForm("POST", `/events/create`, formData);
         Alert.alert("Created", "Event created successfully.");
       }
 
       router.back();
     } catch (err) {
-      console.error("Saving error:", err.response?.data || err);
-      Alert.alert("Error", "Failed to save event.");
+      console.error("Saving error:", err.message);
+      Alert.alert("Error", err.message || "Failed to save event.");
     }
   };
 
@@ -199,12 +195,12 @@ const EditEvents = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              await axios.delete(`${BASE_URL}/events/${event_id}`);
+              await apiFetch(`/events/${event_id}`, { method: "DELETE" });
               Alert.alert("Success", "Event deleted successfully.");
               router.back();
             } catch (err) {
-              console.error("Delete error:", err);
-              Alert.alert("Error", "Failed to delete event.");
+              console.error("Delete error:", err.message);
+              Alert.alert("Error", err.message || "Failed to delete event.");
             }
           },
         },

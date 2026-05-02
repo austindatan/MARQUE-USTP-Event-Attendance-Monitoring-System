@@ -6,7 +6,8 @@ const User = require("../models/User");
 const Department = require("../models/Department");
 const College = require("../models/College");
 const OrgOfficer = require("../models/Org_officer.js");
-const Organization = require('../models/Organization'); // make sure this line exists
+const Organization = require('../models/Organization');
+const authMiddleware = require('../middleware/auth');
 
 console.log("✅ student.js router loaded");
 
@@ -347,7 +348,7 @@ router.get("/:username", async (req, res) => {
 });
 
 
-router.post("/create", async (req, res) => {
+router.post("/create", authMiddleware, async (req, res) => {
   try {
     const {
       username,
