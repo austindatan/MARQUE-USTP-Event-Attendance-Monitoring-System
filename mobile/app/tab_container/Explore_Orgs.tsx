@@ -1,7 +1,8 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { View, Text, Animated, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Animated, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import OrgLinear from "../components/Card_OrgsLinear";
+import Card_BlankOrg from "../components/Card_BlankOrg";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
 import { useRouter } from "expo-router";
@@ -15,6 +16,15 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     const [followedOrgIds, setFollowedOrgIds] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [userId, setUserId] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const getOptimizedUrl = (url) => {
+        if (!url || typeof url !== 'string') return url;
+        if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+            return url.replace('/upload/', '/upload/w_200,q_auto,f_auto/');
+        }
+        return url;
+    };
 
     const fetchOrganizations = async () => {
         try {
@@ -72,6 +82,15 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
 
         loadData();
     }, []);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        const id = await fetchStudentId();
+        const promises = [fetchOrganizations()];
+        if (id) promises.push(fetchFollowedIds(id));
+        await Promise.all(promises);
+        setRefreshing(false);
+    };
 
     const handleFollowToggle = async (orgId, isCurrentlyFollowed) => {
         if (!userId) {
@@ -136,8 +155,10 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     const renderOrganizations = () => {
         if (isLoading) {
             return (
-                <View style={{ flex: 1, paddingTop: 50 }}>
-                    <ActivityIndicator size="large" color="#FFD700" />
+                <View style={{ flex: 1 }}>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                        <Card_BlankOrg key={`skeleton-orgs-${i}`} />
+                    ))}
                 </View>
             );
         }
@@ -157,7 +178,7 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                 <OrgLinear
                     key={org._id}
                     organization={org.org_name}
-                    orgLogo={{ uri: org.pfp }}
+                    orgLogo={{ uri: getOptimizedUrl(org.pfp) }}
                     text={org.description}
                     isFollowed={isFollowed}
                     onToggleFollow={() => handleFollowToggle(org._id, isFollowed)}
@@ -190,6 +211,9 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={120} />
+                }
             >
                 <View style={appeffects.eventListORG}>{renderOrganizations()}</View>
                 <View style={{ height: 0 }} />

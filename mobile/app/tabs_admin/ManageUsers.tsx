@@ -19,7 +19,7 @@ import styles from "../styles/page_admin_dashboard";
 import Header from '../components/Header_Admin';
 import AdminSidebarMenu from '../components/SidebarMenu_Admin';
 import StudentLinear from '../components/Card_StudentLinear';
-import { BASE_URL } from "../../config";
+import { apiFetch } from "../../utils/apiFetch";
 
 
 const UserActionModal = ({ visible, onClose, onConfirm, title, message, confirmText, cancelText = "Cancel" }) => {
@@ -91,10 +91,7 @@ const ManageUsers = () => {
 
     const filterParam = tab === 'roles' ? 'roles' : 'all';
     try {
-      const url = `${BASE_URL}/api/student/all?filter=${filterParam}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Network response was not ok');
-      const data = await res.json();
+      const data = await apiFetch(`/api/student/all?filter=${filterParam}`);
       setStudents(data);
     } catch (err) {
       console.error("Error fetching students:", err);
@@ -111,9 +108,7 @@ const ManageUsers = () => {
 
     const { studentNumber, name } = studentToDelete;
     try {
-      const url = `${BASE_URL}/api/student/profile/${studentNumber}`;
-      const res = await fetch(url, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete student');
+      await apiFetch(`/api/student/profile/${studentNumber}`, { method: 'DELETE' });
 
       setResultModalData({
         title: "Success",

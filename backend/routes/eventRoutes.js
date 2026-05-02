@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const authMiddleware = require('../middleware/auth');
 
 const eventController = require("../controllers/eventController");
 const {
@@ -34,16 +35,16 @@ router.get("/all/concluded", getAllConcludedEvents);
 router.get('/organization/:orgId/upcoming', eventController.getUpcomingEventsByOrganization);
 router.get('/organization/:orgId/concluded', eventController.getConcludedEventsByOrganization);
 
-router.post('/create', uploadEventImages.single('event_image'), createEvent);
-router.put('/:eventId', uploadEventImages.single('event_image'), updateEvent);
-router.delete('/:id', deleteEvent);
+router.post('/create', authMiddleware, uploadEventImages.single('event_image'), createEvent);
+router.put('/:eventId', authMiddleware, uploadEventImages.single('event_image'), updateEvent);
+router.delete('/:id', authMiddleware, deleteEvent);
 
 // Check if event is active and/or within first 1 hour time window
 router.get('/event-status/:id', eventController.getEventStatus);
 
 // CANCEL and RESUME event
-router.put("/cancel/:eventId", eventController.cancelEvent);
-router.put("/resume/:eventId", eventController.resumeEvent);
+router.put("/cancel/:eventId", authMiddleware, eventController.cancelEvent);
+router.put("/resume/:eventId", authMiddleware, eventController.resumeEvent);
 
 // NEW ROUTE – MUST BE ABOVE departmentId
 router.get("/event/:id", eventController.getEventById); //also used for edit event

@@ -1,8 +1,9 @@
 // @ts-nocheck
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, Animated, ActivityIndicator, Image } from "react-native";
+import { View, Text, Animated, ActivityIndicator, Image, RefreshControl } from "react-native";
 import EventCard from "../components/Card_Event";
 import EmptyCard from "../components/Card_Empty";
+import Card_BlankHorizontal from "../components/Card_BlankHorizontal";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
 import { useRouter } from "expo-router"
@@ -10,7 +11,16 @@ import { useRouter } from "expo-router"
 const Departments = ({ scrollY, studentDept }) => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+
+  const getOptimizedUrl = (url) => {
+    if (!url || typeof url !== 'string') return url;
+    if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+      return url.replace('/upload/', '/upload/w_500,q_auto,f_auto/');
+    }
+    return url;
+  };
 
   const fetchEvents = useCallback(async (studentDept) => {
     setIsLoading(true);
@@ -37,11 +47,21 @@ const Departments = ({ scrollY, studentDept }) => {
     }
   }, [studentDept, fetchEvents]);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    if (studentDept) {
+      await fetchEvents(studentDept);
+    }
+    setRefreshing(false);
+  };
+
   const renderEvents = () => {
     if (isLoading) {
       return (
-        <View style={{ flex: 1, paddingTop: 50 }}>
-          <ActivityIndicator size="large" color="#FFD700" />
+        <View style={[appeffects.eventList, { flex: 1, paddingTop: 10 }]}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card_BlankHorizontal key={`skeleton-dept-${i}`} />
+          ))}
         </View>
       );
     }
@@ -71,10 +91,10 @@ const Departments = ({ scrollY, studentDept }) => {
                 pathname: "/tab_container/EventDetails_Unified",
                 params: { eventId: ev._id }
               })}
-              image={{ uri: ev.event_image }}
+              image={{ uri: getOptimizedUrl(ev.event_image) }}
               title={ev.event_name}
               organization={ev.organization_id?.org_name || "Unknown Org"}
-              orgLogo={{ uri: ev.organization_id?.pfp || "" }}
+              orgLogo={{ uri: getOptimizedUrl(ev.organization_id?.pfp) || "" }}
               dateDay={dateDay}
               dateMonth={dateMonth}
               orgDate={dateStr}
@@ -96,6 +116,9 @@ const Departments = ({ scrollY, studentDept }) => {
         { useNativeDriver: true }
       )}
       scrollEventThrottle={16}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={120} />
+      }
     >
       {/* ⭐️ HIDE THE TEXT IF LOADING IS DONE AND THERE ARE NO EVENTS ⭐️ */}
       {(!isLoading && events.length > 0) && (

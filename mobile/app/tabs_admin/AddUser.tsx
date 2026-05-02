@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import axios from "axios";
 import { useRouter } from "expo-router";
+import { apiFetch, apiFetchForm } from "../../utils/apiFetch";
 import Header from "../components/Header_Normal";
 import styles from "../styles/page_editevents";
 import { BASE_URL } from "../../config";
@@ -54,11 +54,11 @@ const AddUser = () => {
   useEffect(() => {
     const fetchCollegesAndDepartments = async () => {
       try {
-        const collegeRes = await axios.get(`${BASE_URL}/api/college/colleges`);
-        setColleges(collegeRes.data);
+        const collegeRes = await apiFetch("/api/college/colleges");
+        setColleges(collegeRes);
 
-        const departmentRes = await axios.get(`${BASE_URL}/api/departments`);
-        setDepartments(departmentRes.data);
+        const departmentRes = await apiFetch("/api/departments");
+        setDepartments(departmentRes);
       } catch (err) {
         console.error("Error fetching data:", err.response?.data);
         Alert.alert("Error", "Failed to load college/department data.");
@@ -109,18 +109,17 @@ const AddUser = () => {
     console.log("Payload sent:", payload);
 
     try {
-      const res = await axios.post(`${BASE_URL}/api/student/create`, payload);
-      console.log("Response:", res.data);
+      const res = await apiFetch("/api/student/create", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      console.log("Response:", res);
 
       Alert.alert("Success", "Student added successfully.");
       router.back();
     } catch (err) {
-      console.error("Error creating student:", err.response?.data || err.message);
-
-      let message = "Failed to create user.";
-      if (err.response?.data?.message) message = err.response.data.message;
-
-      Alert.alert("Error", message);
+      console.error("Error creating student:", err.message);
+      Alert.alert("Error", err.message || "Failed to create user.");
     }
   };
 
