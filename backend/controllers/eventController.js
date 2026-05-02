@@ -38,6 +38,7 @@ const autoUpdateEventStatuses = async () => {
 
 
 const getEventsByDepartment = async (req, res) => {
+  console.log(`GET /events/department/${req.params.departmentId} REACHED`);
   try {
     await autoUpdateEventStatuses();
 
@@ -133,6 +134,7 @@ const getFilteredEvents = async (req, res) => {
 
 
 const getFollowedEvents = async (req, res) => {
+  console.log("GET /events/followed REACHED");
   try {
     await autoUpdateEventStatuses();
 
@@ -165,6 +167,7 @@ const getFollowedEvents = async (req, res) => {
 };
 
 const getAllUpcomingEvents = async (req, res) => {
+  console.log("GET /events/all/upcoming REACHED");
   try {
     await autoUpdateEventStatuses();
 
@@ -180,6 +183,7 @@ const getAllUpcomingEvents = async (req, res) => {
 };
 
 const getAllConcludedEvents = async (req, res) => {
+  console.log("GET /events/all/concluded REACHED");
   try {
     await autoUpdateEventStatuses();
 
@@ -343,6 +347,7 @@ const getOngoingFilter = () => {
 };
 
 const getOngoingEvents = async (req, res) => {
+  console.log("GET /events/ongoing REACHED");
   try {
     await autoUpdateEventStatuses();
 
@@ -396,6 +401,7 @@ const searchEvents = async (req, res) => {
 
 
 const getEventById = async (req, res) => {
+  console.log(`GET /events/event/${req.params.id} REACHED`);
   try {
     await autoUpdateEventStatuses();
 

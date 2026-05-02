@@ -40,7 +40,7 @@ router.get('/by-type/:type', organizationController.getOrganizationsByType);
 // GET all orgs by department ID
 router.get('/department/:departmentId', async (req, res) => {
   try {
-    console.log(`✅ Organization Department Route Hit. ID: ${req.params.departmentId}`);
+    console.log(`Organization Department Route Hit. ID: ${req.params.departmentId}`);
     const { departmentId } = req.params;
     const orgs = await Organization.find({ department_id: departmentId }).lean();
 
