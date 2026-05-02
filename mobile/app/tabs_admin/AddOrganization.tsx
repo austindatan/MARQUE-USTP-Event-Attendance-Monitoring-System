@@ -427,21 +427,23 @@ const EditOrganization = () => {
         <View style={styles.modalSheet}>
           <Text style={styles.modalTitle}>Select Department</Text>
 
-          {departments.map((d) => (
-            <TouchableOpacity
-              key={d._id}
-              style={[
-                styles.modalItem,
-                d._id === department && { backgroundColor: "#E7E7E7" } // highlight current
-              ]}
-              onPress={() => {
-                setDepartment(d._id);
-                setDeptModalVisible(false);
-              }}
-            >
-              <Text style={styles.modalItemText}>{d.department_name}</Text>
-            </TouchableOpacity>
-          ))}
+          <ScrollView style={{ maxHeight: 300, width: "100%" }} showsVerticalScrollIndicator={true}>
+            {departments.map((d) => (
+              <TouchableOpacity
+                key={d._id}
+                style={[
+                  styles.modalItem,
+                  d._id === department && { backgroundColor: "#E7E7E7" } // highlight current
+                ]}
+                onPress={() => {
+                  setDepartment(d._id);
+                  setDeptModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>{d.department_name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       </Modal>
     </View>

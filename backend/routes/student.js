@@ -33,8 +33,8 @@ router.get("/all", async (req, res) => {
             }
 
             map[studentId].push({
-                orgName: manager.org_id.org_name,
-                orgLogo: manager.org_id.pfp,
+                orgName: manager.org_id?.org_name || 'Unknown',
+                orgLogo: manager.org_id?.pfp || '',
                 position: manager.role, 
             });
             return map;
