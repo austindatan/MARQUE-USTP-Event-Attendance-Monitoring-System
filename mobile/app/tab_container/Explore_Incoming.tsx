@@ -1,16 +1,27 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, ActivityIndicator } from "react-native";
+import { View, Text, Animated, ActivityIndicator, RefreshControl } from "react-native";
 import EventCard from "../components/Card_Event";
+import EmptyCard from "../components/Card_Empty";
+import Card_BlankHorizontal from "../components/Card_BlankHorizontal";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config";
 import { useRouter } from "expo-router"
 
 const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
-  const router = useRouter ();
+  const router = useRouter();
   const scrollRef = useRef(null);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const getOptimizedUrl = (url) => {
+    if (!url || typeof url !== 'string') return url;
+    if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+      return url.replace('/upload/', '/upload/w_500,q_auto,f_auto/');
+    }
+    return url;
+  };
 
   const fetchAllEvents = async () => {
     setIsLoading(true);
@@ -26,11 +37,17 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAllEvents();
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     fetchAllEvents();
   }, []);
 
-  
+
   useEffect(() => {
     if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
       const t = setTimeout(() => {
@@ -72,6 +89,9 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={120} />
+        }
       >
         <View style={appeffects.pageStarter}>
           <Text style={appeffects.pageTitle}>Incoming Events</Text>
@@ -79,8 +99,10 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
 
         <View style={appeffects.eventList}>
           {isLoading ? (
-            <View style={{ flex: 1, paddingTop: 50 }}>
-              <ActivityIndicator size="large" color="#FFD700" />
+            <View style={{ flex: 1 }}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card_BlankHorizontal key={`skeleton-inc-${i}`} />
+              ))}
             </View>
           ) : events.length > 0 ? (
             events.map((event) => {
@@ -110,10 +132,10 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                 <EventCard
                   key={event._id}
                   onPress={handleEventPress}
-                  image={{ uri: event.event_image }}
+                  image={{ uri: getOptimizedUrl(event.event_image) }}
                   title={event.event_name}
                   organization={event.organization_id?.org_name || "Unknown Org"}
-                  orgLogo={{ uri: event.organization_id?.pfp || "" }}
+                  orgLogo={{ uri: getOptimizedUrl(event.organization_id?.pfp) || "" }}
                   orgDate={dateStr}
                   dateDay={dateDay}
                   dateMonth={dateMonth}
@@ -122,7 +144,11 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
               );
             })
           ) : (
-            <Text style={{ textAlign: "center", marginTop: 20 }}>No upcoming events</Text>
+            <EmptyCard
+              image={require("../../assets/images/marque/MARQUE_singlelogo.png")}
+              text="No Upcoming Events Found"
+              button={() => router.push("/tabs/Explore")}
+            />
           )}
         </View>
       </Animated.ScrollView>

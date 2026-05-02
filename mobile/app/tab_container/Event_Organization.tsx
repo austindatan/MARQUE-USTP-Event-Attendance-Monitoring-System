@@ -1,10 +1,11 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { View, Text, Animated, ActivityIndicator } from "react-native";
+import { View, Text, Animated, ActivityIndicator, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import EventCard from "../components/Card_Event";
 import appeffects from "../styles/effects_app";
 import EmptyCard from "../components/Card_Empty";
+import Card_BlankHorizontal from "../components/Card_BlankHorizontal";
 import { BASE_URL } from "../../config";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -14,6 +15,15 @@ const Organizations = ({ scrollY }) => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const getOptimizedUrl = (url) => {
+    if (!url || typeof url !== 'string') return url;
+    if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+      return url.replace('/upload/', '/upload/w_500,q_auto,f_auto/');
+    }
+    return url;
+  };
 
   const fetchStudentId = async () => {
     try {
@@ -77,11 +87,24 @@ const Organizations = ({ scrollY }) => {
   }, []);
 
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    const id = await fetchStudentId();
+    if (id) {
+      await fetchFollowedEvents(id);
+    } else {
+      setIsLoading(false);
+    }
+    setRefreshing(false);
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return (
-        <View style={{ flex: 1, paddingTop: 50 }}>
-          <ActivityIndicator size="large" color="#FFD700" />
+        <View style={[appeffects.eventList, { flex: 1, paddingTop: 10 }]}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card_BlankHorizontal key={`skeleton-org-ev-${i}`} />
+          ))}
         </View>
       );
     }
@@ -115,10 +138,10 @@ const Organizations = ({ scrollY }) => {
                 pathname: "/tab_container/EventDetails_Unified",
                 params: { eventId: ev._id }
               })}
-              image={{ uri: ev.event_image }}
+              image={{ uri: getOptimizedUrl(ev.event_image) }}
               title={ev.event_name}
               organization={ev.organization_id?.org_name || "Unknown Org"}
-              orgLogo={{ uri: ev.organization_id?.pfp || "" }}
+              orgLogo={{ uri: getOptimizedUrl(ev.organization_id?.pfp) || "" }}
               dateDay={dateDay}
               dateMonth={dateMonth}
               orgDate={dateStr}
@@ -143,6 +166,9 @@ const Organizations = ({ scrollY }) => {
         { useNativeDriver: true }
       )}
       scrollEventThrottle={16}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} progressViewOffset={120} />
+      }
     >
       {renderContent()}
       <View style={{ height: 40 }} />

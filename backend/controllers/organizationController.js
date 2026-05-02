@@ -2,6 +2,7 @@ const Organization = require('../models/Organization');
 const mongoose = require('mongoose');
 
 exports.getOrganizations = async (req, res) => {
+    console.log("GET /api/organizations/all REACHED");
     try {
         const { type } = req.query; 
 
@@ -21,6 +22,7 @@ exports.getOrganizations = async (req, res) => {
 };
 
 exports.getOrganizationsByType = async (req, res) => {
+    console.log(`GET /api/organizations/type/${req.params.type} REACHED`);
     try {
         const { type } = req.params;
 

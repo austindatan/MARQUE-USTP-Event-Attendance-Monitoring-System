@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
+import { apiFetchForm } from "../../utils/apiFetch";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "../../config";
 
@@ -163,21 +164,17 @@ const EditOrganization = () => {
 
     try {
       if (isEdit) {
-        await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await apiFetchForm("PUT", `/api/organizations/${orgId}`, formData);
         Alert.alert("Updated", "Organization updated successfully.");
       } else {
-        await axios.post(`${BASE_URL}/api/organizations`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await apiFetchForm("POST", `/api/organizations`, formData);
         Alert.alert("Created", "Organization added successfully.");
       }
 
       router.back();
     } catch (err) {
       console.error(err);
-      Alert.alert("Error", "Failed to save organization.");
+      Alert.alert("Error", err.message || "Failed to save organization.");
     }
   };
 
@@ -192,12 +189,12 @@ const EditOrganization = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              await axios.delete(`${BASE_URL}/api/organizations/${orgId}`);
+              await apiFetchForm("DELETE", `/api/organizations/${orgId}`, new FormData());
               Alert.alert("Deleted", "Organization deleted successfully.");
-              router.back(); 
+              router.back();
             } catch (err) {
               console.error(err);
-              Alert.alert("Error", "Failed to delete organization.");
+              Alert.alert("Error", err.message || "Failed to delete organization.");
             }
           }
         }
@@ -427,21 +424,23 @@ const EditOrganization = () => {
         <View style={styles.modalSheet}>
           <Text style={styles.modalTitle}>Select Department</Text>
 
-          {departments.map((d) => (
-            <TouchableOpacity
-              key={d._id}
-              style={[
-                styles.modalItem,
-                d._id === department && { backgroundColor: "#E7E7E7" } // highlight current
-              ]}
-              onPress={() => {
-                setDepartment(d._id);
-                setDeptModalVisible(false);
-              }}
-            >
-              <Text style={styles.modalItemText}>{d.department_name}</Text>
-            </TouchableOpacity>
-          ))}
+          <ScrollView style={{ maxHeight: 300, width: "100%" }} showsVerticalScrollIndicator={true}>
+            {departments.map((d) => (
+              <TouchableOpacity
+                key={d._id}
+                style={[
+                  styles.modalItem,
+                  d._id === department && { backgroundColor: "#E7E7E7" } // highlight current
+                ]}
+                onPress={() => {
+                  setDepartment(d._id);
+                  setDeptModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>{d.department_name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       </Modal>
     </View>

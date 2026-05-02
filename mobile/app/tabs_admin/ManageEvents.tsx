@@ -1,13 +1,12 @@
 //@ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
-import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import styles from "../styles/page_admin_dashboard";
 import Header from '../components/Header_Admin';
 import AdminSidebarMenu from '../components/SidebarMenu_Admin';
 import EventCard from '../components/Card_EventHorizontal';
-import { BASE_URL } from "../../config";
+import { apiFetch } from "../../utils/apiFetch";
 
 const ManageEvents = () => {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -35,14 +34,14 @@ const ManageEvents = () => {
     let endpoint = '';
 
     if (status === 'upcoming') {
-      endpoint = `${BASE_URL}/events/all/upcoming`;
+      endpoint = `/events/all/upcoming`;
     } else if (status === 'concluded') {
-      endpoint = `${BASE_URL}/events/all/concluded`;
+      endpoint = `/events/all/concluded`;
     }
 
     try {
-      const response = await axios.get(endpoint);
-      setEvents(response.data);
+      const response = await apiFetch(endpoint);
+      setEvents(response);
     } catch (err) {
       console.error("Error fetching events:", err);
       setError("Failed to load events. Check API connection.");

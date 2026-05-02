@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import axios from "axios";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { apiFetch, apiFetchForm } from "../../utils/apiFetch";
 import Header from "../components/Header_Normal";
 import styles from "../styles/page_editevents";
 import { BASE_URL } from "../../config";
@@ -64,13 +64,13 @@ const EditUser = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [studentRes, collegeRes, departmentRes, orgsRes] = await Promise.all([
-          axios.get(`${BASE_URL}/api/student/id/${studentNumber}`),
-          axios.get(`${BASE_URL}/api/college/colleges`),
-          axios.get(`${BASE_URL}/api/departments`),
+        const [studentRes, collegeRes, departmentRes] = await Promise.all([
+          apiFetch(`/api/student/id/${studentNumber}`),
+          apiFetch(`/api/college/colleges`),
+          apiFetch(`/api/departments`),
         ]);
 
-        const student = studentRes.data;
+        const student = studentRes;
 
         if (!student) {
           throw new Error("Student data received from API is null or undefined.");
@@ -86,8 +86,8 @@ const EditUser = () => {
         setCollegeId(String(student.college_id || ''));
         setProfileImage({ uri: student.profile_image, local: false });
 
-        const membershipRes = await axios.get(`${BASE_URL}/api/memberships/student/${student._id}`);
-        const roles = membershipRes.data.map(membership => ({
+        const membershipRes = await apiFetch(`/api/memberships/student/${student._id}`);
+        const roles = membershipRes.map(membership => ({
           role: membership.role,
           org_id: membership._id,
           org_name: membership.org_name,
@@ -96,16 +96,16 @@ const EditUser = () => {
 
         setUserRoles(roles.length > 0 ? roles : [{ role: 'Student', org_id: null, org_name: null, org_pfp: null }]);
 
-        setColleges(collegeRes.data);
-        setDepartments(departmentRes.data);
+        setColleges(collegeRes);
+        setDepartments(departmentRes);
 
-        const extracurricularDept = departmentRes.data.find(d => d.department_name === "Extracurricular");
+        const extracurricularDept = departmentRes.find(d => d.department_name === "Extracurricular");
         if (extracurricularDept) {
           setExtracurricularDepartmentId(extracurricularDept._id);
         }
 
       } catch (err) {
-        console.error("Error fetching data:", err.response?.data || err.message);
+        console.error("Error fetching data:", err.message);
         Alert.alert("Error", "Failed to load student or college/department data.");
       } finally {
         setLoadingData(false);
@@ -146,9 +146,9 @@ const EditUser = () => {
 
       try {
         const deptIdsString = departmentIdsToQuery.join(',');
-        const res = await axios.get(`${BASE_URL}/api/student/organizations/by-departments?departmentIds=${deptIdsString}`);
+        const res = await apiFetch(`/api/student/organizations/by-departments?departmentIds=${deptIdsString}`);
 
-        const uniqueOrgs = res.data.reduce((acc, current) => {
+        const uniqueOrgs = res.reduce((acc, current) => {
           const x = acc.find(item => item._id === current._id);
           if (!x) {
             return acc.concat([current]);
@@ -188,14 +188,14 @@ const EditUser = () => {
     });
 
     try {
-      const res = await axios.post(
-        `${BASE_URL}/api/student/profile/${studentNumber}/upload-photo`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+      const res = await apiFetchForm(
+        "POST",
+        `/api/student/profile/${studentNumber}/upload-photo`,
+        formData
       );
-      setProfileImage({ uri: res.data.profile_image, local: false });
+      setProfileImage({ uri: res.profile_image, local: false });
     } catch (err) {
-      console.error("Error uploading image:", err.response?.data || err.message);
+      console.error("Error uploading image:", err.message);
       Alert.alert("Error", "Failed to upload profile image.");
     }
   };
@@ -235,7 +235,10 @@ const EditUser = () => {
         college_id: collegeId,
       };
 
-      await axios.put(`${BASE_URL}/api/student/profile/${studentNumber}`, payload);
+      await apiFetch(`/api/student/profile/${studentNumber}`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
       await handleImageUpload();
 
       Alert.alert("Success", "Student updated successfully.");
@@ -244,12 +247,12 @@ const EditUser = () => {
 
       let message = "Failed to update student profile.";
 
-      if (err.response?.data?.message?.includes("duplicate email")) {
+      if (err.message?.includes("duplicate email")) {
         message = "This email is already used by another student.";
       }
 
-      if (err.response?.data?.message?.includes("President of more than 2")) {
-        message = err.response.data.message;
+      if (err.message?.includes("President of more than 2")) {
+        message = err.message;
       }
 
       setErrorMessage(message);

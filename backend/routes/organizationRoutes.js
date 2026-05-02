@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const organizationController = require('../controllers/organizationController');
+const authMiddleware = require('../middleware/auth');
 
 const Organization = require("../models/Organization");
 const Event = require("../models/Event");
@@ -39,7 +40,7 @@ router.get('/by-type/:type', organizationController.getOrganizationsByType);
 // GET all orgs by department ID
 router.get('/department/:departmentId', async (req, res) => {
   try {
-    console.log(`✅ Organization Department Route Hit. ID: ${req.params.departmentId}`);
+    console.log(`Organization Department Route Hit. ID: ${req.params.departmentId}`);
     const { departmentId } = req.params;
     const orgs = await Organization.find({ department_id: departmentId }).lean();
 
@@ -52,7 +53,8 @@ router.get('/department/:departmentId', async (req, res) => {
 
 router.get('/:id', organizationController.getOrganizationById);
 router.post(
-  '/', 
+  '/',
+  authMiddleware,
   uploadOrgImages.fields([
     { name: 'pfp', maxCount: 1 }, 
     { name: 'cover_photo', maxCount: 1 },
@@ -63,6 +65,7 @@ router.post(
 // UPDATE organization profile
 router.put(
   '/:orgId',
+  authMiddleware,
   uploadOrgImages.fields([
     { name: 'pfp', maxCount: 1 },
     { name: 'cover_photo', maxCount: 1 },
@@ -70,7 +73,7 @@ router.put(
   organizationController.updateOrganizationProfile
 );
 
-router.delete('/:orgId', async (req, res) => {
+router.delete('/:orgId', authMiddleware, async (req, res) => {
   try {
     const { orgId } = req.params;
     const deleted = await Organization.findByIdAndDelete(orgId);

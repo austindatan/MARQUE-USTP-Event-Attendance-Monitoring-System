@@ -131,7 +131,7 @@ const sendConclusionNotification = async (event) => {
 };
 
 const initScheduler = () => {
-    console.log('[Scheduler] Initializing Notification Scheduler...');
+    console.log('[Scheduler] Started');
 
     cron.schedule('*/30 * * * * *', async () => {
 
