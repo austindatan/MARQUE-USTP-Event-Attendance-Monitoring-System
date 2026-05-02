@@ -10,7 +10,7 @@ mobile/config.js
 
 # OS files
 .DS_Store
-Thumbs.db
+Thumbs.db**
 
 # IDE
 .vscode/settings.json
