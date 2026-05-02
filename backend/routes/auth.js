@@ -10,6 +10,11 @@ const router = express.Router();
 // LOGIN
 router.post("/login", async (req, res) => {
   const { student_number, password } = req.body;
+
+  if (!student_number || !password || student_number.trim() === "" || password.trim() === "") {
+    return res.status(400).json({ message: "Student number and password are required" });
+  }
+
   const loginId = student_number; 
 
   try {
