@@ -94,9 +94,9 @@ const ManageOrganizations = () => {
       );
     }
 
-    return filtered.map((org) => (
+    return filtered.map((org, index) => (
       <OrgLinear
-        key={org._id}
+        key={`${org._id}-${index}`}
         organization={org.org_name}
         orgLogo={org.safePfp}
         text={org.description}
