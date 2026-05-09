@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
+import Skeleton_Concluded from "../components/Skeleton_Concluded";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import { BASE_URL } from "../../config";
@@ -14,6 +15,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
   const [organizationData, setOrganizationData] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   const formatDate = (dateStr) => {
@@ -66,12 +68,14 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
     fetchAllData();
   }, [organizationId]);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAllData();
+    setRefreshing(false);
+  };
+
   if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
+    return <Skeleton_Concluded />;
   }
 
   if (error || !organizationData) {
@@ -112,6 +116,15 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            progressViewOffset={170}
+            colors={["#0A0F51"]}
+            tintColor="#0A0F51"
+          />
+        }
       >
         <View style={appeffects.eventList}>
           {events.length > 0 ? (

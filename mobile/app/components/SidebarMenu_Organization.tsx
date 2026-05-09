@@ -7,6 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import Animated, { useSharedValue, withTiming, useAnimatedStyle, runOnJS } from "react-native-reanimated";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const menuItems = [
   { name: "Home", icon: "home-outline" },
@@ -23,13 +24,14 @@ interface StudentData {
   email: string;
   student_number: string;
   department_code: string;
-  college_name: string;          
+  college_name: string;
   profile_image?: string;
 }
 
 const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [renderSidebar, setRenderSidebar] = useState(isVisible);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -72,20 +74,30 @@ const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClos
   const handleMenuItemPress = async (name: string) => {
     onClose();
 
+    type MenuName = "Home" | "Notifications" | "Bookmarks" | "Profile";
+
+    const routes = {
+      Home: "/tabs_organization/Teams",
+      Notifications: "/tab_container/Notifications",
+      Bookmarks: "/tab_container/Bookmark_Page",
+      Profile: "/tabs/Profile",
+    } as const;
+
+    type RoutePath = typeof routes[keyof typeof routes];
+
     if (name === "Student Side") {
       try {
-        const studentNumber = await AsyncStorage.getItem("student_number");
-        if (!studentNumber) {
-          console.log("No student number found in AsyncStorage.");
-          return;
-        }
-
         router.push("/tabs/Events");
       } catch (err) {
         console.error("Error navigating to Student Side:", err);
       }
+      return;
+    }
+
+    if (name in routes) {
+      router.push(routes[name as MenuName] as RoutePath);
     } else {
-      console.log("Navigating to:", name);
+      console.warn(`⚠️ No route found for menu item: ${name}`);
     }
   };
 
@@ -101,7 +113,7 @@ const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClos
         <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
       </TouchableOpacity>
 
-      <Animated.View style={[styles.sidebarContainer, animatedSidebarStyle]}>
+      <Animated.View style={[styles.sidebarContainer, animatedSidebarStyle, { paddingTop: insets.top }]}>
         <View style={styles.profileContainer}>
           <Image
             source={{ uri: studentData?.profile_image || "https://via.placeholder.com/150" }}
@@ -124,12 +136,15 @@ const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClos
               style={styles.menuItem}
               onPress={() => handleMenuItemPress(item.name)}
             >
-              <Ionicons name="home-outline" size={24} color="#000" />
+              <View style={{ position: 'relative' }}>
+                <Ionicons name={item.icon as any} size={24} color="#222762" />
+              </View>
               <Text style={styles.menuText}>{item.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
+        {/* Switch back to Student Side */}
         <TouchableOpacity
           style={styles.organizationsButton}
           onPress={() => handleMenuItemPress("Student Side")}

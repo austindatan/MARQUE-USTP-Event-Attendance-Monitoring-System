@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Platform, SafeAreaView, Linking } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Modal, Platform, SafeAreaView, Linking } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../styles/page_eventdetails";
@@ -8,6 +8,9 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL, CLOUD_NAME } from "../../config";
 import ScannerButton from '../components/ScannerButton';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiFetch } from "../../utils/apiFetch";
+import joinModalStyles from "../styles/components_joinmodal";
+import Skeleton_OrgEventDetails from "../components/Skeleton_OrgEventDetails";
 
 const OFFICER_ROLES = ["Manager", "President"];
 
@@ -44,6 +47,7 @@ const Events = () => {
 
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showCancelledOverlay, setShowCancelledOverlay] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
 
     const handleBack = () => {
         router.back();
@@ -163,19 +167,13 @@ const Events = () => {
 
         try {
             setIsFollowing(!isFollowing);
-
-            const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
+            await apiFetch(`/api/followed-orgs/${action}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: studentId, organizationId: orgId }),
             });
-
-            if (!res.ok) {
-                setIsFollowing(isFollowing);
-                Alert.alert("Error", `Failed to ${action} organization.`);
-            }
         } catch (err) {
             setIsFollowing(isFollowing);
+            Alert.alert("Error", `Failed to ${action} organization.`);
         }
     };
 
@@ -183,21 +181,14 @@ const Events = () => {
     const handleCancelOrResume = async () => {
         if (!eventData) return;
 
-        const endpoint =
-            eventData.status === "Cancelled"
-                ? `${BASE_URL}/events/resume/${eventId}`
-                : `${BASE_URL}/events/cancel/${eventId}`;
+        const path = eventData.status === "Cancelled"
+            ? `/events/resume/${eventId}`
+            : `/events/cancel/${eventId}`;
 
         try {
-            const res = await fetch(endpoint, { method: "PUT" });
-            const result = await res.json();
-
-            if (!res.ok) {
-                Alert.alert("Error", "Failed to update event status.");
-                return;
-            }
-
             setShowCancelModal(false);
+            setIsCancelling(true);
+            const result = await apiFetch(path, { method: "PUT" });
 
             setEventData({ ...eventData, status: result.status });
 
@@ -209,6 +200,8 @@ const Events = () => {
         } catch (err) {
             console.error(err);
             Alert.alert("Error", "Failed to update event status.");
+        } finally {
+            setIsCancelling(false);
         }
     };
 
@@ -241,12 +234,7 @@ const Events = () => {
     }, [eventData]);
 
     if (loading) {
-        return (
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                <ActivityIndicator size="large" color="#0A0F51" />
-                <Text style={{ marginTop: 10 }}>Loading Event Details...</Text>
-            </View>
-        );
+        return <Skeleton_OrgEventDetails />;
     }
 
     if (!eventData) {
@@ -309,7 +297,6 @@ const Events = () => {
                                 numberOfLines={2}
                                 ellipsizeMode="tail"
                             >
-                                {eventData.title || eventData.event_name}
                             </Text>
                         </TouchableOpacity>
 
@@ -443,27 +430,75 @@ const Events = () => {
                 />
             )}
 
-            {showCancelModal && (
-                <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-                    <View style={{ width: "80%", backgroundColor: "#fff", padding: 20, borderRadius: 15 }}>
-                        <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
-                            {eventData.status === "Cancelled" ? "Resume Event?" : "Cancel Event?"}
+            {/* ===== CANCEL / RESUME CONFIRMATION MODAL ===== */}
+            <Modal
+                visible={showCancelModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowCancelModal(false)}
+            >
+                <TouchableOpacity
+                    style={joinModalStyles.overlay}
+                    onPress={() => setShowCancelModal(false)}
+                    activeOpacity={1}
+                >
+                    <View style={joinModalStyles.modalBox}>
+                        <View style={joinModalStyles.iconContainer}>
+                            <Image
+                                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                                style={joinModalStyles.iconImage}
+                            />
+                        </View>
+                        <Text style={joinModalStyles.title}>
+                            {eventData?.status === "Cancelled" ? "Resume Event?" : "Cancel Event?"}
                         </Text>
-                        <Text style={{ marginBottom: 20 }}>
-                            {eventData.status === "Cancelled" ? "Are you sure you want to resume this event?" : "Are you sure you want to cancel this event?"}
+                        <Text style={joinModalStyles.desc}>
+                            {eventData?.status === "Cancelled"
+                                ? "Are you sure you want to resume this event?"
+                                : "Are you sure you want to cancel this event? This will notify all attendees."}
                         </Text>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                            <TouchableOpacity onPress={() => setShowCancelModal(false)}>
-                                <Text style={{ color: "#555", fontSize: 16 }}>No</Text>
+                        <View style={{ flexDirection: "row", marginTop: 20, width: "100%" }}>
+                            <TouchableOpacity
+                                style={{ flex: 1, backgroundColor: "#0a0f51", paddingVertical: 12, borderRadius: 25, alignItems: "center", marginRight: 6 }}
+                                onPress={() => setShowCancelModal(false)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>No</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={handleCancelOrResume}>
-                                <Text style={{ color: "#B40000", fontSize: 16 }}>Yes</Text>
+                            <TouchableOpacity
+                                style={{ flex: 1, backgroundColor: "#fecb20", paddingVertical: 12, borderRadius: 25, alignItems: "center", marginLeft: 6 }}
+                                onPress={handleCancelOrResume}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Yes</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
-                </View>
-            )}
+                </TouchableOpacity>
+            </Modal>
 
+            {/* ===== CANCELLING LOADING MODAL ===== */}
+            <Modal visible={isCancelling} transparent animationType="fade" onRequestClose={() => {}}>
+                <View style={joinModalStyles.overlay}>
+                    <View style={joinModalStyles.modalBox}>
+                        <View style={joinModalStyles.iconContainer}>
+                            <Image
+                                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                                style={joinModalStyles.iconImage}
+                            />
+                        </View>
+                        <Text style={joinModalStyles.title}>
+                            {eventData?.status === "Cancelled" ? "Resuming…" : "Cancelling…"}
+                        </Text>
+                        <Text style={joinModalStyles.desc}>Please wait while we update the event.</Text>
+                        <View style={{ marginTop: 18 }}>
+                            <ActivityIndicator size="large" color="#0A0F51" />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* ===== CANCELLED OVERLAY ===== */}
             {showCancelledOverlay && (
                 <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center", zIndex: 900 }}>
                     <Text style={{ color: "#fff", fontSize: 26, fontFamily: "DMSans-Bold", textAlign: "center" }}>

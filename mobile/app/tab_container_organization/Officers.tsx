@@ -1,12 +1,15 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Animated, TextInput, ActivityIndicator, Modal, Pressable, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, Animated, TextInput, ActivityIndicator, Modal, Pressable, TouchableOpacity, Image, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/page_admin_dashboard";
 import StudentLinear from "../components/OrgSide_Card_StudentLinear";
+import Skeleton_Officers from "../components/Skeleton_Officers";
 import { BASE_URL } from "../../config";
-import { useRoute } from '@react-navigation/native'; // <- NEW
+import { useRoute } from '@react-navigation/native';
+import { apiFetch } from "../../utils/apiFetch";
+import joinModalStyles from "../styles/components_joinmodal";
 
 const ManageOfficers = ({ scrollY, handleScroll }) => {
     const route = useRoute(); // <- NEW
@@ -24,6 +27,8 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
     const [roleModalVisible, setRoleModalVisible] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [newRole, setNewRole] = useState(null);
+    const [isRoleChanging, setIsRoleChanging] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     const [inviteRolePending, setInviteRolePending] = useState(null);
     const [inviteTargetStudent, setInviteTargetStudent] = useState(null);
@@ -148,6 +153,12 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         fetchStudents(activeTab);
     }, [activeTab, isIdLoading, localStudentNumber, orgId]);
 
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchStudents(activeTab);
+        setRefreshing(false);
+    };
+
     const safeImage = (img) =>
         typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/crk.jpg");
 
@@ -169,30 +180,10 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
                 organization_id: orgId
             };
 
-            const res = await fetch(`${BASE_URL}/api/memberships/invite`, {
+            const data = await apiFetch(`/api/memberships/invite`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
-
-            const text = await res.text();
-            let data;
-            try { data = JSON.parse(text); } catch { data = text; }
-
-            if (res.status === 409 && data?.message?.includes("pending invitation")) {
-                const existingRole = data.role || "Manager";
-                setStudents(prev =>
-                    prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: existingRole } : s)
-                );
-                alert(`Student already has a pending invite as ${existingRole}`);
-                return;
-            }
-
-            if (!res.ok) {
-                console.error("[INVITE ERROR]", { status: res.status, body: data });
-                alert(`Error sending invite: ${data.message || 'check terminal for details.'}`);
-                return;
-            }
 
             console.log("[INVITE SUCCESS]", { student, role, response: data });
             alert(`Invite sent to ${student.name} as ${role}`);
@@ -201,8 +192,16 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
                 prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: role } : s)
             );
         } catch (err) {
+            if (err.message?.includes("pending invitation")) {
+                const existingRole = "Manager";
+                setStudents(prev =>
+                    prev.map(s => s.id === student.id ? { ...s, pendingInviteRole: existingRole } : s)
+                );
+                alert(`Student already has a pending invite as ${existingRole}`);
+                return;
+            }
             console.error("[INVITE EXCEPTION]", err);
-            alert("Error sending invite — check terminal for details.");
+            alert(`Error sending invite: ${err.message || 'check terminal for details.'}`);
         }
     };
 
@@ -210,21 +209,10 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         if (!student.pendingInviteRole) return;
 
         try {
-            const res = await fetch(`${BASE_URL}/api/memberships/cancel-invite`, {
+            await apiFetch(`/api/memberships/cancel-invite`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ target_student_id: student.id, orgId }),
             });
-
-            const text = await res.text();
-            let data;
-            try { data = JSON.parse(text); } catch { data = text; }
-
-            if (!res.ok) {
-                console.error("[CANCEL INVITE ERROR]", { student, body: data });
-                alert(`Error cancelling invite: ${data.message || 'check terminal for details.'}`);
-                return;
-            }
 
             setStudents(prev =>
                 prev.map(s => {
@@ -240,7 +228,7 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
             alert(`Invite to ${student.name} cancelled successfully.`);
         } catch (err) {
             console.error("[CANCEL INVITE EXCEPTION]", err);
-            alert("Error cancelling invite — check terminal for details.");
+            alert(`Error cancelling invite: ${err.message || 'check terminal for details.'}`);
         }
     };
 
@@ -257,56 +245,37 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         if (!newRole || !selectedStudent) return;
 
         try {
-            const res = await fetch(`${BASE_URL}/api/memberships/change-role`, {
+            setRoleModalVisible(false);
+            setIsRoleChanging(true);
+            const data = await apiFetch(`/api/memberships/change-role`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ student_id: selectedStudent.id, new_role: newRole }),
             });
 
-            const text = await res.text();
-            let data;
-            try { data = JSON.parse(text); } catch { data = text; }
-
-            if (!res.ok) {
-                console.error("[CHANGE ROLE ERROR]", { selectedStudent, newRole, body: data });
-                alert(`Error changing role: ${data.message || 'check terminal for details.'}`);
-                return;
-            }
-
             console.log("[CHANGE ROLE SUCCESS]", { student: selectedStudent, newRole, response: data });
             alert(`Role changed to ${newRole} for ${selectedStudent.name}`);
-            setRoleModalVisible(false);
             fetchStudents(activeTab);
         } catch (err) {
             console.error("[CHANGE ROLE EXCEPTION]", err);
-            alert("Error changing role — check terminal for details.");
+            alert(`Error changing role: ${err.message || 'check terminal for details.'}`);
+        } finally {
+            setIsRoleChanging(false);
         }
     };
 
     const handleRemove = async (student) => {
         try {
-            const res = await fetch(`${BASE_URL}/api/memberships/remove`, {
+            await apiFetch(`/api/memberships/remove`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ student_id: student.id }),
             });
 
-            const text = await res.text();
-            let data;
-            try { data = JSON.parse(text); } catch { data = text; }
-
-            if (!res.ok) {
-                console.error("[REMOVE USER ERROR]", { student, body: data });
-                alert(`Error removing student: ${data.message || 'check terminal for details.'}`);
-                return;
-            }
-
-            console.log("[REMOVE USER SUCCESS]", { student, response: data });
+            console.log("[REMOVE USER SUCCESS]", { student });
             alert(`${student.name} removed from organization`);
             fetchStudents(activeTab);
         } catch (err) {
             console.error("[REMOVE USER EXCEPTION]", err);
-            alert("Error removing student — check terminal for details.");
+            alert(`Error removing student: ${err.message || 'check terminal for details.'}`);
         }
     };
 
@@ -318,7 +287,7 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
              console.log(`[RENDER DEBUG] Displaying ${students.length} students (before search filter).`);
         }
         
-        if (isLoading) return <ActivityIndicator size="large" color="#0A0F51" style={{ marginTop: 50 }} />;
+        if (isLoading) return <Skeleton_Officers embedded={true} />;
         if (error) return <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>{error}</Text>;
 
         const filteredStudents = students.filter(
@@ -353,12 +322,7 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
 
     // Initial Loading/Error Render
     if (isIdLoading) {
-        return (
-            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-                <ActivityIndicator size="large" color="#0A0F51" />
-                <Text style={{ marginTop: 10, color: '#333' }}>Authenticating user ID...</Text>
-            </View>
-        );
+        return <Skeleton_Officers />;
     }
 
     if (!localStudentNumber) {
@@ -384,6 +348,15 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
                     { useNativeDriver: false, listener: handleScroll }
                 )}
                 scrollEventThrottle={16}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        progressViewOffset={50}
+                        colors={["#0A0F51"]}
+                        tintColor="#0A0F51"
+                    />
+                }
             >
                 <View style={{ width: '100%', alignItems: 'center', zIndex: 100 }}>
                     <View style={{ height: 105, backgroundColor: 'transparent' }} />
@@ -425,58 +398,79 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
                 </View>
             </Animated.ScrollView>
 
-            {/* Role change modal (unchanged) */}
-            <Modal visible={roleModalVisible} transparent animationType="fade">
-                <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
-                    <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 10, width: "80%", alignItems: "center" }}>
-                        <Text style={{ fontFamily: "DMSans-Bold", fontSize: 18, marginBottom: 12 }}>Change Role</Text>
+            {/* ===== ROLE CHANGE MODAL ===== */}
+            <Modal visible={roleModalVisible} transparent animationType="fade" onRequestClose={() => setRoleModalVisible(false)}>
+                <TouchableOpacity
+                    style={joinModalStyles.overlay}
+                    onPress={() => setRoleModalVisible(false)}
+                    activeOpacity={1}
+                >
+                    <View style={joinModalStyles.modalBox}>
+                        <View style={joinModalStyles.iconContainer}>
+                            <Image
+                                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                                style={joinModalStyles.iconImage}
+                            />
+                        </View>
+                        <Text style={joinModalStyles.title}>Change Role</Text>
+                        <Text style={joinModalStyles.desc}>
+                            Select a new role for {selectedStudent?.name}.
+                        </Text>
 
                         {["Manager", "Committee"].map((role) => (
-                            <Pressable
+                            <TouchableOpacity
                                 key={role}
                                 onPress={() => setNewRole(role)}
                                 style={{
-                                    padding: 12,
-                                    marginVertical: 6,
                                     width: "100%",
-                                    borderRadius: 6,
-                                    backgroundColor: newRole === role ? "#0A0F51" : "#ccc",
+                                    paddingVertical: 12,
+                                    borderRadius: 10,
+                                    marginTop: 10,
+                                    backgroundColor: newRole === role ? "#0A0F51" : "#f0f0f0",
                                     alignItems: "center",
                                 }}
                             >
-                                <Text style={{ color: newRole === role ? "#fff" : "#000", fontFamily: "DMSans-Bold" }}>{role}</Text>
-                            </Pressable>
+                                <Text style={{ color: newRole === role ? "#fff" : "#333", fontFamily: "DMSans-Bold", fontSize: 15 }}>
+                                    {role}
+                                </Text>
+                            </TouchableOpacity>
                         ))}
 
-                        <View style={{ flexDirection: "row", marginTop: 16, width: "100%", justifyContent: "space-between" }}>
-                            <Pressable
+                        <View style={{ flexDirection: "row", marginTop: 20, width: "100%" }}>
+                            <TouchableOpacity
+                                style={{ flex: 1, backgroundColor: "#0a0f51", paddingVertical: 12, borderRadius: 25, alignItems: "center", marginRight: 6 }}
                                 onPress={() => setRoleModalVisible(false)}
-                                style={{
-                                    flex: 1,
-                                    padding: 12,
-                                    backgroundColor: "#888",
-                                    borderRadius: 6,
-                                    alignItems: "center",
-                                    marginRight: 8,
-                                }}
+                                activeOpacity={0.7}
                             >
-                                <Text style={{ color: "#fff", fontFamily: "DMSans-Bold" }}>Cancel</Text>
-                            </Pressable>
-
-                            <Pressable
+                                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
                                 disabled={!newRole}
+                                style={{ flex: 1, backgroundColor: newRole ? "#fecb20" : "#ccc", paddingVertical: 12, borderRadius: 25, alignItems: "center", marginLeft: 6 }}
                                 onPress={confirmRoleChange}
-                                style={{
-                                    flex: 1,
-                                    padding: 12,
-                                    backgroundColor: newRole ? "#0A0F51" : "#aaa",
-                                    borderRadius: 6,
-                                    alignItems: "center",
-                                    marginLeft: 8,
-                                }}
+                                activeOpacity={0.7}
                             >
-                                <Text style={{ color: "#fff", fontFamily: "DMSans-Bold" }}>Confirm</Text>
-                            </Pressable>
+                                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Confirm</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            {/* ===== ROLE CHANGING LOADING MODAL ===== */}
+            <Modal visible={isRoleChanging} transparent animationType="fade" onRequestClose={() => {}}>
+                <View style={joinModalStyles.overlay}>
+                    <View style={joinModalStyles.modalBox}>
+                        <View style={joinModalStyles.iconContainer}>
+                            <Image
+                                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                                style={joinModalStyles.iconImage}
+                            />
+                        </View>
+                        <Text style={joinModalStyles.title}>Updating Role</Text>
+                        <Text style={joinModalStyles.desc}>Please wait while we apply the changes.</Text>
+                        <View style={{ marginTop: 18 }}>
+                            <ActivityIndicator size="large" color="#0A0F51" />
                         </View>
                     </View>
                 </View>

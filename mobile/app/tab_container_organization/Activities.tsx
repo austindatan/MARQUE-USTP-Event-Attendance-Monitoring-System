@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useRef, useState, useEffect } from "react";
-import { View, Animated, Modal, ActivityIndicator, Text } from "react-native";
+import { View, Animated, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage"; 
 import Header from "../components/Header_Activities";
@@ -9,6 +9,7 @@ import Concluded from "./Concluded";
 import Officers from "./Officers";
 import AddActivityButton from "../components/AddActivityButton";
 import SidebarMenu from "../components/SidebarMenu_Organization";
+import Skeleton_Incoming from "../components/Skeleton_Incoming";
 import appeffects from "../styles/effects_app";
 import { BASE_URL } from "../../config"; 
 
@@ -91,10 +92,15 @@ const Activities = () => {
 
   if (isLoading) {
     return (
-        <View style={[appeffects.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
-            <ActivityIndicator size="large" color="#0A0F51" />
-            <Text style={{ marginTop: 10 }}>Loading permissions...</Text>
-        </View>
+      <View style={[appeffects.container, { flex: 1 }]}>
+        <Header
+          onMenuPress={() => {}}
+          scrollY={incomingScrollY}
+          onToggleChange={() => {}}
+          isOfficerTabAllowed={false}
+        />
+        <Skeleton_Incoming />
+      </View>
     );
   }
 

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
+import Skeleton_Incoming from "../components/Skeleton_Incoming";
 import EventCard from "../components/Card_Event";
 import OrgCard from "../components/Card_Organization";
 import appeffects from "../styles/effects_app";
@@ -22,6 +23,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     const [organizationData, setOrganizationData] = useState(null);
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
 
     const formatDate = (dateStr) => {
@@ -71,6 +73,12 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     useEffect(() => {
         fetchAllData();
     }, [orgId]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchAllData();
+        setRefreshing(false);
+    };
     -
         useEffect(() => {
             if (scrollRef.current && typeof initialScroll === "number" && initialScroll > 0) {
@@ -103,11 +111,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     };
 
     if (loading) {
-        return (
-            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 180 }}>
-                <ActivityIndicator size="large" color="#0000ff" />
-            </View>
-        );
+        return <Skeleton_Incoming />;
     }
 
     if (error || !organizationData) {
@@ -144,6 +148,15 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        progressViewOffset={165}
+                        colors={["#0A0F51"]}
+                        tintColor="#0A0F51"
+                    />
+                }
             >
                 <View style={appeffects.pageStarter}>
                 </View>

@@ -24,7 +24,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
+    marginTop: 5,
+    marginBottom: 12,
   },
 
   backButton: {},

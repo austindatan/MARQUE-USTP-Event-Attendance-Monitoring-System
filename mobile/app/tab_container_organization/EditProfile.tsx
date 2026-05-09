@@ -4,12 +4,12 @@ import { View, Text, Image, ImageBackground, ScrollView, TouchableOpacity, Statu
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styles from "../styles/page_eventdetails";
-import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
 import { BASE_URL } from "../../config";
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from "expo-linear-gradient";
 import EditProfileModal from "../components/EditProfileModal";
+import { apiFetchForm } from "../../utils/apiFetch";
 
 const EditProfile = () => {
   const router = useRouter();
@@ -28,8 +28,10 @@ const EditProfile = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/api/organizations/profile/${orgId}`);
-        const org = res.data.organization;
+        const res = await fetch(`${BASE_URL}/api/organizations/profile/${orgId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const org = data.organization;
 
         setOrgName(org.org_name);
         setDescription(org.description);
@@ -86,9 +88,7 @@ const EditProfile = () => {
         });
       }
 
-      await axios.put(`${BASE_URL}/api/organizations/${orgId}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await apiFetchForm("PUT", `/api/organizations/${orgId}`, formData);
 
       console.log("Data updates successfully.");
 
