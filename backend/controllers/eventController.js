@@ -1,11 +1,11 @@
-import Event from "../models/Event.js";
-import Organization from "../models/Organization.js";
-import FollowedOrgs from "../models/Followed_org.js";
-import Notification from "../models/Notification.js";
-import Student from "../models/Student.js";
-import fs from "fs";
-import path from "path";
-import mongoose from "mongoose";
+const Event = require("../models/Event");
+const Organization = require("../models/Organization");
+const FollowedOrgs = require("../models/Followed_org");
+const Notification = require("../models/Notification");
+const Student = require("../models/Student");
+const fs = require("fs");
+const path = require("path");
+const mongoose = require("mongoose");
 
 // Auto-update status of all events
 const autoUpdateEventStatuses = async () => {
@@ -741,7 +741,7 @@ const deleteEvent = async (req, res) => {
 
 
 
-export {
+module.exports = {
   autoUpdateEventStatuses,
   getEventsByDepartment,
   getAllUpcomingEvents,

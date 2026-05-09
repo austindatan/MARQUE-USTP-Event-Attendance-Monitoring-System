@@ -78,7 +78,7 @@ app.use('/api', departmentRoutes);
 
 // College route
 const collegeRoutes = require("./routes/collegeRoutes");
-app.use("/api/college", collegeRoutes);
+app.use("/api", collegeRoutes);
 
 // DB connection
 mongoose.connect(process.env.MONGODB_URI)

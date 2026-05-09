@@ -93,7 +93,7 @@ const Header = ({ onMenuPress, scrollY, onToggleChange }) => {
             onPress={() => router.push("/tab_container/Search_Page")}
           >
             <Ionicons name="search" size={24} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={{ color: "#8c8c8c", fontSize: 16 }}>Search...</Text>
+            <Text style={{ color: "#8c8c8c", fontSize: 16, fontFamily: "DMSans-Regular" }}>Search...</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.filterButton} onPress={() => router.push("/tab_container/Filter_Page")}>

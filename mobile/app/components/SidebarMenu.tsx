@@ -9,6 +9,7 @@ import Animated, { useSharedValue, withTiming, useAnimatedStyle, runOnJS } from 
 import { router } from "expo-router";
 import { useUnreadNotifications } from "../hooks/useUnreadNotifications";
 import NotificationBadge from "./NotificationBadge";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const menuItems = [
   { name: "Home", icon: "home-outline" },
@@ -37,6 +38,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [renderSidebar, setRenderSidebar] = useState(isVisible);
   const hasUnread = useUnreadNotifications();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -131,7 +133,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ isVisible, onClose }) => {
         <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
       </TouchableOpacity>
 
-      <Animated.View style={[styles.sidebarContainer, animatedSidebarStyle]}>
+      <Animated.View style={[styles.sidebarContainer, animatedSidebarStyle, { paddingTop: insets.top }]}>
         <View style={styles.profileContainer}>
           <Image
             source={{ uri: studentData?.profile_image || "https://via.placeholder.com/150" }}

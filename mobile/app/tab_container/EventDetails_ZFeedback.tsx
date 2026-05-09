@@ -1,11 +1,12 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, TextInput, Alert, ActivityIndicator, } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, TextInput, Alert, ActivityIndicator, Modal, } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BASE_URL } from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
+import joinModalStyles from "../styles/components_joinmodal";
 
 const getAuthInfo = async () => {
   try {
@@ -55,6 +56,17 @@ const EventFeedback = () => {
   const [authInfo, setAuthInfo] = useState({ userId: null, token: null });
   const [eventImageUrl, setEventImageUrl] = useState(null);
   const FALLBACK_IMAGE = require("../../assets/images/marque/crtcg1.png");
+  const [marqueModalVisible, setMarqueModalVisible] = useState(false);
+  const [marqueModalTitle, setMarqueModalTitle] = useState("");
+  const [marqueModalDesc, setMarqueModalDesc] = useState("");
+  const [marqueModalOnClose, setMarqueModalOnClose] = useState(null);
+
+  const openMarqueModal = (title, desc, onClose = null) => {
+    setMarqueModalTitle(title);
+    setMarqueModalDesc(desc);
+    setMarqueModalOnClose(() => onClose);
+    setMarqueModalVisible(true);
+  };
 
   const fetchEventImage = async () => {
     if (!eventId) return;
@@ -84,10 +96,10 @@ const EventFeedback = () => {
       setAuthInfo(info);
 
       if (!info.userId) {
-        Alert.alert(
+        openMarqueModal(
           "Login Required",
           "You must be logged in to submit feedback.",
-          [{ text: "OK", onPress: () => router.back() }]
+          () => router.back()
         );
         return;
       }
@@ -103,15 +115,12 @@ const EventFeedback = () => {
 
   const handleSubmit = async () => {
     if (overall === 0 || venue === 0 || speaker === 0 || experience === 0) {
-      Alert.alert(
-        "Incomplete Feedback",
-        "Please rate all four categories before submitting."
-      );
+      openMarqueModal("Incomplete Feedback", "Please rate all four categories before submitting.");
       return;
     }
 
     if (!authInfo.userId || !authInfo.token) {
-      Alert.alert("Login Required", "Please refresh the page or log in again.");
+      openMarqueModal("Login Required", "Please refresh the page or log in again.");
       return;
     }
 
@@ -146,25 +155,16 @@ const EventFeedback = () => {
         const errorData = await res.json();
 
         if (res.status === 409) {
-          Alert.alert(
-            "Already Submitted",
-            "You have already submitted feedback for this event."
-          );
+          openMarqueModal("Already Submitted", "You have already submitted feedback for this event.");
           await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
           router.back();
         } else {
-          Alert.alert(
-            "Submission Failed",
-            errorData.message || "An error occurred."
-          );
+          openMarqueModal("Submission Failed", errorData.message || "An error occurred.");
         }
       }
     } catch (error) {
       console.error("Feedback submission error:", error);
-      Alert.alert(
-        "Network Error",
-        "Could not connect to the server. Check your connection."
-      );
+      openMarqueModal("Network Error", "Could not connect to the server. Check your connection.");
     } finally {
       setIsLoading(false);
     }
@@ -258,6 +258,54 @@ const EventFeedback = () => {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* MARQUE modal (consistent design) */}
+      <Modal
+        visible={marqueModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMarqueModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => {
+            setMarqueModalVisible(false);
+            marqueModalOnClose?.();
+          }}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={joinModalStyles.title}>{marqueModalTitle}</Text>
+            <Text style={joinModalStyles.desc}>{marqueModalDesc}</Text>
+
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#fecb20",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={() => {
+                  setMarqueModalVisible(false);
+                  marqueModalOnClose?.();
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  OK
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };

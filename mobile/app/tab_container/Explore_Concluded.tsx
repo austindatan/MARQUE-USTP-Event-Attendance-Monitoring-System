@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, Animated, ActivityIndicator, RefreshControl, Dimensions } from "react-native";
 import EventCardSL from "../components/Card_EventSL";
 import appeffects from "../styles/effects_app";
 import Card_Blank from "../components/Card_Blank";
@@ -8,11 +8,13 @@ import EmptyCard from "../components/Card_Empty";
 import { BASE_URL } from "../../config";
 import { useRouter } from "expo-router"
 
+const CARD_WIDTH = Math.round((28.1 * Dimensions.get("window").width) / 100);
+
 const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
   const router = useRouter();
   const scrollRef = useRef(null);
   const [events, setEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);6
   const [visibleCount, setVisibleCount] = useState(12);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -131,12 +133,12 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0 }) => {
             />
           );
         })}
-        {/* Add blank cards if not divisible by 3 */}
-        {visibleEvents.length % 3 !== 0 && (
+        {/* Ghost spacers — keep last row left-aligned without showing skeletons */}
+        {visibleEvents.length % 3 !== 0 &&
           Array.from({ length: 3 - (visibleEvents.length % 3) }).map((_, index) => (
-            <Card_Blank key={`blank-${index}`} />
+            <View key={`ghost-${index}`} style={{ width: CARD_WIDTH, height: 0 }} />
           ))
-        )}
+        }
       </>
     );
   };

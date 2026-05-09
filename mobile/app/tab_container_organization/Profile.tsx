@@ -116,7 +116,7 @@ const ProfilePage = () => {
                 setIncomingEvents(profileData.events.incoming);
                 setConcludedEvents(profileData.events.concluded);
             } catch (err) {
-                console.error("❌ Error loading profile:", err);
+                console.error("Error loading profile:", err);
             } finally {
                 profileLoaded = true;
                 finalizeLoading();

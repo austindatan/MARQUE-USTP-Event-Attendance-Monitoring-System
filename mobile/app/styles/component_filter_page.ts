@@ -13,7 +13,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontFamily: "DMSans-Bold",
         fontSize: 18,
-        marginTop: 30,
         marginBottom: 10,
         color: "#222762",
     },
@@ -27,7 +26,7 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     applyButton: {
-        marginTop: 40,
+        marginTop: 20,
         backgroundColor: "#f5c20a",
         paddingVertical: 13,
         borderRadius: 30,

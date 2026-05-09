@@ -6,7 +6,6 @@ const authMiddleware = require('../middleware/auth');
 const Organization = require("../models/Organization");
 const Event = require("../models/Event");
 
-// multer Cloudinary
 const { uploadOrgImages } = require('./cloudinaryConfig');
 
 router.get('/profile/:orgId', async (req, res) => {
@@ -33,11 +32,9 @@ router.get('/profile/:orgId', async (req, res) => {
   }
 });
 
-// Org routes
 router.get('/', organizationController.getOrganizations);
 router.get('/by-type/:type', organizationController.getOrganizationsByType);
 
-// GET all orgs by department ID
 router.get('/department/:departmentId', async (req, res) => {
   try {
     console.log(`Organization Department Route Hit. ID: ${req.params.departmentId}`);
@@ -56,13 +53,12 @@ router.post(
   '/',
   authMiddleware,
   uploadOrgImages.fields([
-    { name: 'pfp', maxCount: 1 }, 
+    { name: 'pfp', maxCount: 1 },
     { name: 'cover_photo', maxCount: 1 },
   ]),
   organizationController.addOrganization
 );
 
-// UPDATE organization profile
 router.put(
   '/:orgId',
   authMiddleware,

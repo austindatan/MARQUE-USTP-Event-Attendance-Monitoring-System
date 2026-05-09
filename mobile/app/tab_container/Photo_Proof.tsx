@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  Modal,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
@@ -15,6 +16,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { BASE_URL } from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import joinModalStyles from "../styles/components_joinmodal";
 
 export default function CameraWithWatermark() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -23,10 +25,19 @@ export default function CameraWithWatermark() {
   const [isTorchOn, setIsTorchOn] = useState(false);
   const [facing, setFacing] = useState("front");
   const [preview, setPreview] = useState(null);
+  const [marqueModalVisible, setMarqueModalVisible] = useState(false);
+  const [marqueModalTitle, setMarqueModalTitle] = useState("");
+  const [marqueModalDesc, setMarqueModalDesc] = useState("");
 
   const cameraRef = useRef(null);
   const router = useRouter();
   const { eventId, attendanceLogId: initialAttendanceLogId } = useLocalSearchParams();
+
+  const openMarqueModal = (title, desc) => {
+    setMarqueModalTitle(title);
+    setMarqueModalDesc(desc);
+    setMarqueModalVisible(true);
+  };
 
   // -------------------- LOCATION --------------------
   useEffect(() => {
@@ -81,7 +92,7 @@ export default function CameraWithWatermark() {
       setPreview(photo.uri);
     } catch (err) {
       console.log(err);
-      Alert.alert("Error", "Failed to capture photo.");
+      openMarqueModal("Error", "Failed to capture photo.");
     } finally {
       setLoading(false);
     }
@@ -91,11 +102,14 @@ export default function CameraWithWatermark() {
   const getOrRegisterLog = async () => {
     try {
       const student_number = await AsyncStorage.getItem("student_number");
+      const token = await AsyncStorage.getItem("token");
       if (!student_number) return null;
 
       const res = await axios.post(`${BASE_URL}/api/attendance/register-or-get-log`, {
         event_id: eventId,
         student_number,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       return res.data.attendanceLog._id;
@@ -112,7 +126,7 @@ export default function CameraWithWatermark() {
 
       const student_number = await AsyncStorage.getItem("student_number");
       if (!student_number) {
-        Alert.alert("Error", "Student number not found.");
+        openMarqueModal("Error", "Student number not found.");
         setLoading(false);
         return;
       }
@@ -122,7 +136,7 @@ export default function CameraWithWatermark() {
       if (!logId) {
         logId = await getOrRegisterLog();
         if (!logId) {
-          Alert.alert("Error", "Cannot get attendance log ID. Upload failed.");
+          openMarqueModal("Error", "Cannot get attendance log ID. Upload failed.");
           setLoading(false);
           return;
         }
@@ -144,12 +158,17 @@ export default function CameraWithWatermark() {
       formData.append("event_id", eventId);
       formData.append("student_number", student_number);
 
+      const token = await AsyncStorage.getItem("token");
+
       // 4. Upload
       await axios.post(`${BASE_URL}/api/attendance/upload-photoproof`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      Alert.alert("Success", "Photo proof submitted for verification.");
+      openMarqueModal("Success", "Photo proof submitted for verification.");
 
       router.replace({
         pathname: "tab_container/EventDetails_Unified",
@@ -157,7 +176,7 @@ export default function CameraWithWatermark() {
       });
     } catch (err) {
       console.log("UPLOAD ERROR:", err.response?.data || err);
-      Alert.alert("Error", err.response?.data?.message || "Failed to upload photo.");
+      openMarqueModal("Error", err.response?.data?.message || "Failed to upload photo.");
     } finally {
       setLoading(false);
     }
@@ -307,6 +326,48 @@ export default function CameraWithWatermark() {
       >
         {loading ? <ActivityIndicator size="large" /> : <Ionicons name="camera" size={40} color="black" />}
       </TouchableOpacity>
+
+      {/* MARQUE modal (consistent design) */}
+      <Modal
+        visible={marqueModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMarqueModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => setMarqueModalVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={joinModalStyles.title}>{marqueModalTitle}</Text>
+            <Text style={joinModalStyles.desc}>{marqueModalDesc}</Text>
+
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#fecb20",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={() => setMarqueModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  OK
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }

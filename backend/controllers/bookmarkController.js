@@ -84,7 +84,7 @@ exports.removeBookmark = async (req, res) => {
 
     res.json({ message: "Bookmark removed successfully" });
   } catch (err) {
-    console.error("❌ Fatal Error removing bookmark (500):", err.message, err.stack); 
+    console.error("Fatal Error removing bookmark (500):", err.message, err.stack); 
     res.status(500).json({ message: "Server error. Check server logs." });
   }
 };

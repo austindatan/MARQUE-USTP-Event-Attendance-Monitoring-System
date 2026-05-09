@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
     width: "70%",
     height: height,
     backgroundColor: "#fff",
-    paddingTop: 50, 
+    paddingTop: 20,
     paddingHorizontal: 20,
     borderTopRightRadius: 15,
     borderBottomRightRadius: 15,
@@ -17,13 +17,13 @@ const styles = StyleSheet.create({
     width: "70%",
     height: "100%",
     backgroundColor: "#fff",
-    paddingTop: 50, 
+    paddingTop: 20,
     paddingHorizontal: 20,
     borderTopRightRadius: 15,
     borderBottomRightRadius: 15,
   },
   profileContainer: {
-    marginBottom: 20,
+    marginBottom: 8,
     paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 15,
+    paddingVertical: 13,
     paddingHorizontal: 5,
   },
   menuText: {
