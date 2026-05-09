@@ -11,9 +11,9 @@ import styles from "../styles/components_bookmark";
 import { useRouter } from "expo-router";
 import BookmarkCard from "../components/Card_Bookmark";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL, CLOUD_NAME } from "../../config"; // ⭐️ MODIFIED: Added CLOUD_NAME import
+import { apiFetch } from "../../utils/apiFetch";
 
 // ⭐️ ADDED: Utility function to convert raw Cloudinary path to full URL
 const fixCloudinaryUrl = (url, cloudName) => {
@@ -41,10 +41,10 @@ const Bookmark = () => {
         if (!student_number) return;
 
         try {
-            const res = await axios.get(`${BASE_URL}/api/bookmarks/${student_number}`);
-            setBookmarks(res.data);
+            const data = await apiFetch(`/api/bookmarks/${student_number}`);
+            setBookmarks(data);
         } catch (err) {
-            console.log("❌ Error loading bookmarks:", err);
+            console.log("Error loading bookmarks:", err);
         }
     };
 
@@ -52,12 +52,10 @@ const Bookmark = () => {
         const student_number = await AsyncStorage.getItem("student_number");
 
         try {
-            await axios.delete(
-                `${BASE_URL}/api/bookmarks/${student_number}/${event_id}`
-            );
+            await apiFetch(`/api/bookmarks/${student_number}/${event_id}`, { method: "DELETE" });
             loadBookmarks(); // Refresh list
         } catch (err) {
-            console.log("❌ Error removing bookmark:", err);
+            console.log("Error removing bookmark:", err);
         }
     };
 
@@ -133,7 +131,7 @@ const Bookmark = () => {
                     );
                 })}
 
-                <View style={{ height: 80 }} />
+                <View style={{ height: 130 }} />
             </ScrollView>
         </View>
     );

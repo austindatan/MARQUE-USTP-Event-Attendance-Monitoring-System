@@ -101,10 +101,12 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
         const action = isCurrentlyFollowed ? "unfollow" : "follow";
 
         try {
+            const token = await AsyncStorage.getItem("token");
             const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     userId: userId,
@@ -130,7 +132,7 @@ const Orgs = ({ scrollY, handleScroll, initialScroll = 0 }) => {
 
     const handleOrgPress = (orgId) => {
         router.push({
-            pathname: "../tab_container_organization/ProfileSTU",
+            pathname: "../tab_container/ProfileSTU",
             params: { orgId: orgId },
         });
     };

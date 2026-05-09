@@ -9,6 +9,7 @@ import {
   Modal,
   TextInput,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header_Profile";
@@ -22,10 +23,10 @@ import styles from "../styles/effects_profile";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
-import axios from "axios";
-import { BASE_URL } from "../../config";
+import { apiFetch, apiFetchForm } from "../../utils/apiFetch";
 import { useUnreadNotifications } from "../hooks/useUnreadNotifications";
 import NotificationBadge from "../components/NotificationBadge";
+import joinModalStyles from "../styles/components_joinmodal";
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -42,6 +43,13 @@ const ProfilePage = () => {
   const [tempEmail, setTempEmail] = useState('');
 
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarSuccessVisible, setAvatarSuccessVisible] = useState(false);
+  const [sessionExpiredVisible, setSessionExpiredVisible] = useState(false);
+  const [emailUpdating, setEmailUpdating] = useState(false);
+  const [emailSuccessVisible, setEmailSuccessVisible] = useState(false);
+  const [emailErrorVisible, setEmailErrorVisible] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState("");
 
   const toggleMenu = () => setMenuVisible((prev) => !prev);
 
@@ -53,10 +61,8 @@ const ProfilePage = () => {
   const loadProfile = async () => {
     if (!studentNumber) return;
     try {
-      const res = await axios.get(
-        `${BASE_URL}/api/student/profile/${studentNumber}`
-      );
-      setProfile(res.data);
+      const data = await apiFetch(`/api/student/profile/${studentNumber}`);
+      setProfile(data);
     } catch (err) {
       console.log("Error loading profile:", err);
     }
@@ -65,10 +71,8 @@ const ProfilePage = () => {
   const loadAttendance = async () => {
     if (!studentNumber) return;
     try {
-      const res = await axios.get(
-        `${BASE_URL}/api/student/profile/${studentNumber}/attendance?limit=10`
-      );
-      setAttendance(res.data.records || []);
+      const data = await apiFetch(`/api/student/profile/${studentNumber}/attendance?limit=10`);
+      setAttendance(data.records || []);
     } catch (err) {
       console.log("Error loading attendance:", err);
     }
@@ -76,6 +80,12 @@ const ProfilePage = () => {
 
   const uploadAvatar = async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        setSessionExpiredVisible(true);
+        return;
+      }
+
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         alert("Allow access to your photos to change your avatar.");
@@ -83,7 +93,7 @@ const ProfilePage = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ImagePicker.MediaType?.Images ?? ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
       });
 
@@ -97,17 +107,24 @@ const ProfilePage = () => {
         type: "image/png",
       });
 
-      await axios.post(
-        `${BASE_URL}/api/student/profile/${studentNumber}/upload-photo`,
-        form,
-        { headers: { "Content-Type": "multipart/form-data" } }
+      setAvatarUploading(true);
+      await apiFetchForm(
+        "POST",
+        `/api/student/profile/${studentNumber}/upload-photo`,
+        form
       );
 
-      alert("Avatar updated!");
+      setAvatarSuccessVisible(true);
       loadProfile();
     } catch (err) {
       console.log("Upload error:", err);
+      if (err?.message?.toLowerCase?.().includes("unauthorized")) {
+        setSessionExpiredVisible(true);
+        return;
+      }
       alert("Failed to upload avatar");
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -123,18 +140,27 @@ const ProfilePage = () => {
     }
 
     try {
-      await axios.put(
-        `${BASE_URL}/api/student/profile/${studentNumber}/email`,
-        { email: trimmedEmail }
-      );
+      setEmailUpdating(true);
+      await apiFetch(`/api/student/profile/${studentNumber}/email`, {
+        method: "PUT",
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
 
-      alert("Email updated successfully!");
+      setIsEmailModalVisible(false);
+      setEmailSuccessVisible(true);
       setIsEmailModalVisible(false);
       loadProfile(); // Reload the profile data
     } catch (err) {
-      const errorMessage = err.response?.data?.message || "Failed to update email.";
-      console.log("❌ Email update error:", errorMessage);
-      alert(errorMessage);
+      const errorMessage = err?.message || "Failed to update email.";
+      console.log("Email update error:", errorMessage);
+      if (errorMessage.toLowerCase().includes("unauthorized")) {
+        setSessionExpiredVisible(true);
+        return;
+      }
+      setEmailErrorMessage(errorMessage);
+      setEmailErrorVisible(true);
+    } finally {
+      setEmailUpdating(false);
     }
   };
 
@@ -174,7 +200,7 @@ const ProfilePage = () => {
 
   const confirmLogout = async () => {
     try {
-      await axios.post(`${BASE_URL}/api/auth/logout`);
+      await apiFetch(`/api/auth/logout`, { method: "POST" });
       await AsyncStorage.clear();
       setLogoutModalVisible(false);
       router.replace("/login");
@@ -316,45 +342,189 @@ const ProfilePage = () => {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* 🚨 NEW: Email Edit Modal */}
+      {/* Email edit modal (same design) */}
       <Modal
-        animationType="slide"
-        transparent
         visible={isEmailModalVisible}
+        transparent
+        animationType="fade"
         onRequestClose={() => setIsEmailModalVisible(false)}
       >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalTitle}>
-              {profile.email ? 'Edit Email' : 'Add Email'}
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => setIsEmailModalVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+
+            <Text style={joinModalStyles.title}>
+              {profile.email ? "Edit Email" : "Add Email"}
             </Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email address"
-              placeholderTextColor="#888"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={tempEmail}
-              onChangeText={setTempEmail}
-            />
+            <View style={{ width: "100%", marginTop: 10 }}>
+              <TextInput
+                style={{
+                  height: 44,
+                  borderColor: "#ddd",
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  width: "100%",
+                  paddingHorizontal: 12,
+                  backgroundColor: "#f9f9f9",
+                  fontFamily: "DMSans-Regular",
+                }}
+                placeholder="Enter your email address"
+                placeholderTextColor="#888"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={tempEmail}
+                onChangeText={setTempEmail}
+              />
+            </View>
 
-            <View style={styles.buttonRow}>
+            <View style={{ flexDirection: "row", marginTop: 18, width: "100%" }}>
               <TouchableOpacity
-                style={[styles.button, styles.buttonClose]}
+                style={{
+                  flex: 1,
+                  backgroundColor: "#0a0f51",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                  marginRight: 6,
+                }}
                 onPress={() => setIsEmailModalVisible(false)}
+                activeOpacity={0.7}
               >
-                <Text style={styles.textStyle}>Cancel</Text>
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
+
               <TouchableOpacity
-                style={[styles.button, styles.buttonSave]}
+                style={{
+                  flex: 1,
+                  backgroundColor: "#fecb20",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                  marginLeft: 6,
+                }}
                 onPress={handleUpdateEmail}
+                activeOpacity={0.7}
               >
-                <Text style={styles.textStyle}>Save</Text>
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  Save
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Email updating (blocks interaction) */}
+      <Modal visible={emailUpdating} transparent animationType="fade" onRequestClose={() => {}}>
+        <View style={joinModalStyles.overlay}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={joinModalStyles.title}>Updating</Text>
+            <Text style={joinModalStyles.desc}>Saving your email address…</Text>
+            <View style={{ marginTop: 18 }}>
+              <ActivityIndicator size="large" color="#0A0F51" />
+            </View>
+          </View>
         </View>
+      </Modal>
+
+      {/* Email success */}
+      <Modal
+        visible={emailSuccessVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEmailSuccessVisible(false)}
+      >
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => setEmailSuccessVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={joinModalStyles.title}>Email Updated</Text>
+            <Text style={joinModalStyles.desc}>Your email has been saved.</Text>
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#fecb20",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={() => setEmailSuccessVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  OK
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Email error */}
+      <Modal
+        visible={emailErrorVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEmailErrorVisible(false)}
+      >
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => setEmailErrorVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={joinModalStyles.title}>Update Failed</Text>
+            <Text style={joinModalStyles.desc}>{emailErrorMessage || "Failed to update email."}</Text>
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#0a0f51",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={() => setEmailErrorVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  OK
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
       </Modal>
 
       <Modal
@@ -371,6 +541,109 @@ const ProfilePage = () => {
         onClose={() => setLogoutModalVisible(false)}
         onConfirm={confirmLogout}
       />
+
+      {/* Avatar upload loading (blocks interaction) */}
+      <Modal visible={avatarUploading} transparent animationType="fade" onRequestClose={() => {}}>
+        <View style={joinModalStyles.overlay}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image source={require("../../assets/images/marque/MARQUE_whitelogo.png")} style={joinModalStyles.iconImage} />
+            </View>
+            <Text style={joinModalStyles.title}>Uploading</Text>
+            <Text style={joinModalStyles.desc}>Please wait while we update your avatar.</Text>
+            <View style={{ marginTop: 18 }}>
+              <ActivityIndicator size="large" color="#0A0F51" />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Avatar upload success (same design as logout modal) */}
+      <Modal
+        visible={avatarSuccessVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAvatarSuccessVisible(false)}
+      >
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => setAvatarSuccessVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image source={require("../../assets/images/marque/MARQUE_whitelogo.png")} style={joinModalStyles.iconImage} />
+            </View>
+
+            <Text style={joinModalStyles.title}>Avatar Changed</Text>
+            <Text style={joinModalStyles.desc}>Your new avatar has been saved.</Text>
+
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#fecb20",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={() => setAvatarSuccessVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  OK
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Session expired (same design) */}
+      <Modal
+        visible={sessionExpiredVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSessionExpiredVisible(false)}
+      >
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => setSessionExpiredVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+
+            <Text style={joinModalStyles.title}>Session Expired</Text>
+            <Text style={joinModalStyles.desc}>Please log in again to continue.</Text>
+
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#0a0f51",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={async () => {
+                  setSessionExpiredVisible(false);
+                  await AsyncStorage.clear();
+                  router.replace("/login");
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  Go to Login
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };

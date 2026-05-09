@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: "row",
     paddingHorizontal: rs(20),
-    marginTop: rs(14),
+    marginTop: rs(10),
   },
 
   infoColumn: {
@@ -260,8 +260,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: rs(16),
     paddingHorizontal: rs(20),
-    marginTop: rs(10),
-    marginBottom: rs(8),
+    marginTop: rs(15),
+    marginBottom: rs(0),
     fontFamily: "DMSans-Bold",
   },
 
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
 
   organizerCard: {
-    marginTop: rs(24),
+    marginTop: rs(15),
     paddingHorizontal: rs(20),
     flexDirection: "row",
     justifyContent: "space-between",

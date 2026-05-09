@@ -5,9 +5,8 @@ import Header from "../components/Header_Normal";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/effects_profile";
-import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BASE_URL } from "../../config";
+import { apiFetch } from "../../utils/apiFetch";
 
 import PasswordChangeModal from "../components/Profile_ChangePasswordModal";
 
@@ -31,55 +30,27 @@ const ChangePasswordPage = () => {
     loadData();
   }, []);
 
-  const getPasswordStrength = (password) => {
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-    return score;
-  };
-
-  const getStrengthLabel = (score) => {
-    switch (score) {
-      case 0:
-      case 1:
-        return { text: "Weak", color: "#FF4D4D" };
-      case 2:
-        return { text: "Fair", color: "#FFB84D" };
-      case 3:
-        return { text: "Strong", color: "#4DA6FF" };
-      case 4:
-        return { text: "Very Strong", color: "#33CC66" };
-      default:
-        return { text: "Weak", color: "#FF4D4D" };
-    }
-  };
-
-  const strengthScore = getPasswordStrength(newPass);
-  const strength = getStrengthLabel(strengthScore);
-
-  const isSaveDisabled = strengthScore < 2 || newPass !== confirmPass || !currentPass;
+  const isSaveDisabled = !currentPass || !newPass || newPass !== confirmPass;
 
   const handleChangePassword = async () => {
     if (isSaveDisabled) {
-      setModalTitle("Weak Password");
-      setModalMessage("New password must be at least FAIR or higher.");
+      setModalTitle("Incomplete Details");
+      setModalMessage("Please fill out all fields and make sure passwords match.");
       setModalVisible(true);
       return;
     }
 
     try {
-      const res = await axios.put(
-        `${BASE_URL}/api/student/profile/${studentNumber}/change-password`,
-        {
+      const data = await apiFetch(`/api/student/profile/${studentNumber}/change-password`, {
+        method: "PUT",
+        body: JSON.stringify({
           current_password: currentPass,
           new_password: newPass,
-        }
-      );
+        }),
+      });
 
       setModalTitle("Success");
-      setModalMessage(res.data.message);
+      setModalMessage(data?.message || "Password updated.");
       setModalVisible(true);
 
       setCurrentPass("");
@@ -88,8 +59,8 @@ const ChangePasswordPage = () => {
 
       setTimeout(() => router.back(), 2000);
     } catch (err) {
-      console.log("❌ Change password error:", err);
-      const msg = err.response?.data?.message || "Failed to change password. Try again.";
+      console.log("Change password error:", err);
+      const msg = err?.message || "Failed to change password. Try again.";
 
       setModalTitle("Error");
       setModalMessage(msg);
@@ -127,32 +98,6 @@ const ChangePasswordPage = () => {
               value={newPass}
               onChangeText={setNewPass}
             />
-
-            {newPass.length > 0 && (
-              <View style={{ marginTop: 8 }}>
-                <View
-                  style={{
-                    height: 8,
-                    borderRadius: 8,
-                    backgroundColor: "#ddd",
-                    overflow: "hidden",
-                    marginBottom: 4,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: `${(strengthScore / 4) * 100}%`,
-                      height: "100%",
-                      backgroundColor: strength.color,
-                    }}
-                  />
-                </View>
-
-                <Text style={{ color: strength.color, fontWeight: "600" }}>
-                  {strength.text}
-                </Text>
-              </View>
-            )}
           </View>
 
           <View style={styles.inputGroup2}>

@@ -1,6 +1,15 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, StyleSheet, } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  ImageBackground,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -10,6 +19,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "../../config";
 import EventCard from "../components/Card_Event";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiFetch } from "../../utils/apiFetch";
 
 type EventTabType = "Incoming" | "Concluded";
 
@@ -54,6 +65,9 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState<OrgProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
 
   const STICKY_HEADER_HEIGHT = 90;
 
@@ -76,7 +90,7 @@ const ProfilePage = () => {
   const fetchOrgProfile = async () => {
     try {
       setLoading(true);
-      console.log('[ProfileSTU] Fetching profile for orgId:', orgId);
+      console.log("[ProfileSTU] Fetching profile for orgId:", orgId);
       const response = await axios.get(`${BASE_URL}/api/organizations/profile/${orgId}`);
       setProfileData(response.data);
       setError(null);
@@ -88,9 +102,62 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchStudentId = async () => {
+    try {
+      const studentNumber = await AsyncStorage.getItem("student_number");
+      if (!studentNumber) return null;
+      const res = await fetch(`${BASE_URL}/api/student/id/${studentNumber}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      setUserId(data._id);
+      return data._id;
+    } catch (e) {
+      console.error("Error fetching student ID:", e);
+      return null;
+    }
+  };
+
+  const checkFollowStatus = async (currentUserId: string) => {
+    try {
+      if (!orgId || !currentUserId) return;
+      const ids = await apiFetch(`/api/followed-orgs/${currentUserId}/ids`);
+      setIsFollowing(Array.isArray(ids) ? ids.includes(orgId) : false);
+    } catch (e) {
+      console.error("Error checking follow status:", e);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    if (!userId || !orgId || followBusy) return;
+    const next = !isFollowing;
+    const action = next ? "follow" : "unfollow";
+    try {
+      setFollowBusy(true);
+      setIsFollowing(next);
+      await apiFetch(`/api/followed-orgs/${action}`, {
+        method: "POST",
+        body: JSON.stringify({ userId, organizationId: orgId }),
+      });
+    } catch (e) {
+      // revert optimistic toggle
+      setIsFollowing(!next);
+      console.error("Follow toggle error:", e);
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+
   useEffect(() => {
     if (orgId) fetchOrgProfile();
   }, [orgId, refresh]);
+
+  useEffect(() => {
+    const init = async () => {
+      const id = await fetchStudentId();
+      if (id) await checkFollowStatus(id);
+    };
+    init();
+  }, [orgId]);
 
   if (loading) {
     return (
@@ -108,11 +175,25 @@ const ProfilePage = () => {
           { justifyContent: "center", alignItems: "center", padding: 20 },
         ]}
       >
-        <Text style={{ color: "red", fontSize: 18, marginBottom: 10, textAlign: "center" }}>
+        <Text
+          style={{
+            color: "red",
+            fontSize: 18,
+            marginBottom: 10,
+            textAlign: "center",
+            fontFamily: "DMSans-Bold",
+          }}
+        >
           {error || "Organization data not available."}
         </Text>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ color: COLORS.primaryNavy, textDecorationLine: "underline" }}>
+          <Text
+            style={{
+              color: COLORS.primaryNavy,
+              textDecorationLine: "underline",
+              fontFamily: "DMSans-Medium",
+            }}
+          >
             Go Back
           </Text>
         </TouchableOpacity>
@@ -141,7 +222,6 @@ const ProfilePage = () => {
             style={{ flexDirection: "row", alignItems: "center" }}
           >
             <Ionicons name="arrow-back" size={18} color="#fff" />
-            <Text style={[styles.navTextORG, { color: "#fff" }]} numberOfLines={2} ellipsizeMode="tail">{org.org_name}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -168,28 +248,46 @@ const ProfilePage = () => {
                 style={STYLES.logoImage}
               />
             </View>
+
+            <TouchableOpacity
+              style={[
+                localStyles.followBtn,
+                isFollowing ? localStyles.followBtnActive : localStyles.followBtnInactive,
+              ]}
+              onPress={handleFollowToggle}
+              activeOpacity={0.8}
+              disabled={followBusy || !userId}
+            >
+              <Text
+                style={[
+                  localStyles.followText,
+                  isFollowing ? localStyles.followTextActive : localStyles.followTextInactive,
+                ]}
+              >
+                {followBusy ? "..." : isFollowing ? "Following" : "Follow"}
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          <Text style={STYLES.orgTitle}>{org.org_name}</Text>
+          <Text style={[STYLES.orgTitle, localStyles.orgTitleTight]}>{org.org_name}</Text>
 
-          <View style={STYLES.socialRow}>
-            {org.fb_link && (
-              <TouchableOpacity style={STYLES.socialIcon}>
-                <Icon name="logo-facebook" size={22} color={COLORS.primaryNavy} />
-              </TouchableOpacity>
-            )}
-            {org.ig_link && (
-              <TouchableOpacity style={STYLES.socialIcon}>
-                <Icon name="logo-instagram" size={22} color={COLORS.primaryNavy} />
-              </TouchableOpacity>
-            )}
-          </View>
+          {(org.fb_link || org.ig_link || org.x_link) ? (
+            <View style={STYLES.socialRow}>
+              {org.fb_link && (
+                <TouchableOpacity style={STYLES.socialIcon}>
+                  <Icon name="logo-facebook" size={22} color={COLORS.primaryNavy} />
+                </TouchableOpacity>
+              )}
+              {org.ig_link && (
+                <TouchableOpacity style={STYLES.socialIcon}>
+                  <Icon name="logo-instagram" size={22} color={COLORS.primaryNavy} />
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : null}
 
           <Text style={STYLES.sectionHeader}>About Organization</Text>
           <Text style={STYLES.aboutText}>{org.description}</Text>
-
-          <Text style={STYLES.eventsTitle}>EVENTS</Text>
-          <View style={STYLES.divider} />
 
           <View style={tabStyles.tabWrapper}>
             <TouchableOpacity
@@ -205,7 +303,7 @@ const ProfilePage = () => {
                   activeTab === "Incoming" ? tabStyles.activeTabText : tabStyles.inactiveTabText,
                 ]}
               >
-                Incoming ({incomingEvents.length})
+                Incoming
               </Text>
             </TouchableOpacity>
 
@@ -222,7 +320,7 @@ const ProfilePage = () => {
                   activeTab === "Concluded" ? tabStyles.activeTabText : tabStyles.inactiveTabText,
                 ]}
               >
-                Concluded ({concludedEvents.length})
+                Concluded
               </Text>
             </TouchableOpacity>
           </View>
@@ -241,9 +339,7 @@ const ProfilePage = () => {
                           : "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"
                       }
                       title={event.event_name}
-                      orgLogo={
-                        org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")
-                      }
+                      orgLogo={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")}
                       organization={org.org_name}
                       orgDate={orgDate}
                       dateDay={dateDay}
@@ -272,9 +368,7 @@ const ProfilePage = () => {
                           : "https://images.unsplash.com/photo-1529101091764-c3526daf38fe"
                       }
                       title={event.event_name}
-                      orgLogo={
-                        org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")
-                      }
+                      orgLogo={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/LogoImage.jpg")}
                       organization={org.org_name}
                       orgDate={orgDate}
                       dateDay={dateDay}
@@ -333,5 +427,39 @@ const tabStyles = StyleSheet.create({
     textAlign: "center",
     color: COLORS.textDark,
     marginVertical: 12,
+    fontFamily: "DMSans-Medium",
   },
 });
+
+const localStyles = StyleSheet.create({
+  orgTitleTight: {
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  followBtn: {
+    marginTop: 60,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 110,
+  },
+  followBtnInactive: {
+    backgroundColor: COLORS.primaryNavy,
+  },
+  followBtnActive: {
+    backgroundColor: "#d3d3d3",
+  },
+  followText: {
+    fontSize: 14,
+    fontFamily: "DMSans-Bold",
+  },
+  followTextInactive: {
+    color: COLORS.white,
+  },
+  followTextActive: {
+    color: COLORS.textDark,
+  },
+});
+

@@ -1,10 +1,12 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import OrgChip from "../components/Org_Chip";
 import { BASE_URL } from "../../config";
 import styles from "../styles/component_filter_page";
+import bookmarkStyles from "../styles/components_bookmark";
+import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header_Normal";
 
 const mapOrgData = (data) =>
@@ -17,106 +19,64 @@ const mapOrgData = (data) =>
 
 export default function Filter_Page() {
   const router = useRouter();
-  const [selectedUnits, setSelectedUnits] = useState([]);
-  const [selectedMothers, setSelectedMothers] = useState([]);
-  const [units, setUnits] = useState([]);
-  const [mothers, setMothers] = useState([]);
-  const [isLoadingUnits, setIsLoadingUnits] = useState(true);
-  const [isLoadingMothers, setIsLoadingMothers] = useState(true);
-  const [search, setSearch] = useState("");
+  const [selectedOrgs, setSelectedOrgs] = useState([]);
+  const [orgs, setOrgs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchUnits();
-    fetchMothers();
+    fetchOrgs();
   }, []);
 
-  const fetchUnits = async () => {
-    setIsLoadingUnits(true);
+  const fetchOrgs = async () => {
+    setIsLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/api/organizations/by-type/units`);
+      const res = await fetch(`${BASE_URL}/exploreorgs/all`);
       const data = await res.json();
-      setUnits(Array.isArray(data) ? mapOrgData(data) : []);
+      setOrgs(Array.isArray(data) ? mapOrgData(data) : []);
     } catch (err) {
-      console.error("Error fetching units:", err);
-      setUnits([]);
+      console.error("Error fetching organizations:", err);
+      setOrgs([]);
     } finally {
-      setIsLoadingUnits(false);
+      setIsLoading(false);
     }
   };
 
-  const fetchMothers = async () => {
-    setIsLoadingMothers(true);
-    try {
-      const res = await fetch(`${BASE_URL}/api/organizations/by-type/mothers`);
-      const data = await res.json();
-      setMothers(Array.isArray(data) ? mapOrgData(data) : []);
-    } catch (err) {
-      console.error("Error fetching mothers:", err);
-      setMothers([]);
-    } finally {
-      setIsLoadingMothers(false);
-    }
-  };
-
-  const toggleUnit = (id) =>
-    setSelectedUnits((prev) =>
-      prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
-    );
-
-  const toggleMother = (id) =>
-    setSelectedMothers((prev) =>
+  const toggleOrg = (id) =>
+    setSelectedOrgs((prev) =>
       prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
     );
 
   const applyFilter = () => {
-    const allSelectedIds = [...selectedUnits, ...selectedMothers];
-
     router.replace({
       pathname: "../tab_container/Search_Page",
       params: {
-        filterIds: JSON.stringify(allSelectedIds)
+        filterIds: JSON.stringify(selectedOrgs)
       },
     });
   };
-
-  const filteredUnits = units.filter((u) =>
-    u?.name?.toLowerCase().includes(search.toLowerCase())
-  );
-  const filteredMothers = mothers.filter((m) =>
-    m?.name?.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <View style={styles.container}>
       <Header />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-        <Text style={styles.sectionTitle}>Unit Organizations</Text>
-        {isLoadingUnits ? (
-          <ActivityIndicator size="large" color="#222762" style={styles.loadingIndicator} />
-        ) : (
-          <View style={styles.chipWrappingContainer}>
-            {filteredUnits.map((unit) => (
-              <OrgChip
-                key={unit._id}
-                item={unit}
-                isSelected={selectedUnits.includes(unit._id)}
-                onPress={() => toggleUnit(unit._id)}
-              />
-            ))}
-          </View>
-        )}
 
-        <Text style={styles.sectionTitle}>Mother Organizations</Text>
-        {isLoadingMothers ? (
+        {/* Back arrow + "Filter" title */}
+        <TouchableOpacity style={[bookmarkStyles.backBtn, { marginTop: 16 }]} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={18} color="#0A0F51" />
+          <Text style={bookmarkStyles.backText}>Filter</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.sectionTitle}>Organizations</Text>
+        {isLoading ? (
           <ActivityIndicator size="large" color="#222762" style={styles.loadingIndicator} />
         ) : (
           <View style={styles.chipWrappingContainer}>
-            {filteredMothers.map((mother) => (
+            {orgs.map((org) => (
               <OrgChip
-                key={mother._id}
-                item={mother}
-                isSelected={selectedMothers.includes(mother._id)}
-                onPress={() => toggleMother(mother._id)}
+                key={org._id}
+                item={org}
+                isSelected={selectedOrgs.includes(org._id)}
+                onPress={() => toggleOrg(org._id)}
               />
             ))}
           </View>

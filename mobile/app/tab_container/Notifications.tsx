@@ -4,8 +4,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIn
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-import { BASE_URL } from "../../config";
+import { apiFetch } from "../../utils/apiFetch";
 import NotificationCardEvent from "../components/Card_NotificationEvent";
 import NotificationCardOrg from "../components/Card_NotificationOrg";
 import Header from "../components/Header_Normal";
@@ -93,8 +92,8 @@ const NotificationsScreen = () => {
   const fetchNotifications = async (studentObjectId) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/notifications/${studentObjectId}`);
-      setNotifications(res.data);
+      const data = await apiFetch(`/api/notifications/${studentObjectId}`);
+      setNotifications(data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
       Alert.alert("Error", "Failed to load notifications.");
@@ -105,7 +104,7 @@ const NotificationsScreen = () => {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await axios.patch(`${BASE_URL}/api/notifications/read/${notificationId}`);
+      await apiFetch(`/api/notifications/read/${notificationId}`, { method: "PATCH" });
       setNotifications((prev) =>
         prev.map((n) => (n._id === notificationId ? { ...n, is_read: true } : n))
       );
@@ -121,15 +120,17 @@ const NotificationsScreen = () => {
       return;
     }
     try {
-      const endpoint = `${BASE_URL}/api/notifications/${action}`;
-      await axios.post(endpoint, {
+      await apiFetch(`/api/notifications/${action}`, {
+        method: "POST",
+        body: JSON.stringify({
         notification_id: notificationId,
         user_id: studentNumberForAction
+        }),
       });
       Alert.alert("Success", `Invite ${action}ed.`);
       loadUserIdAndNotifications();
     } catch (error) {
-      const errorMessage = error.response?.data?.message || `Failed to ${action} invite.`;
+      const errorMessage = error?.message || `Failed to ${action} invite.`;
       Alert.alert("Error", errorMessage);
     }
   };
@@ -147,7 +148,7 @@ const NotificationsScreen = () => {
             try {
               const studentNumber = await AsyncStorage.getItem("student_number");
               if (!studentNumber) return;
-              await axios.delete(`${BASE_URL}/api/notifications/read/${studentNumber}`);
+              await apiFetch(`/api/notifications/read/${studentNumber}`, { method: "DELETE" });
               setNotifications(prev => prev.filter(n => !n.is_read));
             } catch (err) {
               console.error("Error clearing notifications:", err);

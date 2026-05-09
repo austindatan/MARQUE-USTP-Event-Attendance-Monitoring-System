@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState } from "react";
-import { View, TextInput, TouchableOpacity, Image, Text, Animated } from "react-native";
+import { View, TouchableOpacity, Image, Text, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/component_header";
 import { useRouter } from "expo-router";
@@ -87,16 +87,13 @@ const Header = ({ onMenuPress, scrollY = new Animated.Value(0), onToggleChange }
             },
           ]}
         >
-          <View style={styles.searchContainer}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[styles.searchContainer, { paddingVertical: 8 }]}
+            onPress={() => router.push("/tab_container/Search_Page")}
+          >
             <Ionicons name="search" size={24} color="#fff" style={{ marginRight: 8 }} />
-            <TextInput
-              placeholder="Search..."
-              placeholderTextColor="#8c8c8c"
-              style={styles.searchInput}
-            />
-          </View>
-
-          <TouchableOpacity>
+            <Text style={{ color: "#8c8c8c", fontSize: 16, fontFamily: "DMSans-Regular" }}>Search...</Text>
           </TouchableOpacity>
         </Animated.View>
       </Animated.View>

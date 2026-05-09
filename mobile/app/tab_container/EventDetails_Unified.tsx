@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
@@ -10,6 +10,8 @@ import { BASE_URL, CLOUD_NAME } from "../../config";
 import axios from "axios";
 import FeedbackComments from "../components/FeedbackComments";
 import Skeleton_EventDetails from "../components/Skeleton_EventDetails";
+import { apiFetch } from "../../utils/apiFetch";
+import joinModalStyles from "../styles/components_joinmodal";
 
 const fixCloudinaryUrl = (url, cloudName) => {
   if (!url || url.startsWith("http")) return url;
@@ -48,6 +50,7 @@ const EventDetails_Unified = () => {
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
   const [userId, setUserId] = useState(null);
   const [feedbackComments, setFeedbackComments] = useState([]);
+  const [feedbackSubmittedModalVisible, setFeedbackSubmittedModalVisible] = useState(false);
   const fetchStudentId = async () => {
     try {
       const studentNumber = await AsyncStorage.getItem("student_number");
@@ -56,7 +59,8 @@ const EventDetails_Unified = () => {
       if (!res.ok) return null;
       const data = await res.json();
       setUserId(data._id);
-    } catch (e) { console.error("Error fetching user ID:", e); }
+      return data._id;
+    } catch (e) { console.error("Error fetching user ID:", e); return null; }
   };
 
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -85,11 +89,17 @@ const EventDetails_Unified = () => {
     const student_number = await AsyncStorage.getItem("student_number");
     if (!student_number) { Alert.alert("Error", "Student login info not found."); setBookmarkLoading(false); return; }
     try {
-      if (!actionToAdd) await axios.delete(`${BASE_URL}/api/bookmarks/${student_number}/${eventId}`);
-      else await axios.post(`${BASE_URL}/api/bookmarks/${student_number}`, { event_id: eventId });
+      if (!actionToAdd) {
+        await apiFetch(`/api/bookmarks/${student_number}/${eventId}`, { method: "DELETE" });
+      } else {
+        await apiFetch(`/api/bookmarks/${student_number}`, {
+          method: "POST",
+          body: JSON.stringify({ event_id: eventId }),
+        });
+      }
       setIsBookmarked(actionToAdd);
     } catch (err) {
-      const errorMessage = err.response?.data?.message || `Failed to ${actionToAdd ? 'add' : 'remove'} bookmark.`;
+      const errorMessage = err?.message || `Failed to ${actionToAdd ? 'add' : 'remove'} bookmark.`;
       console.error(`Bookmark Toggle Error: ${errorMessage}`, err);
       Alert.alert("Action Failed", errorMessage);
       checkBookmarkStatus();
@@ -216,30 +226,34 @@ const EventDetails_Unified = () => {
     const action = isFollowing ? "unfollow" : "follow";
     try {
       setIsFollowing(!isFollowing);
-      const res = await fetch(`${BASE_URL}/api/followed-orgs/${action}`, {
+      await apiFetch(`/api/followed-orgs/${action}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, organizationId: orgId }),
       });
-      if (!res.ok) setIsFollowing(isFollowing);
     } catch (err) { setIsFollowing(isFollowing); }
   };
 
   /** ================= FEEDBACK ================= */
   const checkFeedbackStatus = async () => {
-    if (!eventId || !userId) return;
+    if (!eventId) return;
+    // 1. Check local cache first for instant UI
     try {
       const localStatus = await AsyncStorage.getItem(`feedback_status_${eventId}`);
       if (localStatus === 'submitted') { setHasSubmittedFeedback(true); return; }
     } catch (err) { console.error(err); }
+    // 2. Hit the correct backend endpoint: /api/feedback/check/:eventId (auth required)
     try {
-      const res = await fetch(`${BASE_URL}/api/feedback/status/${eventId}/${userId}`);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${BASE_URL}/api/feedback/check/${eventId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) return;
       const data = await res.json();
       const submitted = data.hasSubmitted || false;
       setHasSubmittedFeedback(submitted);
       if (submitted) await AsyncStorage.setItem(`feedback_status_${eventId}`, 'submitted');
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error('Error checking feedback status:', err); }
   };
 
   /** ================= FETCH FEEDBACK COMMENTS ================= */
@@ -291,10 +305,11 @@ const EventDetails_Unified = () => {
   useFocusEffect(useCallback(() => {
     if (eventId) {
       fetchEventDetails(eventId);
-      checkFeedbackStatus();
       checkBookmarkStatus();
       fetchPhotoProofStatus(eventId);
       fetchStudentId();
+      // Always check feedback status fresh on focus (uses JWT token, not userId)
+      checkFeedbackStatus();
     } else {
       setLoading(false);
     }
@@ -455,9 +470,13 @@ const EventDetails_Unified = () => {
                     <Text style={styles.infoText}>Please answer the feedback survey.</Text>
                   </TouchableOpacity>
                 ) : (
-                  <View style={[styles.infoBox, { backgroundColor: "#e8e8e8", opacity: 0.6 }]} pointerEvents="none">
+                  <TouchableOpacity
+                    style={[styles.infoBox, { backgroundColor: "#e8e8e8", opacity: 0.85 }]}
+                    onPress={() => setFeedbackSubmittedModalVisible(true)}
+                    activeOpacity={0.8}
+                  >
                     <Text style={[styles.infoText, { color: "gray" }]}>✓ You already submitted feedback. Thank you!</Text>
-                  </View>
+                  </TouchableOpacity>
                 )}
               </>
             ) : null}
@@ -485,7 +504,7 @@ const EventDetails_Unified = () => {
             if (eventData.organization_id?._id) {
               console.log('[EventDetails] Navigating to ProfileSTU with orgId:', eventData.organization_id._id);
               router.push({
-                pathname: "../tab_container_organization/ProfileSTU",
+                pathname: "../tab_container/ProfileSTU",
                 params: { orgId: eventData.organization_id._id }
               });
             }
@@ -512,6 +531,48 @@ const EventDetails_Unified = () => {
           <FeedbackComments comments={feedbackComments} />
         )}
       </ScrollView>
+
+      {/* Feedback already submitted (same MARQUE modal design) */}
+      <Modal
+        visible={feedbackSubmittedModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFeedbackSubmittedModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => setFeedbackSubmittedModalVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={joinModalStyles.title}>Feedback Submitted</Text>
+            <Text style={joinModalStyles.desc}>You already submitted feedback for this event. Thank you!</Text>
+
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#fecb20",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={() => setFeedbackSubmittedModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  OK
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };

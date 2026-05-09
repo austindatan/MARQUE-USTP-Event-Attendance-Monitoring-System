@@ -30,50 +30,22 @@ export default function OrgChip({ item, isSelected, onPress }: OrgChipProps) {
             onPress={onPress}
             style={{
                 borderWidth: 2,
-                borderColor: isSelected ? "transparent" : lightGray,
-                borderRadius: 30,
-                paddingHorizontal: 10,
-                paddingVertical: 8,
-                flexDirection: "row",
+                borderColor: isSelected ? orange : lightGray,
+                borderRadius: 50,
+                padding: 4,
                 alignItems: "center",
-                gap: 8,
-                width: '48%',
+                justifyContent: "center",
                 backgroundColor: isSelected ? orange : "#fff",
             }}
         >
             <Image
                 source={imageSource}
                 style={{
-                    width: 36,
-                    height: 36,
+                    width: 58,
+                    height: 58,
                     borderRadius: 50,
                 }}
             />
-
-            <View style={{ flexShrink: 1, justifyContent: 'center' }}>
-                <Text
-                    style={{
-                        fontFamily: "DMSans-Bold",
-                        fontSize: 14,
-                        color: isSelected ? darkBlue : "#000"
-                    }}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                >
-                    {item.name}
-                </Text>
-                <Text
-                    style={{
-                        fontSize: 11,
-                        fontFamily: "DMSans-Regular",
-                        color: isSelected ? darkBlue : subtitleColor
-                    }}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                >
-                    {item.college}
-                </Text>
-            </View>
         </TouchableOpacity>
     );
 }

@@ -94,7 +94,7 @@ router.get("/all", async (req, res) => {
         res.json(detailedUsers);
 
     } catch (error) {
-        console.error("❌ Error fetching all users for admin:", error);
+        console.error("Error fetching all users for admin:", error);
         res.status(500).json({ message: "Error fetching user list", error: error.message });
     }
 });
@@ -208,7 +208,7 @@ router.get("/officers/all", async (req, res) => {
         res.json(detailedUsers);
 
     } catch (error) {
-        console.error("❌ Error fetching users:", error);
+        console.error("Error fetching users:", error);
         res.status(500).json({ message: "Error fetching user list", error: error.message });
     }
 });
@@ -282,7 +282,7 @@ router.get("/organizations/by-departments", async (req, res) => {
     res.json(organizations);
 
   } catch (error) {
-    console.error("❌ Error fetching organizations by departments:", error);
+    console.error("Error fetching organizations by departments:", error);
     res.status(500).json({ message: "Server error fetching organizations", error: error.message });
   }
 });
@@ -342,7 +342,7 @@ router.get("/:username", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error fetching student:", error);
+    console.error("Error fetching student:", error);
     res.status(500).json({ message: "Error", error: error.message });
   }
 });
