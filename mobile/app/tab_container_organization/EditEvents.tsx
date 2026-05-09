@@ -1,16 +1,16 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, TextInput, Modal, ActivityIndicator, Alert, } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, TextInput, Modal, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { apiFetch, apiFetchForm } from "../../utils/apiFetch";
 import { BASE_URL } from "../../config";
-
 import Header from "../components/Header_Normal";
 import styles from "../styles/page_editevents";
 import { COLORS } from "../styles/component_org_page";
+import joinModalStyles from "../styles/components_joinmodal";
 
 const eventTypes = ["Event", "Sub-Event"];
 const venueOptions = ["LRC", "DRER Memorial Hall", "Cafet Hall", "ICT AVR", "Building 28", "PAT AVR", "Building 5", "Science Building",];
@@ -40,6 +40,21 @@ const EditEvents = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [venueModalVisible, setVenueModalVisible] = useState(false);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveAction, setSaveAction] = useState<"created" | "updated" | "deleted" | null>(null);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorVisible, setErrorVisible] = useState(false);
+
+  const [missingFieldsVisible, setMissingFieldsVisible] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [invalidDateTimeVisible, setInvalidDateTimeVisible] = useState(false);
+  const [invalidDateTimeMessage, setInvalidDateTimeMessage] = useState("");
+
+  const showError = (msg: string) => { setErrorMessage(msg); setErrorVisible(true); };
+  const showDateTimeError = (msg: string) => { setInvalidDateTimeMessage(msg); setInvalidDateTimeVisible(true); };
+
   useEffect(() => {
     if (!isEdit) {
       setLoadingEvent(false);
@@ -55,7 +70,7 @@ const EditEvents = () => {
 
         if (!ev || !ev.event_name) {
           console.error("Event data is missing or incomplete:", ev);
-          Alert.alert("Error", "Event data could not be loaded. Please check the ID.");
+          showError("Event data could not be loaded. Please check the ID.");
           setLoadingEvent(false);
           return;
         }
@@ -76,7 +91,7 @@ const EditEvents = () => {
         }
       } catch (err) {
         console.error("Error loading event", err);
-        Alert.alert("Error", "Failed to load event.");
+        showError("Failed to load event. Please try again.");
       } finally {
         setLoadingEvent(false);
       }
@@ -128,7 +143,7 @@ const EditEvents = () => {
 
   const handleSave = async () => {
   if (!eventName.trim() || !selectedEvent || !selectedVenue || !description.trim()) {
-    Alert.alert("Missing Fields", "Please fill all required fields.");
+    setMissingFieldsVisible(true);
     return;
   }
 
@@ -144,6 +159,24 @@ const EditEvents = () => {
 
     const startDateTime = combineDateTime(startDate, startTime);
     const endDateTime = combineDateTime(endDate, endTime);
+
+    // --- Date/Time Validation ---
+    const startDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const endDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+    if (endDay < startDay) {
+      showDateTimeError(
+        `End date (${formatDate(endDate)}) cannot be before start date (${formatDate(startDate)}).`
+      );
+      return;
+    }
+
+    if (endDay.getTime() === startDay.getTime() && endDateTime <= startDateTime) {
+      showDateTimeError(
+        `End time (${formatTime(endTime)}) cannot be the same as or before start time (${formatTime(startTime)}) on the same day.`
+      );
+      return;
+    }
 
     const formData = new FormData();
     formData.append("organization_id", orgId);
@@ -168,44 +201,41 @@ const EditEvents = () => {
     }
 
     try {
+      setIsSaving(true);
       if (isEdit) {
         await apiFetchForm("PUT", `/events/${event_id}`, formData);
-        Alert.alert("Updated", "Event updated successfully.");
+        setSaveAction("updated");
       } else {
         await apiFetchForm("POST", `/events/create`, formData);
-        Alert.alert("Created", "Event created successfully.");
+        setSaveAction("created");
       }
-
-      router.back();
+      setSaveSuccess(true);
     } catch (err) {
       console.error("Saving error:", err.message);
-      Alert.alert("Error", err.message || "Failed to save event.");
+      showError(err.message || "Failed to save event.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
 
   const handleDelete = async () => {
-    Alert.alert(
-      "Confirm Delete",
-      "Are you sure you want to delete this event?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await apiFetch(`/events/${event_id}`, { method: "DELETE" });
-              Alert.alert("Success", "Event deleted successfully.");
-              router.back();
-            } catch (err) {
-              console.error("Delete error:", err.message);
-              Alert.alert("Error", err.message || "Failed to delete event.");
-            }
-          },
-        },
-      ]
-    );
+    setDeleteConfirmVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    setDeleteConfirmVisible(false);
+    try {
+      setIsSaving(true);
+      await apiFetch(`/events/${event_id}`, { method: "DELETE" });
+      setSaveAction("deleted");
+      setSaveSuccess(true);
+    } catch (err) {
+      console.error("Delete error:", err.message);
+      showError(err.message || "Failed to delete event.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (loadingEvent) {
@@ -449,6 +479,166 @@ const EditEvents = () => {
             </TouchableOpacity>
           ))}
         </View>
+      </Modal>
+      {/* ===== SAVING LOADING MODAL ===== */}
+      <Modal visible={isSaving} transparent animationType="fade" onRequestClose={() => {}}>
+        <View style={joinModalStyles.overlay}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={joinModalStyles.title}>
+              {isEdit ? "Updating Event…" : "Publishing Event…"}
+            </Text>
+            <Text style={joinModalStyles.desc}>Please wait while we save your event.</Text>
+            <View style={{ marginTop: 18 }}>
+              <ActivityIndicator size="large" color="#0A0F51" />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ===== SAVE SUCCESS MODAL ===== */}
+      <Modal visible={saveSuccess} transparent animationType="fade" onRequestClose={() => {}}>
+        <View style={joinModalStyles.overlay}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require("../../assets/images/marque/MARQUE_whitelogo.png")}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={joinModalStyles.title}>
+              {saveAction === "deleted"
+                ? "Event Deleted"
+                : saveAction === "updated"
+                ? "Event Updated"
+                : "Event Published"}
+            </Text>
+            <Text style={joinModalStyles.desc}>
+              {saveAction === "deleted"
+                ? "The event has been removed successfully."
+                : saveAction === "updated"
+                ? "Your event has been updated successfully."
+                : "Your event has been published successfully."}
+            </Text>
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#fecb20",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={() => {
+                  setSaveSuccess(false);
+                  router.back();
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ===== MISSING FIELDS MODAL ===== */}
+      <Modal visible={missingFieldsVisible} transparent animationType="fade" onRequestClose={() => setMissingFieldsVisible(false)}>
+        <TouchableOpacity style={joinModalStyles.overlay} onPress={() => setMissingFieldsVisible(false)} activeOpacity={1}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image source={require("../../assets/images/marque/MARQUE_whitelogo.png")} style={joinModalStyles.iconImage} />
+            </View>
+            <Text style={joinModalStyles.title}>Missing Fields</Text>
+            <Text style={joinModalStyles.desc}>Please fill in all required fields before continuing.</Text>
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{ backgroundColor: "#0a0f51", paddingVertical: 12, borderRadius: 25, alignItems: "center" }}
+                onPress={() => setMissingFieldsVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Got It</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ===== DELETE CONFIRM MODAL ===== */}
+      <Modal visible={deleteConfirmVisible} transparent animationType="fade" onRequestClose={() => setDeleteConfirmVisible(false)}>
+        <TouchableOpacity style={joinModalStyles.overlay} onPress={() => setDeleteConfirmVisible(false)} activeOpacity={1}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image source={require("../../assets/images/marque/MARQUE_whitelogo.png")} style={joinModalStyles.iconImage} />
+            </View>
+            <Text style={joinModalStyles.title}>Delete Event?</Text>
+            <Text style={joinModalStyles.desc}>Are you sure you want to delete this event? This action cannot be undone.</Text>
+            <View style={{ flexDirection: "row", marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: "#0a0f51", paddingVertical: 12, borderRadius: 25, alignItems: "center", marginRight: 6 }}
+                onPress={() => setDeleteConfirmVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: "#e53935", paddingVertical: 12, borderRadius: 25, alignItems: "center", marginLeft: 6 }}
+                onPress={confirmDelete}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ===== ERROR MODAL ===== */}
+      <Modal visible={errorVisible} transparent animationType="fade" onRequestClose={() => setErrorVisible(false)}>
+        <TouchableOpacity style={joinModalStyles.overlay} onPress={() => setErrorVisible(false)} activeOpacity={1}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image source={require("../../assets/images/marque/MARQUE_whitelogo.png")} style={joinModalStyles.iconImage} />
+            </View>
+            <Text style={joinModalStyles.title}>Something Went Wrong</Text>
+            <Text style={joinModalStyles.desc}>{errorMessage || "An unexpected error occurred."}</Text>
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{ backgroundColor: "#0a0f51", paddingVertical: 12, borderRadius: 25, alignItems: "center" }}
+                onPress={() => setErrorVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ===== INVALID DATE/TIME MODAL ===== */}
+      <Modal visible={invalidDateTimeVisible} transparent animationType="fade" onRequestClose={() => setInvalidDateTimeVisible(false)}>
+        <TouchableOpacity style={joinModalStyles.overlay} onPress={() => setInvalidDateTimeVisible(false)} activeOpacity={1}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image source={require("../../assets/images/marque/MARQUE_whitelogo.png")} style={joinModalStyles.iconImage} />
+            </View>
+            <Text style={joinModalStyles.title}>Invalid Date / Time</Text>
+            <Text style={joinModalStyles.desc}>{invalidDateTimeMessage}</Text>
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{ backgroundColor: "#0a0f51", paddingVertical: 12, borderRadius: 25, alignItems: "center" }}
+                onPress={() => setInvalidDateTimeVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Got It</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );

@@ -1,291 +1,291 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ImageBackground, ScrollView, Image, ActivityIndicator, } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import {
+  View, Text, TextInput, StyleSheet, TouchableOpacity,
+  ScrollView, ActivityIndicator, Modal, SafeAreaView, StatusBar,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { BASE_URL } from '../../config';
-
-const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
-const FILTER_IMAGE = require('../../assets/images/marque/Filters.png');
-const SEARCH_IMAGE = require('../../assets/images/marque/Search.png');
+import { apiFetch } from '../../utils/apiFetch';
 
 interface LogEntry {
-    name: string;
-    date: string;
-    time: string;
-    student_number: string;
-    program: string;  
+  name: string;
+  date: string;
+  time: string;
+  student_number: string;
+  program: string;
 }
 
-const LogItem: React.FC<LogEntry> = ({ name, date, time, student_number, program }) => (
-    <View>
-        <View style={styles.logItem}>
-            <View style={styles.logDetails}>
-                <Text style={styles.logName}>{name}</Text>
-                <Text style={styles.logTime}>{date}  {time}</Text>
-            </View>
-            <View style={styles.logDetails}>
-                <Text style={styles.logId}>{student_number}</Text>
-                <Text style={styles.logProgram}>{program}</Text>
-            </View>
-        </View>
-        <View style={styles.separator} />
-    </View>
-);
-
 interface AttendanceHistoryProps {
-    onBack: () => void;
-    eventId: string;
+  onBack: () => void;
+  eventId: string;
 }
 
 const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ onBack, eventId }) => {
-    const [attendanceLog, setAttendanceLog] = useState<LogEntry[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [searchText, setSearchText] = useState<string>('');
+  const [attendanceLog, setAttendanceLog] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchText, setSearchText] = useState<string>('');
+  const searchTimeout = useRef<number | null>(null);
 
-    const searchTimeout = useRef<number | null>(null);
+  const fetchAttendance = async (query?: string) => {
+    try {
+      setLoading(true);
+      const path = query
+        ? `/api/attendance/search/${eventId}?q=${encodeURIComponent(query)}`
+        : `/api/attendance/history/${eventId}`;
 
-    const fetchAttendance = async (query?: string) => {
-        try {
-            setLoading(true);
-            const url = query
-                ? `${BASE_URL}/api/attendance/search/${eventId}?q=${encodeURIComponent(query)}`
-                : `${BASE_URL}/api/attendance/history/${eventId}`;
+      const data = await apiFetch(path);
 
-            const response = await fetch(url);
-            const data = await response.json();
+      if (Array.isArray(data.history)) {
+        setAttendanceLog(data.history);
+      } else {
+        setAttendanceLog([]);
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      setAttendanceLog([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            if (response.ok && Array.isArray(data.history)) {
-                setAttendanceLog(data.history);
-            } else {
-                console.warn("Failed to retrieve attendance history", data);
-                setAttendanceLog([]);
-            }
-        } catch (error) {
-            console.error("Network error:", error);
-            setAttendanceLog([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+  useEffect(() => {
+    fetchAttendance();
+  }, [eventId]);
 
-    useEffect(() => {
-        fetchAttendance();
-    }, [eventId]);
+  useEffect(() => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      fetchAttendance(searchText.trim());
+    }, 500);
+  }, [searchText]);
 
-    useEffect(() => {
-        if (searchTimeout.current) {
-            clearTimeout(searchTimeout.current);
-        }
-        searchTimeout.current = setTimeout(() => {
-            fetchAttendance(searchText.trim());
-        }, 500); // 500ms delay
-    }, [searchText]);
+  const filteredLogs = attendanceLog.filter(
+    log =>
+      log.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      log.student_number.includes(searchText)
+  );
 
-    const filteredLogs = attendanceLog.filter(
-        log =>
-            log.name.toLowerCase().includes(searchText.toLowerCase()) ||
-            log.student_number.includes(searchText)
-    );
+  return (
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0F51" />
 
-    return (
-        <View style={styles.safeArea}>
-            <ImageBackground source={BackgroundImage} style={styles.background} resizeMode="cover">
-                <View style={styles.container}>
-
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={onBack}>
-                            <Ionicons name="arrow-back" size={24} color={COLORS.headerText} />
-                        </TouchableOpacity>
-                        <Text style={styles.headerTitle}>Attendance Log</Text>
-                    </View>
-
-                    <View style={styles.searchContainer}>
-                        <View style={styles.searchBar}>
-                            <Image source={SEARCH_IMAGE} style={styles.searchImage} resizeMode="contain" />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Search..."
-                                placeholderTextColor="rgba(120,123,157,0.7)"
-                                value={searchText}
-                                onChangeText={setSearchText}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.contentArea}>
-                        {loading ? (
-                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                <ActivityIndicator size="large" color="#10b981" />
-                            </View>
-                        ) : (
-                            <ScrollView contentContainerStyle={styles.logList}>
-                                {filteredLogs.length > 0 ? (
-                                    filteredLogs.map((log, index) => (
-                                        <LogItem
-                                            key={index}
-                                            name={log.name}
-                                            date={log.date}
-                                            time={log.time}
-                                            student_number={log.student_number}
-                                            program={log.program}
-                                        />
-                                    ))
-                                ) : (
-                                    <Text style={{ textAlign: 'center', marginTop: 20 }}>
-                                        No records found.
-                                    </Text>
-                                )}
-                                <View style={{ height: 40 }} />
-                            </ScrollView>
-                        )}
-                    </View>
-
-                </View>
-            </ImageBackground>
+      {/* ── Header ── */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="arrow-back" size={22} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Attendance Log</Text>
+        <View style={styles.countBadge}>
+          <Text style={styles.countText}>{filteredLogs.length}</Text>
         </View>
-    );
-};
+      </View>
 
-const COLORS = {
-    headerText: '#FFFFFF',
-    inputBackground: 'rgba(255, 255, 255, 0.15)',
-    inputPlaceholder: '#787b9d',
-    inputText: '#FFFFFF',
-    filterButton: '#222762',
-    logBackground: '#FFFFFF',
-    contentBackground: '#FFFFFF',
-    separator: '#DDDDDD',
-};
+      {/* ── Search ── */}
+      <View style={styles.searchWrapper}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={18} color="rgba(255,255,255,0.6)" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name or ID..."
+            placeholderTextColor="rgba(255,255,255,0.5)"
+            value={searchText}
+            onChangeText={setSearchText}
+          />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchText('')}>
+              <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.5)" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
-const FONT_SIZES = {
-    header: 20,
-    search: 18,
-    filterText: 14,
-};
+      {/* ── List ── */}
+      <View style={styles.listContainer}>
+        {loading ? (
+          <View style={styles.centerState}>
+            <ActivityIndicator size="large" color="#0A0F51" />
+            <Text style={styles.centerStateText}>Loading records...</Text>
+          </View>
+        ) : filteredLogs.length === 0 ? (
+          <View style={styles.centerState}>
+            <Ionicons name="document-text-outline" size={48} color="#ccc" />
+            <Text style={styles.centerStateText}>
+              {searchText ? 'No matching records found.' : 'No attendance records yet.'}
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 30 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {filteredLogs.map((log, index) => (
+              <View key={index} style={styles.card}>
+                {/* Left: avatar initial */}
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {log.name?.charAt(0).toUpperCase() || '?'}
+                  </Text>
+                </View>
 
-const SPACING = {
-    paddingHorizontal: 25,
+                {/* Center: name + date/time */}
+                <View style={styles.cardCenter}>
+                  <Text style={styles.cardName} numberOfLines={1}>{log.name}</Text>
+                  <Text style={styles.cardMeta}>{log.date}  ·  {log.time}</Text>
+                </View>
+
+                {/* Right: ID + program */}
+                <View style={styles.cardRight}>
+                  <Text style={styles.cardId}>{log.student_number}</Text>
+                  <View style={styles.programBadge}>
+                    <Text style={styles.programText}>{log.program}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  background: { flex: 1, width: '100%', height: '100%' },
-  container: { flex: 1, paddingTop: 10 },
+  root: { flex: 1, backgroundColor: '#F4F6FB' },
 
+  // Header
   header: {
+    backgroundColor: '#0A0F51',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.paddingHorizontal,
-    paddingBottom: 20,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 16,
   },
+  backBtn: { padding: 4, marginRight: 10 },
   headerTitle: {
-    color: COLORS.headerText,
-    fontSize: FONT_SIZES.header,
-    fontWeight: '700',
-    fontFamily: 'DM Sans',
-    marginLeft: 10,
     flex: 1,
-    textAlign: 'center',
-    transform: [{ translateX: -12 }],
+    color: '#fff',
+    fontSize: 18,
+    fontFamily: 'DMSans-Bold',
+  },
+  countBadge: {
+    backgroundColor: '#FFD100',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    minWidth: 28,
+    alignItems: 'center',
+  },
+  countText: {
+    color: '#0A0F51',
+    fontSize: 13,
+    fontFamily: 'DMSans-Bold',
   },
 
-  searchContainer: {
-    paddingHorizontal: SPACING.paddingHorizontal,
-    marginBottom: 15,
-    marginTop: 15,
+  // Search
+  searchWrapper: {
+    backgroundColor: '#0A0F51',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBackground,
-    borderRadius: 10,
-    height: 40,
-    paddingHorizontal: 15,
-    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 44,
   },
-  searchImage: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-  },
-  input: {
+  searchInput: {
     flex: 1,
-    height: '100%',
-    color: COLORS.inputText,
-    fontSize: FONT_SIZES.search,
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: 'DMSans-Regular',
     paddingVertical: 0,
-    fontFamily: 'DM Sans',
-  },
-  filtersButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.filterButton,
-    borderRadius: 25,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginLeft: 8,
-  },
-  filterImage: {
-    width: 20,
-    height: 20,
-    marginRight: 6,
-  },
-  filtersText: {
-    color: COLORS.headerText,
-    fontSize: FONT_SIZES.filterText,
-    fontWeight: '600',
-    fontFamily: 'DM Sans',
   },
 
-  contentArea: {
+  // List area
+  listContainer: {
     flex: 1,
-    backgroundColor: COLORS.contentBackground,
+    backgroundColor: '#F4F6FB',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    marginTop: -12,
     overflow: 'hidden',
+    paddingTop: 12,
   },
-  logList: {
-    paddingTop: 15,
-    paddingBottom: 20,
-  },
-  logItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  centerState: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 30,
-    backgroundColor: COLORS.logBackground,
+    paddingBottom: 60,
+    gap: 12,
   },
-  logDetails: { flex: 1 },
-  logName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 2,
-    fontFamily: 'DM Sans',
+  centerStateText: {
+    color: '#999',
+    fontSize: 15,
+    fontFamily: 'DMSans-Regular',
   },
-  logTime: {
+
+  // Cards
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 10,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    shadowColor: '#505588',
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
+    gap: 12,
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#0A0F51',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  avatarText: {
+    color: '#FFD100',
+    fontSize: 18,
+    fontFamily: 'DMSans-Bold',
+  },
+  cardCenter: { flex: 1 },
+  cardName: {
+    fontSize: 14,
+    fontFamily: 'DMSans-Bold',
+    color: '#111',
+    marginBottom: 3,
+  },
+  cardMeta: {
     fontSize: 12,
-    color: '#888888',
-    fontFamily: 'DM Sans',
+    fontFamily: 'DMSans-Regular',
+    color: '#888',
   },
-  logId: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#000',
-    marginLeft: 10,
-    fontFamily: 'DM Sans',
-  },
-  logProgram: {
+  cardRight: { alignItems: 'flex-end', flexShrink: 0 },
+  cardId: {
     fontSize: 12,
-    color: '#888888',
-    fontFamily: 'DM Sans',
-    textAlign: 'right',
-},
-  separator: {
-    height: 1,
-    backgroundColor: COLORS.separator,
-    marginHorizontal: 25,
+    fontFamily: 'DMSans-Medium',
+    color: '#0A0F51',
+    marginBottom: 4,
+  },
+  programBadge: {
+    backgroundColor: '#EEF0FF',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  programText: {
+    fontSize: 11,
+    fontFamily: 'DMSans-Bold',
+    color: '#0A0F51',
   },
 });
 

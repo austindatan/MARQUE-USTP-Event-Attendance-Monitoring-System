@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, SafeAreaView, Dimensions, ImageBackground, StatusBar, } from 'react-native';
+import {
+  StyleSheet, View, Text, TouchableOpacity, Image,
+  SafeAreaView, Dimensions, StatusBar,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const QrCodePlaceholder = require('../../assets/images/marque/QRCode.png');
-const BackgroundImage = require('../../assets/images/marque/BlueBackground.png');
+const MARQUELogo = require('../../assets/images/marque/MARQUE_whitelogo.png');
 
 const Scanner: React.FC = () => {
   const router = useRouter();
@@ -21,10 +25,7 @@ const Scanner: React.FC = () => {
   const loadAttendanceCount = async () => {
     try {
       const saved = await AsyncStorage.getItem('attendanceLog');
-      if (saved) {
-        const log = JSON.parse(saved);
-        setAttendanceCount(log.length);
-      }
+      if (saved) setAttendanceCount(JSON.parse(saved).length);
     } catch (error) {
       console.error('Error loading attendance count:', error);
     }
@@ -33,120 +34,167 @@ const Scanner: React.FC = () => {
   const handleOpenCamera = () => {
     router.push({
       pathname: '/tab_container_organization/Camera_State',
-      params: { eventId }
+      params: { eventId },
     });
   };
 
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
-      <ImageBackground
-        source={BackgroundImage}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <View style={styles.container}>
+    <SafeAreaView style={styles.root}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0F51" />
 
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
+      <LinearGradient
+        colors={['#0A0F51', '#1a2580', '#0A0F51']}
+        style={StyleSheet.absoluteFill}
+      />
 
-          <View style={styles.qrCodeContainer}>
-            <Image
-              source={QrCodePlaceholder}
-              style={styles.qrCodeImage}
-              resizeMode="contain"
-            />
-          </View>
+      {/* ── Back ── */}
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={22} color="#fff" />
+      </TouchableOpacity>
 
-          <Text style={styles.instructionText}>
-            Scan the participant's QR code{'\n'}clearly under good lighting{'\n'}to record attendance accurately.
-          </Text>
+      {/* ── Logo + Title ── */}
+      <View style={styles.brandRow}>
+        <Image source={MARQUELogo} style={styles.brandLogo} />
+        <Text style={styles.brandText}>MARQUE</Text>
+      </View>
 
-          <TouchableOpacity
-            style={styles.scanButton}
-            onPress={handleOpenCamera}
-          >
-            <Text style={styles.scanButtonText}>SCAN</Text>
-          </TouchableOpacity>
-
+      {/* ── QR Illustration ── */}
+      <View style={styles.qrWrapper}>
+        <View style={styles.qrGlow}>
+          <Image source={QrCodePlaceholder} style={styles.qrImage} resizeMode="contain" />
         </View>
-      </ImageBackground>
+      </View>
+
+      {/* ── Label ── */}
+      <Text style={styles.title}>Attendance Scanner</Text>
+      <Text style={styles.subtitle}>
+        Scan the participant's QR code clearly{'\n'}under good lighting to record attendance.
+      </Text>
+
+      {/* ── Stats pill ── */}
+      {attendanceCount > 0 && (
+        <View style={styles.statsPill}>
+          <Ionicons name="checkmark-circle" size={16} color="#FFD100" />
+          <Text style={styles.statsText}>{attendanceCount} scanned this session</Text>
+        </View>
+      )}
+
+      {/* ── Scan button ── */}
+      <TouchableOpacity style={styles.scanBtn} onPress={handleOpenCamera} activeOpacity={0.85}>
+        <Ionicons name="qr-code" size={20} color="#0A0F51" style={{ marginRight: 8 }} />
+        <Text style={styles.scanBtnText}>OPEN SCANNER</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
-    backgroundColor: '#1E2B5A',
-  },
-  backgroundImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  container: {
-    flex: 1,
+    backgroundColor: '#0A0F51',
     alignItems: 'center',
   },
-  header: {
-    width: '100%',
-    paddingTop: 60,
-    paddingBottom: 40,
-    alignItems: 'flex-start',
+
+  backBtn: {
+    position: 'absolute',
+    top: 54,
+    left: 20,
+    padding: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    zIndex: 10,
   },
-  backButton: {
-    padding: 10,
-    marginLeft: 15,
-    marginTop: 10,
+
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 60,
+    gap: 10,
   },
-  qrCodeContainer: {
-    width: width * 0.7,
-    aspectRatio: 1,
+  brandLogo: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    resizeMode: 'contain',
+  },
+  brandText: {
+    color: '#FFD100',
+    fontSize: 22,
+    fontFamily: 'DMSans-Bold',
+    letterSpacing: 3,
+  },
+
+  qrWrapper: {
+    marginTop: height * 0.07,
+    marginBottom: height * 0.05,
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  qrGlow: {
+    width: width * 0.58,
+    height: width * 0.58,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 50,
+    justifyContent: 'center',
   },
-  qrCodeImage: {
-    width: '80%',
-    height: '80%',
+  qrImage: {
+    width: '75%',
+    height: '75%',
   },
-  instructionText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    lineHeight: 20,
+
+  title: {
+    color: '#fff',
+    fontSize: 24,
+    fontFamily: 'DMSans-Bold',
+    marginBottom: 10,
+  },
+  subtitle: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    fontFamily: 'DMSans-Regular',
     textAlign: 'center',
-    maxWidth: 300,
-    marginBottom: 30,
-    fontWeight: 'bold',
-  },
-  scanButton: {
-    backgroundColor: '#FFC837',
-    paddingVertical: 10,
+    lineHeight: 22,
     paddingHorizontal: 30,
-    borderRadius: 25,
-    width: width * 0.5,
-    alignItems: 'center',
-    marginBottom: 20,
   },
-  scanButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 0.8,
-  },
-  statsContainer: {
-    marginTop: 10,
+
+  statsPill: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    marginTop: 18,
   },
   statsText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: '#FFD100',
+    fontSize: 13,
+    fontFamily: 'DMSans-Medium',
+  },
+
+  scanBtn: {
+    position: 'absolute',
+    bottom: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFD100',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+    shadowColor: '#FFD100',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  scanBtnText: {
+    color: '#0A0F51',
+    fontSize: 16,
+    fontFamily: 'DMSans-Bold',
+    letterSpacing: 1,
   },
 });
 

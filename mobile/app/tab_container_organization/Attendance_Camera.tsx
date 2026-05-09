@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ActivityIndicator, Alert, Image, Animated, Easing, } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ActivityIndicator, Modal, Image, Animated, Easing } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { BASE_URL } from '../../config';
+import { apiFetch } from '../../utils/apiFetch';
+import joinModalStyles from '../styles/components_joinmodal';
 
 const ICON_PLACEHOLDER_PATH = require('../../assets/images/marque/Flip.png');
 
@@ -26,10 +28,20 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   const [loading, setLoading] = useState(false);
   const scannedRef = useRef(false);
 
+  // Modal state
+  const [modal, setModal] = useState<{
+    visible: boolean;
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+  }>({ visible: false, type: 'success', title: '', message: '' });
+
+  const showModal = (type: 'success' | 'error', title: string, message: string) =>
+    setModal({ visible: true, type, title, message });
+  const closeModal = () => setModal(m => ({ ...m, visible: false }));
+
   useEffect(() => {
-    if (!eventId) {
-      Alert.alert('Error', 'No event selected.');
-    }
+    if (!eventId) showModal('error', 'No Event', 'No event selected. Please go back and try again.');
   }, [eventId]);
 
   const scanAnim = useRef(new Animated.Value(0)).current;
@@ -63,40 +75,19 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
 
   const registerAttendance = async (studentNumber: string) => {
   if (!eventId) return;
-
   try {
     setLoading(true);
-
-    const response = await fetch(`${BASE_URL}/api/attendance/register`, {
+    const data = await apiFetch('/api/attendance/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
     });
-
-    let data: any = null;
-    try {
-      data = await response.json();
-    } catch (jsonError) {
-      console.warn('Response is not JSON:', jsonError);
-      const text = await response.text();
-      console.log('Server returned:', text);
-      Alert.alert('Server Error', 'Invalid server response.');
-      return;
-    }
-
-    if (response.ok) {
-      Alert.alert(
-        'Attendance Registered',
-        `${data.data.name}\nProgram: ${data.data.program || 'N/A'}\nTime: ${new Date(
-          data.data.time_in
-        ).toLocaleTimeString()}`
-      );
-    } else {
-      Alert.alert('Error', data.message || 'Unable to register attendance');
-    }
-  } catch (error) {
-    console.error('Network or Fetch Error:', error);
-    Alert.alert('Network Error', 'Unable to reach server.');
+    showModal(
+      'success',
+      'Attendance Registered!',
+      `${data.data.name}\nProgram: ${data.data.program || 'N/A'}\nTime In: ${new Date(data.data.time_in).toLocaleTimeString()}`
+    );
+  } catch (err: any) {
+    showModal('error', 'Registration Failed', err?.message || 'Unable to register attendance.');
   } finally {
     setLoading(false);
   }
@@ -110,43 +101,23 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
 
   try {
     const parts = data.trim().split(/\s+/);
-    if (parts.length < 3) throw new Error('Invalid QR format');
+    if (parts.length < 3) throw new Error('Invalid QR format. Please scan a valid student QR code.');
     const program = parts.pop();
     const studentNumber = parts.pop();
     const name = parts.join(' ');
 
     setLoading(true);
-
-    const response = await fetch(`${BASE_URL}/api/attendance/register`, {
+    const result = await apiFetch('/api/attendance/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ student_number: studentNumber, event_id: eventId }),
     });
-
-    let result: any = null;
-    try {
-      result = await response.json();
-    } catch (jsonError) {
-      console.warn('Response is not JSON:', jsonError);
-      const text = await response.text();
-      console.log('Server returned:', text);
-      Alert.alert('Server Error', 'Invalid server response.');
-      return;
-    }
-
-    if (response.ok) {
-      Alert.alert(
-        'Attendance Registered',
-        `${result.data.name}\nProgram: ${result.data.program || 'N/A'}\nTime: ${new Date(
-          result.data.time_in
-        ).toLocaleTimeString()}`
-      );
-    } else {
-      Alert.alert('Error', result.message || 'Unable to register attendance');
-    }
-  } catch (error) {
-    console.error('QR Scan Error:', error);
-    Alert.alert('Invalid QR Code', 'The scanned QR code is not in the correct format.');
+    showModal(
+      'success',
+      'Attendance Registered!',
+      `${result.data.name}\nProgram: ${result.data.program || 'N/A'}\nTime In: ${new Date(result.data.time_in).toLocaleTimeString()}`
+    );
+  } catch (err: any) {
+    showModal('error', 'Scan Failed', err?.message || 'Unable to register attendance.');
   } finally {
     setTimeout(() => {
       scannedRef.current = false;
@@ -175,6 +146,42 @@ const Attendance_Camera: React.FC<AttendanceCameraProps> = ({ onShowHistory, eve
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      {/* ── Branded Result Modal ── */}
+      <Modal visible={modal.visible} transparent animationType="fade" onRequestClose={closeModal}>
+        <TouchableOpacity style={joinModalStyles.overlay} activeOpacity={1} onPress={closeModal}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={[
+              joinModalStyles.iconContainer,
+              { backgroundColor: modal.type === 'success' ? '#0A0F51' : '#c0392b' }
+            ]}>
+              <Image
+                source={require('../../assets/images/marque/MARQUE_whitelogo.png')}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+            <Text style={[
+              joinModalStyles.title,
+              { color: modal.type === 'success' ? '#0A0F51' : '#c0392b' }
+            ]}>
+              {modal.title}
+            </Text>
+            <Text style={joinModalStyles.desc}>{modal.message}</Text>
+            <TouchableOpacity
+              onPress={closeModal}
+              style={{
+                marginTop: 20,
+                backgroundColor: modal.type === 'success' ? '#0A0F51' : '#c0392b',
+                borderRadius: 10,
+                paddingVertical: 10,
+                paddingHorizontal: 40,
+              }}
+            >
+              <Text style={{ color: '#fff', fontFamily: 'DMSans-Bold', fontSize: 15 }}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <CameraView
         style={StyleSheet.absoluteFill}
@@ -267,6 +274,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
+    fontFamily: 'DMSans-Regular',
   },
   permissionButton: {
     backgroundColor: '#6366f1',
@@ -277,7 +285,7 @@ const styles = StyleSheet.create({
   permissionButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'DMSans-Medium',
   },
   topOverlay: {
     position: 'absolute',
@@ -393,9 +401,9 @@ const styles = StyleSheet.create({
   },
   iconText: {
     color: '#FFF',
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 4,
-    fontWeight: '600',
+    fontFamily: 'DMSans-Medium',
   },
   centerButton: {
     position: 'absolute',

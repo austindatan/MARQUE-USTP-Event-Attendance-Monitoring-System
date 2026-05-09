@@ -74,7 +74,7 @@ const PhotoProofVerification: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await AsyncStorage.getItem('token');
 
       await axios.post(
         `${BASE_URL}/api/attendance/verify-photoproof`,
