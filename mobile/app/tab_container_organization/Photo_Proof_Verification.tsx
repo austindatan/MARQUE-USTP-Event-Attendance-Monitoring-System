@@ -41,7 +41,8 @@ const PhotoProofVerification: React.FC = () => {
   const { eventId: rawEventId } = useLocalSearchParams();
   const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
 
-  const [pendingProofs, setPendingProofs] = useState<AttendanceLogItem[]>([]);
+  const [data, setData] = useState<AttendanceLogItem[]>([]);
+  const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
   const [loading, setLoading] = useState<boolean>(true);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -49,24 +50,25 @@ const PhotoProofVerification: React.FC = () => {
 
   const handleBack = () => router.back();
 
-  const fetchPendingProofs = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!eventId) {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
+      const endpoint = activeTab === 'pending' ? 'pending' : 'history';
       const response = await axios.get<AttendanceLogItem[]>(
-        `${BASE_URL}/api/attendance/photoproofs/pending/${eventId}`
+        `${BASE_URL}/api/attendance/photoproofs/${endpoint}/${eventId}`
       );
-      setPendingProofs(response.data);
+      setData(response.data);
     } catch (error) {
-      console.error("Error fetching pending proofs:", error);
-      Alert.alert("Fetch Error", "Failed to load pending photo proofs.");
+      console.error(`Error fetching ${activeTab} proofs:`, error);
+      Alert.alert("Fetch Error", `Failed to load ${activeTab} photo proofs.`);
     } finally {
       setLoading(false);
     }
-  }, [eventId]);
+  }, [eventId, activeTab]);
 
   // --- Handle Approve / Reject ---
   const handleAction = async (logId: string, action: 'verified' | 'rejected') => {
@@ -82,7 +84,7 @@ const PhotoProofVerification: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setPendingProofs(prev => prev.filter(log => log._id !== logId));
+      setData(prev => prev.filter(log => log._id !== logId));
       Alert.alert("Success", `Photo proof ${action} successfully.`);
     } catch (error) {
       console.error(`Error ${action} photo proof:`, error);
@@ -93,8 +95,8 @@ const PhotoProofVerification: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPendingProofs();
-  }, [fetchPendingProofs]);
+    fetchData();
+  }, [fetchData]);
 
   const renderProofItem = ({ item }: ListRenderItemInfo<AttendanceLogItem>) => {
     const studentName = `${item.user_id?.firstname || 'N/A'} ${item.user_id?.lastname || 'Student'}`;
@@ -113,61 +115,70 @@ const PhotoProofVerification: React.FC = () => {
           />
         </TouchableOpacity>
 
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.approveButton]}
-            onPress={() => handleAction(item._id, 'verified')}
-          >
-            <Ionicons name="checkmark" size={18} color="#fff" />
-          </TouchableOpacity>
+        {activeTab === 'pending' ? (
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.approveButton]}
+              onPress={() => handleAction(item._id, 'verified')}
+            >
+              <Ionicons name="checkmark" size={18} color="#fff" />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.rejectButton]}
-            onPress={() => handleAction(item._id, 'rejected')}
-          >
-            <Ionicons name="close" size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.rejectButton]}
+              onPress={() => handleAction(item._id, 'rejected')}
+            >
+              <Ionicons name="close" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={[styles.statusBox, item.photoproof_status === 'verified' ? styles.bgGreen : styles.bgRed]}>
+            <Text style={styles.statusText}>
+              {item.photoproof_status.toUpperCase()}
+            </Text>
+          </View>
+        )}
       </View>
     );
   };
-
-  if (loading) return (
-    <View style={styles.safeArea}>
-      <Header title="Verify Photo Proofs" showBackButton={true} backAction={handleBack} />
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0A0F51" />
-        <Text style={styles.loadingText}>Loading pending proofs...</Text>
-      </View>
-    </View>
-  );
-
-  if (pendingProofs.length === 0) return (
-    <View style={styles.safeArea}>
-      <Header title="Verify Photo Proofs" showBackButton={true} backAction={handleBack} />
-      <View style={styles.centerContainer}>
-        <Ionicons name="checkmark-circle-outline" size={50} color="#0A0F51" />
-        <Text style={styles.emptyText}>No pending photo proofs for this event.</Text>
-        <TouchableOpacity onPress={fetchPendingProofs} style={styles.refreshButton}>
-          <Text style={styles.refreshText}>Refresh</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.safeArea}>
       <Header title="Verify Photo Proofs" showBackButton={true} backAction={handleBack} />
 
-      <FlatList
-        data={pendingProofs}
-        keyExtractor={(item) => item._id}
-        renderItem={renderProofItem}
-        contentContainerStyle={styles.listContainer}
-        refreshing={loading}
-        onRefresh={fetchPendingProofs}
-        numColumns={3}
-      />
+      <View style={styles.tabContainer}>
+        <TouchableOpacity style={[styles.tabButton, activeTab === 'pending' && styles.tabButtonActive]} onPress={() => setActiveTab('pending')}>
+          <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>Pending</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabButton, activeTab === 'history' && styles.tabButtonActive]} onPress={() => setActiveTab('history')}>
+          <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>History</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#0A0F51" />
+          <Text style={styles.loadingText}>Loading {activeTab} proofs...</Text>
+        </View>
+      ) : data.length === 0 ? (
+        <View style={styles.centerContainer}>
+          <Ionicons name="images-outline" size={50} color="#0A0F51" />
+          <Text style={styles.emptyText}>No {activeTab} photo proofs for this event.</Text>
+          <TouchableOpacity onPress={fetchData} style={styles.refreshButton}>
+            <Text style={styles.refreshText}>Refresh</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={data}
+          keyExtractor={(item) => item._id}
+          renderItem={renderProofItem}
+          contentContainerStyle={styles.listContainer}
+          refreshing={loading}
+          onRefresh={fetchData}
+          numColumns={3}
+        />
+      )}
 
       <Modal
         visible={modalVisible}
@@ -218,6 +229,15 @@ const styles = StyleSheet.create({
   actionButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 6 },
   approveButton: { backgroundColor: '#4CAF50' },
   rejectButton: { backgroundColor: '#F44336' },
+  tabContainer: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#ddd' },
+  tabButton: { flex: 1, paddingVertical: 12, alignItems: 'center' },
+  tabButtonActive: { borderBottomWidth: 3, borderBottomColor: '#0A0F51' },
+  tabText: { fontSize: 16, color: '#666', fontFamily: 'DMSans-Medium' },
+  tabTextActive: { color: '#0A0F51', fontFamily: 'DMSans-Bold' },
+  statusBox: { marginTop: 5, paddingVertical: 5, borderRadius: 5, width: '100%', alignItems: 'center' },
+  bgGreen: { backgroundColor: '#4CAF50' },
+  bgRed: { backgroundColor: '#F44336' },
+  statusText: { fontSize: 10, fontWeight: 'bold', color: '#fff' },
   modalBackground: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
   modalImage: { width: width * 0.95, height: height * 0.8 },
   modalCloseButton: { position: 'absolute', top: 40, right: 20, zIndex: 2 },
