@@ -18,6 +18,7 @@ router.post(
 
 router.post('/register-or-get-log', authMiddleware, attendanceController.registerOrGetAttendanceLog);
 router.get('/photoproofs/pending/:event_id', attendanceController.getPendingPhotoproofs);
+router.get('/photoproofs/history/:event_id', attendanceController.getPhotoproofHistory);
 router.post('/verify-photoproof', authMiddleware, attendanceController.verifyPhotoproof);
 
 router.get("/export/:event_id", attendanceController.exportAttendancePDF);

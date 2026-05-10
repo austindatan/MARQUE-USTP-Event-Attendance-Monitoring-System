@@ -426,6 +426,45 @@ const getPendingPhotoproofs = async (req, res) => {
   }
 };
 
+// Get all verified/rejected photo proofs for an event
+const getPhotoproofHistory = async (req, res) => {
+  try {
+    const { event_id } = req.params;
+
+    if (!event_id) {
+      return res.status(400).json({ message: "Missing event_id" });
+    }
+
+    // Find logs with verified or rejected status
+    const logs = await AttendanceLog.find({ 
+      event_id, 
+      photoproof_status: { $in: ['verified', 'rejected'] } 
+    }).populate('user_id');
+
+    // Attach student_number from Student collection
+    const formattedLogs = await Promise.all(
+      logs.map(async (log) => {
+        const student = await Student.findOne({ users_id: log.user_id._id });
+        return {
+          _id: log._id,
+          event_id: log.event_id,
+          user_id: log.user_id,
+          student_number: student?.student_number || '',
+          photoproof_url: log.photoproof_url,
+          photoproof_status: log.photoproof_status,
+          photoproof_submitted_at: log.photoproof_submitted_at,
+        };
+      })
+    );
+
+    res.status(200).json(formattedLogs);
+
+  } catch (error) {
+    console.error("FETCH PHOTO PROOF HISTORY ERROR:", error);
+    res.status(500).json({ message: "Server error fetching photo proof history" });
+  }
+};
+
 
 // Function for student to check their photo proof status
 const getAttendanceLogByUserAndEvent = async (req, res) => {
@@ -623,6 +662,7 @@ module.exports = {
   exportAttendancePDF,
   verifyPhotoproof,
   getPendingPhotoproofs,
+  getPhotoproofHistory,
   getAttendanceLogByUserAndEvent,
   registerOrGetAttendanceLog,
 };

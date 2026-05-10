@@ -52,7 +52,11 @@ export default function CameraWithWatermark() {
       const geocode = await Location.reverseGeocodeAsync(loc.coords);
       const place = geocode[0];
 
-      setLocationText(`${place.city}, ${place.region}`);
+      const city = place.city || place.subregion || place.district || "";
+      const region = place.region || place.country || "";
+      const locStr = [city, region].filter(Boolean).join(", ");
+      
+      setLocationText(locStr || "Location unknown");
     })();
   }, []);
 
@@ -144,7 +148,12 @@ export default function CameraWithWatermark() {
 
       // 2. Prepare watermark text
       const now = new Date();
-      const watermarkText = `${now.toLocaleDateString()}  ${now.toLocaleTimeString()}\n${locationText}`;
+      // Replace '/' with '-' to avoid Cloudinary '%2F' encoding issues
+      const safeDate = now.toLocaleDateString().replace(/\//g, '-');
+      // Replace commas in location as Cloudinary text overlay uses them for separation
+      const safeLocation = locationText.replace(/,/g, '');
+      
+      const watermarkText = `${safeLocation} - ${safeDate} ${now.toLocaleTimeString()}`;
 
       // 3. Build form data
       const formData = new FormData();
