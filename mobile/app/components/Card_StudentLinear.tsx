@@ -23,24 +23,24 @@ const StudentLinear = ({
   const renderRole = (role, index) => {
     // We must use safeImage here as well since it's a new variable scope
     const safeImage = (img) =>
-      typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/crk.jpg");
+      typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/MARQUE_singlelogo.png");
 
     return (
-        // 🚨 The key is crucial when mapping an array
-        <View key={index} style={styles.roleContainer}> 
-            <Image
-                source={safeImage(role.orgLogo)}
-                style={styles.orgLogo}
-            />
-            <View>
-                <Text style={styles.orgName} numberOfLines={1}>
-                    {role.orgName}
-                </Text>
-                <Text style={styles.position} numberOfLines={1}>
-                    {role.position}
-                </Text>
-            </View>
+      // 🚨 The key is crucial when mapping an array
+      <View key={index} style={styles.roleContainer}>
+        <Image
+          source={safeImage(role.orgLogo)}
+          style={styles.orgLogo}
+        />
+        <View>
+          <Text style={styles.orgName} numberOfLines={1}>
+            {role.orgName}
+          </Text>
+          <Text style={styles.position} numberOfLines={1}>
+            {role.position}
+          </Text>
         </View>
+      </View>
     );
   };
 

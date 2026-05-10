@@ -91,21 +91,21 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
         try {
             console.log(`[DEBUG] Attempting fetch students: ${BASE_URL}/api/student/officers/all?filter=${filterParam}&orgId=${orgId}`);
             const res = await fetch(`${BASE_URL}/api/student/officers/all?filter=${filterParam}&orgId=${orgId}`);
-            
+
             // Log the network status immediately
             console.log(`[DEBUG] Fetch response status: ${res.status}`);
 
             const text = await res.text();
-            
+
             // Log the raw response text before parsing
-            console.log(`[DEBUG] Raw response text: ${text.substring(0, 200)}...`); 
+            console.log(`[DEBUG] Raw response text: ${text.substring(0, 200)}...`);
 
             let data;
-            try { 
-                data = JSON.parse(text); 
-            } catch (parseError) { 
+            try {
+                data = JSON.parse(text);
+            } catch (parseError) {
                 console.error("[PARSE ERROR] Failed to parse JSON. Raw text returned:", text);
-                data = { message: "Failed to parse server response as JSON." }; 
+                data = { message: "Failed to parse server response as JSON." };
             }
 
             if (!res.ok) {
@@ -160,7 +160,7 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
     };
 
     const safeImage = (img) =>
-        typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/crk.jpg");
+        typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/MARQUE_singlelogo.png");
 
     // --------------------
     // Invite flow (single-org)
@@ -284,9 +284,9 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
     // --------------------
     const renderStudents = () => {
         if (!isLoading) {
-             console.log(`[RENDER DEBUG] Displaying ${students.length} students (before search filter).`);
+            console.log(`[RENDER DEBUG] Displaying ${students.length} students (before search filter).`);
         }
-        
+
         if (isLoading) return <Skeleton_Officers embedded={true} />;
         if (error) return <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>{error}</Text>;
 
@@ -458,7 +458,7 @@ const ManageOfficers = ({ scrollY, handleScroll }) => {
             </Modal>
 
             {/* ===== ROLE CHANGING LOADING MODAL ===== */}
-            <Modal visible={isRoleChanging} transparent animationType="fade" onRequestClose={() => {}}>
+            <Modal visible={isRoleChanging} transparent animationType="fade" onRequestClose={() => { }}>
                 <View style={joinModalStyles.overlay}>
                     <View style={joinModalStyles.modalBox}>
                         <View style={joinModalStyles.iconContainer}>

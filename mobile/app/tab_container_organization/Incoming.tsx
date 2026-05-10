@@ -130,11 +130,11 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
     const org = organizationData;
     const orgImageSource = org.pfp
         ? { uri: org.pfp }
-        : require("../../assets/images/marque/crk.jpg");
+        : require("../../assets/images/marque/MARQUE_singlelogo.png");
 
     const orgLogoSource = org.pfp
         ? { uri: org.pfp }
-        : require("../../assets/images/marque/crk.jpg");
+        : require("../../assets/images/marque/MARQUE_singlelogo.png");
 
     return (
         <View style={{ flex: 1, backgroundColor: "transparent" }}>
@@ -178,7 +178,7 @@ const Incoming = ({ scrollY, handleScroll, initialScroll = 0 }) => {
                         events.map((ev) => {
                             const evImage = ev.event_image
                                 ? { uri: ev.event_image }
-                                : require("../../assets/images/marque/crk.jpg");
+                                : require("../../assets/images/marque/MARQUE_singlelogo.png");
 
                             return (
                                 <EventCard

@@ -136,7 +136,7 @@ const ManageUsers = () => {
   };
 
   const safeImage = (img) =>
-    typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/crk.jpg");
+    typeof img === "string" && img.trim() !== "" ? { uri: img } : require("../../assets/images/marque/MARQUE_singlelogo.png");
 
   useFocusEffect(
     useCallback(() => {
