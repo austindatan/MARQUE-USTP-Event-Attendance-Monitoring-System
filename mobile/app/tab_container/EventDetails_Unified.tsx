@@ -68,6 +68,7 @@ const EventDetails_Unified = () => {
 
   const [photoProofStatus, setPhotoProofStatus] = useState(null);
   const [attendanceLogId, setAttendanceLogId] = useState(null);
+  const [attendanceStatus, setAttendanceStatus] = useState(null);
 
   /** ================= BOOKMARKS ================= */
   const checkBookmarkStatus = async () => {
@@ -158,11 +159,15 @@ const EventDetails_Unified = () => {
       const log = response.data.log;
 
       if (log) {
-        setPhotoProofStatus(log.photoproof_status);
+        // Only set photo proof status if a photo was actually uploaded.
+        // Mongoose defaults photoproof_status to 'pending', so we must check the URL.
+        setPhotoProofStatus(log.photoproof_url ? log.photoproof_status : null);
         setAttendanceLogId(log._id);
+        setAttendanceStatus(log.status);
       } else {
         setPhotoProofStatus(null);
         setAttendanceLogId(null);
+        setAttendanceStatus(null);
       }
 
     } catch (error) {
@@ -275,7 +280,11 @@ const EventDetails_Unified = () => {
     let buttonStyle = [styles.photoproofButton, { backgroundColor: '#0A0F51' }];
     let isDisabled = false;
 
-    if (photoProofStatus === 'verified') {
+    if (attendanceStatus !== 'Present') {
+      buttonText = "Scan QR Code to Upload Photoproof";
+      buttonStyle = [styles.photoproofButton, { backgroundColor: '#9e9e9e' }]; // Grayed out
+      isDisabled = true;
+    } else if (photoProofStatus === 'verified') {
       buttonText = "Your Photo has been verified/accepted.";
       buttonStyle = [styles.photoproofButton, { backgroundColor: '#4CAF50' }];
       isDisabled = true;
@@ -443,8 +452,15 @@ const EventDetails_Unified = () => {
               </Text>
             </View>
 
-            {/* Upload Photoproof Button */}
+            {/* Upload Photoproof Button (handles pending/verified/rejected statuses) */}
             {renderPhotoProofButton()}
+
+            {/* Check if attendance is already recorded via QR scan or other means */}
+            {attendanceStatus === "Present" && (
+              <View style={[styles.infoBox, { backgroundColor: '#E8F5E9', marginTop: 10 }]}>
+                <Text style={[styles.infoText, { color: '#2E7D32' }]}>✓ Your attendance has been recorded.</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -456,8 +472,8 @@ const EventDetails_Unified = () => {
               <Text style={styles.infoText}>This event has <Text style={{ fontFamily: 'DMSans-Bold' }}>concluded</Text>.</Text>
             </View>
 
-            {/* Only show attendance and feedback if user attended */}
-            {attendanceLogId ? (
+            {/* Only show attendance and feedback if user attended and was verified/present */}
+            {(attendanceStatus === "Present" || photoProofStatus === "verified") ? (
               <>
                 {/* Attendance recorded message */}
                 <View style={[styles.infoBox, { marginBottom: 10, backgroundColor: '#E8F5E9' }]}>
