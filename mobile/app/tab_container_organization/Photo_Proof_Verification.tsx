@@ -13,7 +13,7 @@ import {
   Dimensions,
   ListRenderItemInfo,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router"; 
+import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
 import { BASE_URL } from "../../config";
@@ -37,7 +37,7 @@ interface AttendanceLogItem {
 }
 
 const PhotoProofVerification: React.FC = () => {
-  const router = useRouter(); 
+  const router = useRouter();
   const { eventId: rawEventId } = useLocalSearchParams();
   const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
 
@@ -59,7 +59,7 @@ const PhotoProofVerification: React.FC = () => {
       const response = await axios.get<AttendanceLogItem[]>(
         `${BASE_URL}/api/attendance/photoproofs/pending/${eventId}`
       );
-      setPendingProofs(response.data); 
+      setPendingProofs(response.data);
     } catch (error) {
       console.error("Error fetching pending proofs:", error);
       Alert.alert("Fetch Error", "Failed to load pending photo proofs.");
@@ -105,10 +105,10 @@ const PhotoProofVerification: React.FC = () => {
         <Text style={styles.studentName}>{studentName}</Text>
         <Text style={styles.studentNumber}>Student No: {studentNumber}</Text>
 
-        <TouchableOpacity onPress={() => { setSelectedImage(item.photoproof_url); setModalVisible(true); }}>
-          <Image 
-            source={{ uri: item.photoproof_url }} 
-            style={styles.proofImage} 
+        <TouchableOpacity style={{ width: '100%' }} onPress={() => { setSelectedImage(item.photoproof_url); setModalVisible(true); }}>
+          <Image
+            source={{ uri: item.photoproof_url }}
+            style={styles.proofImage}
             resizeMode="cover"
           />
         </TouchableOpacity>
@@ -118,16 +118,14 @@ const PhotoProofVerification: React.FC = () => {
             style={[styles.actionButton, styles.approveButton]}
             onPress={() => handleAction(item._id, 'verified')}
           >
-            <Ionicons name="checkmark-circle" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Approve</Text>
+            <Ionicons name="checkmark" size={18} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.actionButton, styles.rejectButton]}
             onPress={() => handleAction(item._id, 'rejected')}
           >
-            <Ionicons name="close-circle" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Reject</Text>
+            <Ionicons name="close" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -168,6 +166,7 @@ const PhotoProofVerification: React.FC = () => {
         contentContainerStyle={styles.listContainer}
         refreshing={loading}
         onRefresh={fetchPendingProofs}
+        numColumns={3}
       />
 
       <Modal
@@ -202,16 +201,23 @@ const styles = StyleSheet.create({
   emptyText: { marginTop: 15, fontSize: 18, textAlign: 'center', color: '#555' },
   refreshButton: { marginTop: 20, backgroundColor: '#0A0F51', padding: 10, borderRadius: 8 },
   refreshText: { color: '#fff', fontWeight: 'bold' },
-  listContainer: { padding: 10 },
-  proofCard: { backgroundColor: '#fff', borderRadius: 10, padding: 15, marginBottom: 15, elevation: 5 },
-  studentName: { fontSize: 18, fontWeight: 'bold', color: '#0A0F51', marginBottom: 5 },
-  studentNumber: { fontSize: 14, color: '#666', marginBottom: 10 },
-  proofImage: { width: '100%', height: 350, borderRadius: 8, marginBottom: 15, backgroundColor: '#eee' },
-  actionsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  actionButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 8 },
+  listContainer: { padding: 10, alignItems: 'flex-start' },
+  proofCard: { 
+    backgroundColor: '#fff', 
+    borderRadius: 8, 
+    padding: 8, 
+    margin: 5, 
+    elevation: 3, 
+    width: (width - 20) / 3 - 10,
+    alignItems: 'center'
+  },
+  studentName: { fontSize: 12, fontWeight: 'bold', color: '#0A0F51', marginBottom: 2, textAlign: 'center' },
+  studentNumber: { fontSize: 10, color: '#666', marginBottom: 5, textAlign: 'center' },
+  proofImage: { width: '100%', height: 120, borderRadius: 6, marginBottom: 8, backgroundColor: '#eee' },
+  actionsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 5, width: '100%' },
+  actionButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 6 },
   approveButton: { backgroundColor: '#4CAF50' },
   rejectButton: { backgroundColor: '#F44336' },
-  actionButtonText: { color: '#fff', fontSize: 16, fontWeight: '600', marginLeft: 5 },
   modalBackground: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
   modalImage: { width: width * 0.95, height: height * 0.8 },
   modalCloseButton: { position: 'absolute', top: 40, right: 20, zIndex: 2 },
