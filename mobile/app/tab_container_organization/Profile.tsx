@@ -256,7 +256,7 @@ const ProfilePage = () => {
                       image={
                         event.event_image
                           ? { uri: fixCloudinaryUrl(event.event_image) }
-                          : require("../../assets/images/marque/crtcg1.png")
+                          : require("../../assets/images/marque/MARQUE.png")
                       }
                       title={event.event_name}
                       orgLogo={orgLogoSource}
@@ -287,7 +287,7 @@ const ProfilePage = () => {
                       image={
                         event.event_image
                           ? { uri: fixCloudinaryUrl(event.event_image) }
-                          : require("../../assets/images/marque/crtcg1.png")
+                          : require("../../assets/images/marque/MARQUE.png")
                       }
                       title={event.event_name}
                       orgLogo={orgLogoSource}
@@ -340,10 +340,10 @@ const tabStyles = StyleSheet.create({
     justifyContent: "center",
     minWidth: 120,
   },
-  activeTab:   { backgroundColor: COLORS.primaryNavy },
+  activeTab: { backgroundColor: COLORS.primaryNavy },
   inactiveTab: { backgroundColor: "#d3d3d3" },
-  tabText:     { fontSize: 15, fontFamily: "DMSans-Bold" },
-  activeTabText:   { color: COLORS.white,    fontFamily: "DMSans-Bold" },
+  tabText: { fontSize: 15, fontFamily: "DMSans-Bold" },
+  activeTabText: { color: COLORS.white, fontFamily: "DMSans-Bold" },
   inactiveTabText: { color: COLORS.textDark, fontFamily: "DMSans-Medium" },
   noEventsText: {
     textAlign: "center",

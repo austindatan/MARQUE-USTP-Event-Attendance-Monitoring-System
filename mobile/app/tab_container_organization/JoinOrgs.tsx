@@ -178,7 +178,7 @@ const JoinOrgs = ({ scrollY, handleScroll }) => {
                             availableOrgs.map((org) => (
                                 <EventCard
                                     key={org._id}
-                                    image={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/crtcg1.png")}
+                                    image={org.pfp ? { uri: org.pfp } : require("../../assets/images/marque/MARQUE.png")}
                                     title={org.org_name}
                                     description={org.description}
                                     onPress={() => handleJoin(org)}

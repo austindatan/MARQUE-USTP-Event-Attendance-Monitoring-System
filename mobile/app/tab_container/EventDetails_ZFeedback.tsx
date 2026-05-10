@@ -55,7 +55,7 @@ const EventFeedback = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [authInfo, setAuthInfo] = useState({ userId: null, token: null });
   const [eventImageUrl, setEventImageUrl] = useState(null);
-  const FALLBACK_IMAGE = require("../../assets/images/marque/crtcg1.png");
+  const FALLBACK_IMAGE = require("../../assets/images/marque/MARQUE.png");
   const [marqueModalVisible, setMarqueModalVisible] = useState(false);
   const [marqueModalTitle, setMarqueModalTitle] = useState("");
   const [marqueModalDesc, setMarqueModalDesc] = useState("");

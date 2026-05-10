@@ -60,8 +60,8 @@ const Bookmark = () => {
     };
 
     const handleEventPress = (eventId) => {
-        router.push({ 
-            pathname: '../tab_container_organization/Events', 
+        router.push({
+            pathname: '../tab_container_organization/Events',
             params: { eventId }
         });
     }
@@ -85,9 +85,9 @@ const Bookmark = () => {
                 {bookmarks.map((b) => {
                     // ⭐️ FIX: Null check to prevent crash if event_id is null/deleted
                     if (!b.event_id) {
-                        return null; 
+                        return null;
                     }
-                    
+
                     const event = b.event_id;
                     const organization = event.organization_id;
 
@@ -112,9 +112,9 @@ const Bookmark = () => {
                             id={event._id}
                             title={event.event_name}
                             // Apply image URI or fallback to a local asset
-                            image={eventImageUri ? { uri: eventImageUri } : require("../../assets/images/marque/crtcg1.png")}
+                            image={eventImageUri ? { uri: eventImageUri } : require("../../assets/images/marque/MARQUE.png")}
                             // Apply organization logo URI or fallback
-                            orgLogo={orgLogoUri ? { uri: orgLogoUri } : require("../../assets/images/marque/crk.jpg")}
+                            orgLogo={orgLogoUri ? { uri: orgLogoUri } : require("../../assets/images/marque/MARQUE_singlelogo.png")}
                             // Use the determined organization name
                             organization={orgName}
                             dateDay={

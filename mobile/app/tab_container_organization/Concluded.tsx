@@ -93,7 +93,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
 
   const orgLogoSource = organizationData.pfp
     ? { uri: organizationData.pfp }
-    : require("../../assets/images/marque/crk.jpg");
+    : require("../../assets/images/marque/MARQUE_singlelogo.png");
 
   const handleEventPress = (eventId: string) => {
     router.push({
@@ -131,7 +131,7 @@ const Concluded = ({ scrollY, handleScroll, initialScroll = 0, organizationId })
             events.map((ev) => {
               const evImage = ev.event_image
                 ? { uri: ev.event_image }
-                : require("../../assets/images/marque/crk.jpg");
+                : require("../../assets/images/marque/MARQUE_singlelogo.png");
 
               return (
                 <EventCard
