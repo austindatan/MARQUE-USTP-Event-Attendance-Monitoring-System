@@ -496,6 +496,7 @@ const createEvent = async (req, res) => {
       end_date,
       start_time,
       end_time,
+      is_mandatory,
     } = req.body;
 
     const event_image_url = req.file ? req.file.path || req.file.secure_url : null;
@@ -504,6 +505,9 @@ const createEvent = async (req, res) => {
     const endDateUTC = new Date(end_date);
     const startTimeUTC = new Date(start_time);
     const endTimeUTC = new Date(end_time);
+
+    // FormData sends booleans as strings; coerce explicitly
+    const isMandatory = is_mandatory === true || is_mandatory === "true";
 
     const newEvent = new Event({
       organization_id,
@@ -517,6 +521,7 @@ const createEvent = async (req, res) => {
       end_date: endDateUTC,
       start_time: startTimeUTC,
       end_time: endTimeUTC,
+      is_mandatory: isMandatory,
     });
 
     const savedEvent = await newEvent.save();
@@ -632,13 +637,16 @@ const updateEvent = async (req, res) => {
       status = "Concluded";
     }
 
+    // FormData sends booleans as strings; coerce explicitly
+    const isMandatoryUpdate = is_mandatory === true || is_mandatory === "true";
+
     const updateData = {
       event_name,
       event_type,
       description,
       venue,
       venue_details,
-      is_mandatory,
+      is_mandatory: isMandatoryUpdate,
       event_date: eventDateUTC,  // START DATE
       end_date: endDateUTC,  // END DATE
       start_time: startTimeUTC,

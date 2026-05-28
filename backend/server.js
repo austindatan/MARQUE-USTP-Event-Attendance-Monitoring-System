@@ -80,6 +80,10 @@ app.use('/api', departmentRoutes);
 const collegeRoutes = require("./routes/collegeRoutes");
 app.use("/api", collegeRoutes);
 
+// ML / Forecasting route
+const mlRoutes = require('./routes/mlRoutes');
+app.use('/api/ml', mlRoutes);
+
 // DB connection
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {

@@ -511,10 +511,19 @@ const EventDetails_Unified = () => {
             <Text style={styles.infoSecondary}>{eventData.venue_details || eventData.location_details}</Text>
           </View>
         </View>
+        {eventData.is_mandatory && (
+          <View style={styles.infoRow}>
+            <View style={styles.iconBox}><Ionicons name="alert-circle" size={20} color="#0A0F51" /></View>
+            <View>
+              <Text style={styles.infoPrimary}>Mandatory Attendance</Text>
+              <Text style={styles.infoSecondary}>Attendance is required for this event.</Text>
+            </View>
+          </View>
+        )}
+
         <Text style={styles.sectionTitle}>About Event</Text>
         <Text style={styles.aboutText}>{eventData.description || eventData.event_description}</Text>
 
-        {/* ================= ORGANIZER ================= */}
         <TouchableOpacity
           onPress={() => {
             if (eventData.organization_id?._id) {
