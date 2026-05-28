@@ -11,6 +11,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch } from "../../utils/apiFetch";
 import joinModalStyles from "../styles/components_joinmodal";
 import Skeleton_OrgEventDetails from "../components/Skeleton_OrgEventDetails";
+import { useNotification } from "../components/NotificationProvider";
+import AnimatedNumber from "../components/AnimatedNumber";
 
 const OFFICER_ROLES = ["Manager", "President"];
 
@@ -28,6 +30,7 @@ const fixCloudinaryUrl = (url, cloudName) => {
 const Events = () => {
     const router = useRouter();
     const params = useLocalSearchParams();
+    const { addSocketListener } = useNotification();
 
     const rawEventId = params.eventId;
     const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
@@ -267,6 +270,17 @@ const Events = () => {
         }
     }, [eventId, userRole, eventData?.status]);
 
+    // Listen for real-time ML forecast updates via WebSocket
+    useEffect(() => {
+        const unsub = addSocketListener((msg) => {
+            if (msg.type === 'FORECAST_UPDATED' && msg.forecast?.event_id === eventId) {
+                console.log('[Events] Forecast updated via WebSocket:', msg.forecast);
+                setForecast(msg.forecast);
+            }
+        });
+        return unsub;
+    }, [addSocketListener, eventId]);
+
     if (loading) {
         return <Skeleton_OrgEventDetails />;
     }
@@ -465,18 +479,20 @@ const Events = () => {
                                     {/* Main stat */}
                                     <View style={forecastCardStyles.statRow}>
                                         <View style={forecastCardStyles.statBlock}>
-                                            <Text style={forecastCardStyles.bigNumber}>
-                                                {forecast.predicted_count ?? '—'}
-                                            </Text>
+                                            <AnimatedNumber
+                                                value={forecast.predicted_count}
+                                                style={forecastCardStyles.bigNumber}
+                                            />
                                             <Text style={forecastCardStyles.statLabel}>predicted attendees</Text>
                                         </View>
                                         <View style={forecastCardStyles.divider} />
                                         <View style={forecastCardStyles.statBlock}>
-                                            <Text style={forecastCardStyles.bigNumber}>
-                                                {forecast.predicted_rate_percent != null
-                                                    ? `${forecast.predicted_rate_percent}%`
-                                                    : '—'}
-                                            </Text>
+                                            <AnimatedNumber
+                                                value={forecast.predicted_rate_percent}
+                                                suffix="%"
+                                                decimals={1}
+                                                style={forecastCardStyles.bigNumber}
+                                            />
                                             <Text style={forecastCardStyles.statLabel}>attendance rate</Text>
                                         </View>
                                     </View>

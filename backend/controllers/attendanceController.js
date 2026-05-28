@@ -102,6 +102,19 @@ const registerAttendance = async (req, res) => {
       is_read: false,
     });
 
+    // Send Real-time WebSocket Notification to Student
+    try {
+      const { sendToStudent } = require("../websocket");
+      sendToStudent(student.student_number, {
+        type: "ATTENDANCE_CONFIRMED",
+        title: "Attendance Confirmed",
+        message: `You are marked Present for ${event.event_name}`,
+        eventName: event.event_name,
+      });
+    } catch (wsError) {
+      console.error("Failed to send WebSocket notification:", wsError);
+    }
+
     return res.status(201).json({
       message: "Attendance registered successfully.",
       alreadyRegistered: false,

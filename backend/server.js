@@ -1,4 +1,5 @@
 const express = require("express");
+const http = require("http");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
@@ -84,6 +85,8 @@ app.use("/api", collegeRoutes);
 const mlRoutes = require('./routes/mlRoutes');
 app.use('/api/ml', mlRoutes);
 
+const server = http.createServer(app);
+
 // DB connection
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
@@ -97,5 +100,10 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  // Initialize WebSocket
+  const { initWebSocket } = require('./websocket');
+  initWebSocket(server);
+});
 
