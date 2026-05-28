@@ -5,6 +5,7 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'react-native';
+import { NotificationProvider } from './components/NotificationProvider';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,7 +35,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <NotificationProvider>
       <StatusBar
         translucent
         backgroundColor="transparent"
@@ -42,6 +43,6 @@ export default function RootLayout() {
       />
 
       <Stack screenOptions={{ headerShown: false }} />
-    </>
+    </NotificationProvider>
   );
 }

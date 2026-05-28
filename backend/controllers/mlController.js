@@ -82,73 +82,92 @@ const getOrgHistory = async (orgId) => {
     };
 };
 
+/**
+ * Core reusable forecast computation for an event ID.
+ * Returns the full forecast payload object (same shape as the HTTP response body),
+ * or throws on error.
+ */
+const computeForecast = async (eventId) => {
+    // 1. Fetch the event and deeply populate org → department → college
+    const event = await Event.findById(eventId).populate({
+        path: 'organization_id',
+        populate: { path: 'department_id' },
+    });
+
+    if (!event) throw new Error(`Event not found: ${eventId}`);
+
+    const org  = event.organization_id;
+    const dept = org?.department_id;
+
+    if (!org) throw new Error(`Event ${eventId} has no associated organization`);
+
+    // 2. Determine scope + audience size
+    const { audience_size, scope } = await getScopeAndAudienceSize(org, dept);
+
+    // 3. Org historical stats
+    const { org_avg_present_count, org_event_count } = await getOrgHistory(org._id);
+
+    // 4. Derived time features
+    const eventDate     = new Date(event.event_date);
+    const startTime     = new Date(event.start_time);
+    const endTime       = new Date(event.end_time);
+    const durationHours = parseFloat(
+        ((endTime - startTime) / (1000 * 60 * 60)).toFixed(2)
+    );
+
+    const features = {
+        is_mandatory:          event.is_mandatory ? 1 : 0,
+        day_of_week:           eventDate.getDay(),
+        month:                 eventDate.getMonth() + 1,
+        duration_hours:        durationHours,
+        org_type_encoded:      ORG_TYPE_MAP[org.org_type] ?? 1,
+        audience_size,
+        org_avg_present_count,
+        org_event_count,
+    };
+
+    // 5. Call Python ML service
+    const mlResponse = await axios.post(`${ML_SERVICE_URL}/predict`, features, {
+        timeout: 10_000,
+    });
+
+    const ml = mlResponse.data;
+
+    return {
+        success:                true,
+        event_id:               eventId,
+        event_name:             event.event_name,
+        scope,
+        audience_size,
+        predicted_count:        ml.predicted_count,
+        predicted_rate_percent: ml.predicted_rate_percent,
+        confidence:             ml.confidence,
+        org_event_count,
+    };
+};
+
+/**
+ * Compute forecast for an event and broadcast the result to all connected
+ * WebSocket clients as a FORECAST_UPDATED message.
+ * Silently swallows errors so callers never fail because of this side-effect.
+ */
+const getForecastAndBroadcast = async (eventId) => {
+    try {
+        const { broadcast } = require('../websocket');
+        const payload = await computeForecast(eventId);
+        broadcast({ type: 'FORECAST_UPDATED', forecast: payload });
+        console.log(`[ML] Forecast broadcast for event ${eventId}`);
+    } catch (err) {
+        console.error(`[ML] getForecastAndBroadcast failed for ${eventId}:`, err.message);
+    }
+};
+
 // ─── GET /api/ml/forecast/:eventId ───────────────────────────────────────────
 const getForecast = async (req, res) => {
     try {
         const { eventId } = req.params;
-
-        // 1. Fetch the event and deeply populate org → department → college
-        const event = await Event.findById(eventId).populate({
-            path: 'organization_id',
-            populate: {
-                path: 'department_id',
-            },
-        });
-
-        if (!event) {
-            return res.status(404).json({ success: false, message: 'Event not found' });
-        }
-
-        const org  = event.organization_id;
-        const dept = org?.department_id;
-
-        if (!org) {
-            return res.status(400).json({ success: false, message: 'Event has no associated organization' });
-        }
-
-        // 2. Determine scope + audience size
-        const { audience_size, scope } = await getScopeAndAudienceSize(org, dept);
-
-        // 3. Org historical stats
-        const { org_avg_present_count, org_event_count } = await getOrgHistory(org._id);
-
-        // 4. Derived time features
-        const eventDate     = new Date(event.event_date);
-        const startTime     = new Date(event.start_time);
-        const endTime       = new Date(event.end_time);
-        const durationHours = parseFloat(
-            ((endTime - startTime) / (1000 * 60 * 60)).toFixed(2)
-        );
-
-        const features = {
-            is_mandatory:          event.is_mandatory ? 1 : 0,
-            day_of_week:           eventDate.getDay(),        // 0=Sun … 6=Sat
-            month:                 eventDate.getMonth() + 1,  // 1–12
-            duration_hours:        durationHours,
-            org_type_encoded:      ORG_TYPE_MAP[org.org_type] ?? 1,
-            audience_size,
-            org_avg_present_count,
-            org_event_count,
-        };
-
-        // 5. Call Python ML service
-        const mlResponse = await axios.post(`${ML_SERVICE_URL}/predict`, features, {
-            timeout: 10_000,
-        });
-
-        const ml = mlResponse.data;
-
-        return res.json({
-            success:                true,
-            event_id:               eventId,
-            event_name:             event.event_name,
-            scope,
-            audience_size,
-            predicted_count:        ml.predicted_count,
-            predicted_rate_percent: ml.predicted_rate_percent,
-            confidence:             ml.confidence,
-            org_event_count,
-        });
+        const payload = await computeForecast(eventId);
+        return res.json(payload);
 
     } catch (err) {
         // ML service is down
@@ -167,6 +186,9 @@ const getForecast = async (req, res) => {
                 predicted_count: null,
             });
         }
+        if (err.message?.startsWith('Event not found')) {
+            return res.status(404).json({ success: false, message: err.message });
+        }
         console.error('[mlController] getForecast error:', err.message);
         return res.status(500).json({ success: false, message: 'Server error during forecast.' });
     }
@@ -176,6 +198,23 @@ const getForecast = async (req, res) => {
 const triggerTrain = async (req, res) => {
     try {
         const mlResponse = await axios.post(`${ML_SERVICE_URL}/train`, {}, { timeout: 120_000 });
+
+        // After successful retrain, broadcast fresh forecasts for all active events
+        setImmediate(async () => {
+            try {
+                const activeEvents = await Event.find({
+                    status: { $in: ['Upcoming', 'Ongoing'] },
+                }).select('_id').lean();
+
+                console.log(`[ML] Rebroadcasting forecasts for ${activeEvents.length} active event(s) after retrain`);
+                for (const ev of activeEvents) {
+                    await getForecastAndBroadcast(ev._id.toString());
+                }
+            } catch (broadcastErr) {
+                console.error('[ML] Post-retrain broadcast error:', broadcastErr.message);
+            }
+        });
+
         return res.json(mlResponse.data);
     } catch (err) {
         if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
@@ -188,4 +227,6 @@ const triggerTrain = async (req, res) => {
     }
 };
 
-module.exports = { getForecast, triggerTrain };
+module.exports = { getForecast, triggerTrain, computeForecast, getForecastAndBroadcast };
+
+

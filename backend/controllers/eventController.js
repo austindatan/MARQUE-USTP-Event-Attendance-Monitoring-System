@@ -667,10 +667,22 @@ const updateEvent = async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
+    // Trigger async ML forecast recompute + WebSocket broadcast
+    // (fire-and-forget — does not block or affect the HTTP response)
+    setImmediate(async () => {
+      try {
+        const { getForecastAndBroadcast } = require('./mlController');
+        await getForecastAndBroadcast(eventId);
+      } catch (mlErr) {
+        console.error('[eventController] Post-update forecast broadcast failed:', mlErr.message);
+      }
+    });
+
     res.status(200).json({
       message: "Event updated successfully",
       event: updatedEvent,
     });
+
 
   } catch (err) {
     console.error("Error updating event:", err);
