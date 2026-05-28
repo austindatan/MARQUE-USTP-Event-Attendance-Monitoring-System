@@ -12,13 +12,6 @@ import FeedbackComments from "../components/FeedbackComments";
 import Skeleton_EventDetails from "../components/Skeleton_EventDetails";
 import { apiFetch } from "../../utils/apiFetch";
 import joinModalStyles from "../styles/components_joinmodal";
-import {
-  addGateStatusListener,
-  getSocket,
-  removeGateStatusListener,
-  subscribeToEvent,
-  unsubscribeFromEvent,
-} from "../../utils/socket";
 
 const fixCloudinaryUrl = (url, cloudName) => {
   if (!url || url.startsWith("http")) return url;
@@ -330,34 +323,6 @@ const EventDetails_Unified = () => {
       setLoading(false);
     }
   }, [eventId, fetchPhotoProofStatus]));
-
-  // ── Real-time gate status via WebSocket ─────────────────────────────
-  useEffect(() => {
-    if (!eventId) return;
-    getSocket();
-    subscribeToEvent(eventId);
-
-    const handleGateStatus = (payload) => {
-      if (payload.eventId?.toString() !== eventId?.toString()) return;
-      console.log('[Socket] gate:status received (student):', payload);
-
-      // Rebuild a minimal event shape so determineEventStatus works
-      setEventData(prev => {
-        if (!prev) return prev;
-        const updated = { ...prev, status: payload.status };
-        const newStatus = determineEventStatus(updated);
-        setEventStatus(newStatus);
-        return updated;
-      });
-    };
-
-    addGateStatusListener(handleGateStatus);
-
-    return () => {
-      removeGateStatusListener(handleGateStatus);
-      unsubscribeFromEvent(eventId);
-    };
-  }, [eventId]);
 
   useEffect(() => {
     if (eventStatus === 'concluded') {

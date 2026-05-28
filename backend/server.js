@@ -1,48 +1,10 @@
 const express = require("express");
 const http = require("http");
-const { WebSocketServer } = require("ws");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-const server = http.createServer(app);
-
-// ── WebSocket (ws) ────────────────────────────────────────────────────────
-const wsServer = new WebSocketServer({ server, path: "/gate-ws" });
-const { setWSServer } = require("./socket");
-setWSServer(wsServer);
-
-wsServer.on("connection", (socket) => {
-  socket.subscriptions = new Set();
-  console.log("[WS] Client connected");
-
-  socket.on("message", (rawMessage) => {
-    let message;
-    try {
-      message = JSON.parse(rawMessage.toString());
-    } catch (error) {
-      console.warn("[WS] Ignored invalid JSON payload");
-      return;
-    }
-
-    if (message.type === "subscribe" && message.eventId) {
-      socket.subscriptions.add(String(message.eventId));
-      console.log(`[WS] Client subscribed to event:${message.eventId}`);
-      return;
-    }
-
-    if (message.type === "unsubscribe" && message.eventId) {
-      socket.subscriptions.delete(String(message.eventId));
-      console.log(`[WS] Client unsubscribed from event:${message.eventId}`);
-    }
-  });
-
-  socket.on("close", () => {
-    console.log("[WS] Client disconnected");
-  });
-});
-// ──────────────────────────────────────────────────────────────────────────
 
 app.use(cors());
 app.use(express.json());
@@ -122,6 +84,8 @@ app.use("/api", collegeRoutes);
 // ML / Forecasting route
 const mlRoutes = require('./routes/mlRoutes');
 app.use('/api/ml', mlRoutes);
+
+const server = http.createServer(app);
 
 // DB connection
 mongoose.connect(process.env.MONGODB_URI)

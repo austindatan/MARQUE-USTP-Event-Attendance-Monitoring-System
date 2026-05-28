@@ -6,46 +6,6 @@ const Student = require("../models/Student");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const WebSocket = require("ws");
-const { getWSServer } = require("../socket");
-
-/**
- * Broadcast gate/status change to all clients watching this event.
- * Payload: { eventId, status, gateOpen, endTime }
- */
-const emitGateStatus = (event) => {
-  const wsServer = getWSServer();
-  if (!wsServer || !event) return;
-  const now = new Date();
-  const startTime = new Date(event.start_time);
-  const endTime = new Date(event.end_time);
-  const oneHourAfterStart = new Date(startTime.getTime() + 60 * 60 * 1000);
-  const gateOpen =
-    event.status !== "Cancelled" &&
-    event.status !== "Concluded" &&
-    now >= startTime &&
-    now <= oneHourAfterStart;
-
-  const payload = {
-    eventId: event._id,
-    status: event.status,
-    gateOpen,
-    startTime: event.start_time,
-    endTime: event.end_time,
-  };
-
-  const eventId = String(event._id);
-  const message = JSON.stringify({ type: "gate:status", payload });
-  wsServer.clients.forEach((client) => {
-    if (
-      client.readyState === WebSocket.OPEN &&
-      client.subscriptions &&
-      client.subscriptions.has(eventId)
-    ) {
-      client.send(message);
-    }
-  });
-};
 
 // Auto-update status of all events
 const autoUpdateEventStatuses = async () => {

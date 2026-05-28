@@ -13,13 +13,6 @@ import joinModalStyles from "../styles/components_joinmodal";
 import Skeleton_OrgEventDetails from "../components/Skeleton_OrgEventDetails";
 import { useNotification } from "../components/NotificationProvider";
 import AnimatedNumber from "../components/AnimatedNumber";
-import {
-    addGateStatusListener,
-    getSocket,
-    removeGateStatusListener,
-    subscribeToEvent,
-    unsubscribeFromEvent
-} from "../../utils/socket";
 
 const OFFICER_ROLES = ["Manager", "President"];
 
@@ -160,51 +153,6 @@ const Events = () => {
         }
     };
 
-    // ── Real-time gate status via WebSocket ──────────────────────────────
-    useEffect(() => {
-        if (!eventId) return;
-        getSocket();
-        subscribeToEvent(eventId);
-
-        const handleGateStatus = (payload) => {
-            if (payload.eventId?.toString() !== eventId?.toString()) return;
-            console.log('[Socket] gate:status received (committee):', payload);
-
-            const now = new Date();
-            const startTime = new Date(payload.startTime);
-            const endTime = new Date(payload.endTime);
-            const oneHourAfterStart = new Date(startTime.getTime() + 60 * 60 * 1000);
-
-            const isActive = now >= startTime && now <= endTime;
-            const within1Hour = now >= startTime && now <= oneHourAfterStart;
-
-            setEventActive(isActive);
-            setWithin30Min(within1Hour);
-
-            // Reflect status change on the overlay
-            if (payload.status === 'Cancelled') {
-                setShowCancelledOverlay(true);
-                setEventData(prev => prev ? { ...prev, status: 'Cancelled' } : prev);
-            } else if (payload.status === 'Upcoming') {
-                setShowCancelledOverlay(false);
-                setEventData(prev => prev ? { ...prev, status: 'Upcoming' } : prev);
-            } else if (payload.status === 'Ongoing') {
-                setShowCancelledOverlay(false);
-                setEventData(prev => prev ? { ...prev, status: 'Ongoing' } : prev);
-            } else if (payload.status === 'Concluded') {
-                setEventActive(false);
-                setWithin30Min(false);
-                setEventData(prev => prev ? { ...prev, status: 'Concluded' } : prev);
-            }
-        };
-
-        addGateStatusListener(handleGateStatus);
-
-        return () => {
-            removeGateStatusListener(handleGateStatus);
-            unsubscribeFromEvent(eventId);
-        };
-    }, [eventId]);
     const checkFollowStatus = async (orgId, currentStudentId) => {
         if (!currentStudentId) return;
         try {
