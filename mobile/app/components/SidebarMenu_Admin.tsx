@@ -104,7 +104,11 @@ const AdminSidebarMenu: React.FC<AdminSidebarMenuProps> = ({ isVisible, onClose 
       <Animated.View style={[styles.sidebarContainerAdmin, animatedSidebarStyle]}>
         <View style={styles.profileContainer}>
           <Image
-            source={{ uri: adminData?.profile_image || "https://via.placeholder.com/150" }}
+            source={
+              adminData?.profile_image
+                ? { uri: adminData.profile_image }
+                : require("../../assets/images/marque/profile_marque.png")
+            }
             style={styles.profileImage}
             resizeMode="cover"
           />

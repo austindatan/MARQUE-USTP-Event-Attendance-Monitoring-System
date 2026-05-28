@@ -42,8 +42,7 @@ exports.getStudentProfileByNumber = async (req, res) => {
       firstname: user.firstname || '',
       lastname: user.lastname || '',
       email: user.email || '',
-      profile_image: user.profile_image ||
-        'https://res.cloudinary.com/dhfgfpoav/image/upload/v1764669009/defaultProf_gbmq9j.jpg',
+      profile_image: user.profile_image || '',
 
       department_id: student.department_id?._id || null,
       department_name: student.department_id?.department_name || '',
