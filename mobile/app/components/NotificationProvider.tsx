@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { BASE_URL, CLOUD_NAME } from '../../config';
+import joinModalStyles from '../styles/components_joinmodal';
 
 const getOptimizedImageUrl = (url: string | undefined | null) => {
   if (!url) return '';
@@ -40,6 +41,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const router = useRouter();
   const [hasUnread, setHasUnread] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [sessionExpiredVisible, setSessionExpiredVisible] = useState(false);
   const [modalData, setModalData] = useState<{
     eventName: string;
     eventId: string;
@@ -149,19 +151,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               socketRef.current.close();
               socketRef.current = null;
             }
-            AsyncStorage.clear().then(() => {
-              Alert.alert(
-                "Session Expired",
-                "Login expired, pls relogin",
-                [
-                  {
-                    text: "OK",
-                    onPress: () => router.replace('/login')
-                  }
-                ],
-                { cancelable: false }
-              );
-            });
+            setSessionExpiredVisible(true);
             return;
           }
 
@@ -288,6 +278,53 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             >
               <Text style={modalStyles.detailsButtonText}>View Event Details</Text>
             </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Session Expired Modal */}
+      <Modal
+        visible={sessionExpiredVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSessionExpiredVisible(false)}
+      >
+        <TouchableOpacity
+          style={joinModalStyles.overlay}
+          onPress={() => setSessionExpiredVisible(false)}
+          activeOpacity={1}
+        >
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image
+                source={require('../../assets/images/marque/MARQUE_whitelogo.png')}
+                style={joinModalStyles.iconImage}
+              />
+            </View>
+
+            <Text style={joinModalStyles.title}>Session Expired</Text>
+            <Text style={joinModalStyles.desc}>Please log in again to continue.</Text>
+
+            <View style={{ marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#0a0f51",
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  alignItems: "center",
+                }}
+                onPress={async () => {
+                  setSessionExpiredVisible(false);
+                  await AsyncStorage.clear();
+                  router.replace("/login");
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>
+                  Go to Login
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
       </Modal>
