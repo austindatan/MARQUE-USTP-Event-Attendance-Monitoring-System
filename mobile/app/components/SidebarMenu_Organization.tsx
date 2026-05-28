@@ -116,7 +116,11 @@ const SidebarMenuOrganization: React.FC<SidebarMenuProps> = ({ isVisible, onClos
       <Animated.View style={[styles.sidebarContainer, animatedSidebarStyle, { paddingTop: insets.top }]}>
         <View style={styles.profileContainer}>
           <Image
-            source={{ uri: studentData?.profile_image || "https://via.placeholder.com/150" }}
+            source={
+              studentData?.profile_image
+                ? { uri: studentData.profile_image }
+                : require("../../assets/images/marque/profile_marque.png")
+            }
             style={styles.profileImage}
             resizeMode="cover"
           />

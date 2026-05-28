@@ -214,7 +214,7 @@ const ProfilePage = () => {
     <View style={styles.container}>
       <Header onMenuPress={toggleMenu} />
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -222,7 +222,11 @@ const ProfilePage = () => {
       >
         <View style={styles.profileHeader}>
           <Image
-            source={{ uri: profile?.profile_image }}
+            source={
+              profile?.profile_image
+                ? { uri: profile.profile_image }
+                : require("../../assets/images/marque/profile_marque.png")
+            }
             style={styles.profileImage}
           />
 
@@ -427,7 +431,7 @@ const ProfilePage = () => {
       </Modal>
 
       {/* Email updating (blocks interaction) */}
-      <Modal visible={emailUpdating} transparent animationType="fade" onRequestClose={() => {}}>
+      <Modal visible={emailUpdating} transparent animationType="fade" onRequestClose={() => { }}>
         <View style={joinModalStyles.overlay}>
           <View style={joinModalStyles.modalBox}>
             <View style={joinModalStyles.iconContainer}>
@@ -543,7 +547,7 @@ const ProfilePage = () => {
       />
 
       {/* Avatar upload loading (blocks interaction) */}
-      <Modal visible={avatarUploading} transparent animationType="fade" onRequestClose={() => {}}>
+      <Modal visible={avatarUploading} transparent animationType="fade" onRequestClose={() => { }}>
         <View style={joinModalStyles.overlay}>
           <View style={joinModalStyles.modalBox}>
             <View style={joinModalStyles.iconContainer}>

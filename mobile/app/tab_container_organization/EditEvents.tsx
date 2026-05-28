@@ -52,6 +52,9 @@ const EditEvents = () => {
   const [invalidDateTimeVisible, setInvalidDateTimeVisible] = useState(false);
   const [invalidDateTimeMessage, setInvalidDateTimeMessage] = useState("");
 
+  const [isMandatory, setIsMandatory] = useState(false);
+  const [mandatoryConfirmVisible, setMandatoryConfirmVisible] = useState(false);
+
   const showError = (msg: string) => { setErrorMessage(msg); setErrorVisible(true); };
   const showDateTimeError = (msg: string) => { setInvalidDateTimeMessage(msg); setInvalidDateTimeVisible(true); };
 
@@ -80,6 +83,7 @@ const EditEvents = () => {
         setSelectedVenue(ev.venue || "");
         setVenueDetails(ev.venue_details || "");
         setDescription(ev.description || "");
+        setIsMandatory(ev.is_mandatory || false);
 
         setStartDate(ev.event_date ? new Date(ev.event_date) : new Date());
         setEndDate(ev.end_date ? new Date(ev.end_date) : new Date());
@@ -185,6 +189,7 @@ const EditEvents = () => {
     formData.append("venue", selectedVenue);
     formData.append("venue_details", venueDetails);
     formData.append("description", description);
+    formData.append("is_mandatory", isMandatory.toString());
 
     // Use combined date-time values
     formData.append("event_date", startDateTime.toISOString());
@@ -398,6 +403,69 @@ const EditEvents = () => {
             value={description}
             onChangeText={setDescription}
           />
+        </View>
+
+        {/* ===== MANDATORY ATTENDANCE TOGGLE ===== */}
+        <View
+          style={[
+            styles.inputGroup,
+            {
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backgroundColor: isMandatory ? "#f0f2ff" : "#fafafa",
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: isMandatory ? "#222762" : "#e0e0e0",
+              paddingHorizontal: 14,
+              paddingVertical: 14,
+            },
+          ]}
+        >
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <Text style={[styles.label, { marginBottom: 2 }]}>
+              Mandatory Attendance
+            </Text>
+            <Text style={{ fontSize: 12, color: "#888", fontFamily: "DMSans-Regular" }}>
+              {isMandatory
+                ? "All members are required to attend this event."
+                : "Tap to require attendance for all members."}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => {
+              if (!isMandatory) {
+                // Show confirmation before enabling
+                setMandatoryConfirmVisible(true);
+              } else {
+                // Disable directly without confirmation
+                setIsMandatory(false);
+              }
+            }}
+            style={{
+              width: 46,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: isMandatory ? "#222762" : "#ccc",
+              justifyContent: "center",
+              paddingHorizontal: 3,
+            }}
+            activeOpacity={0.8}
+          >
+            <View
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: "#fff",
+                alignSelf: isMandatory ? "flex-end" : "flex-start",
+                shadowColor: "#000",
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+                elevation: 2,
+              }}
+            />
+          </TouchableOpacity>
         </View>
 
         <View style={{ height: 80 }} />
@@ -635,6 +703,40 @@ const EditEvents = () => {
                 activeOpacity={0.7}
               >
                 <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Got It</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ===== MANDATORY ATTENDANCE CONFIRM MODAL ===== */}
+      <Modal visible={mandatoryConfirmVisible} transparent animationType="fade" onRequestClose={() => setMandatoryConfirmVisible(false)}>
+        <TouchableOpacity style={joinModalStyles.overlay} onPress={() => setMandatoryConfirmVisible(false)} activeOpacity={1}>
+          <View style={joinModalStyles.modalBox}>
+            <View style={joinModalStyles.iconContainer}>
+              <Image source={require("../../assets/images/marque/MARQUE_whitelogo.png")} style={joinModalStyles.iconImage} />
+            </View>
+            <Text style={joinModalStyles.title}>Set as Mandatory?</Text>
+            <Text style={joinModalStyles.desc}>
+              This event will be set to mandatory attendance. All members of the organization will be required to attend, and absences will be recorded automatically.
+            </Text>
+            <View style={{ flexDirection: "row", marginTop: 20, width: "100%" }}>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: "#0a0f51", paddingVertical: 12, borderRadius: 25, alignItems: "center", marginRight: 6 }}
+                onPress={() => setMandatoryConfirmVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: "#222762", paddingVertical: 12, borderRadius: 25, alignItems: "center", marginLeft: 6 }}
+                onPress={() => {
+                  setIsMandatory(true);
+                  setMandatoryConfirmVisible(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontFamily: "DMSans-Bold" }}>Confirm</Text>
               </TouchableOpacity>
             </View>
           </View>

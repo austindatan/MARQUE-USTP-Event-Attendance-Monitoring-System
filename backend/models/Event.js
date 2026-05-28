@@ -10,13 +10,13 @@ const eventSchema = new mongoose.Schema(
     event_name: { type: String, required: true },
     event_type: { type: String, enum: ["Event", "Sub-Event"] },
     description: { type: String, required: true },
-    event_image: { type: String }, // can be URL or file path
+    event_image: { type: String },
     event_date: { type: Date, required: true },
     end_date: { type: Date, required: true },
-    start_time: { type: Date, required: true }, // includes time
-    end_time: { type: Date, required: true },   // includes time
+    start_time: { type: Date, required: true },
+    end_time: { type: Date, required: true },
     venue: { type: String, required: true },
-    venue_details: { type: String }, // new field for additional venue info
+    venue_details: { type: String },
     status: { type: String, enum: ["Upcoming", "Ongoing", "Concluded", "Cancelled"], default: 'Upcoming' },
     is_mandatory: { type: Boolean, default: false },
     remindersSent: {

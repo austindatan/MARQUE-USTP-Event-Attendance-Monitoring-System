@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Modal, Platform, SafeAreaView, Linking } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Modal, Platform, SafeAreaView, Linking, StyleSheet } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "../styles/page_eventdetails";
@@ -48,6 +48,10 @@ const Events = () => {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showCancelledOverlay, setShowCancelledOverlay] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
+
+    // ── ML Forecast ──────────────────────────────────────────
+    const [forecast, setForecast] = useState(null);
+    const [forecastLoading, setForecastLoading] = useState(false);
 
     const handleBack = () => {
         router.back();
@@ -212,6 +216,28 @@ const Events = () => {
         });
     };
 
+    // ── Fetch ML Forecast ─────────────────────────────────────
+    const fetchForecast = async (id) => {
+        if (!id) return;
+        try {
+            setForecastLoading(true);
+            const res = await fetch(`${BASE_URL}/api/ml/forecast/${id}`);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                console.warn('[Forecast] API error:', err.message);
+                setForecast({ error: err.message || 'Forecast unavailable' });
+                return;
+            }
+            const data = await res.json();
+            setForecast(data);
+        } catch (e) {
+            console.warn('[Forecast] Network error:', e.message);
+            setForecast({ error: 'Could not reach forecast service' });
+        } finally {
+            setForecastLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (eventId) {
             fetchEventDetails(eventId);
@@ -232,6 +258,14 @@ const Events = () => {
             });
         }
     }, [eventData]);
+
+    // Trigger forecast once we know the user is an officer and event is loaded
+    useEffect(() => {
+        const isUpcomingOrOngoing = ['Upcoming', 'Ongoing'].includes(eventData?.status);
+        if (eventId && isUpcomingOrOngoing && OFFICER_ROLES.includes(userRole)) {
+            fetchForecast(eventId);
+        }
+    }, [eventId, userRole, eventData?.status]);
 
     if (loading) {
         return <Skeleton_OrgEventDetails />;
@@ -401,6 +435,83 @@ const Events = () => {
                         {eventData.description}
                     </Text>
 
+                    {/* ── ML Turnout Forecast Card (officers only, upcoming/ongoing) ── */}
+                    {isOfficer && ['Upcoming', 'Ongoing'].includes(eventData.status) && (
+                        <View style={forecastCardStyles.container}>
+                            <View style={forecastCardStyles.header}>
+                                <Ionicons name="stats-chart" size={16} color="#fecb20" />
+                                <Text style={forecastCardStyles.headerText}>AI Turnout Forecast</Text>
+                                <View style={forecastCardStyles.betaBadge}>
+                                    <Text style={forecastCardStyles.betaText}>ML</Text>
+                                </View>
+                            </View>
+
+                            {forecastLoading ? (
+                                <View style={forecastCardStyles.loadingRow}>
+                                    <ActivityIndicator size="small" color="#fecb20" />
+                                    <Text style={forecastCardStyles.loadingText}>Analysing past attendance…</Text>
+                                </View>
+                            ) : forecast?.error ? (
+                                <View style={forecastCardStyles.errorRow}>
+                                    <Ionicons name="alert-circle-outline" size={16} color="#ff6b6b" />
+                                    <Text style={forecastCardStyles.errorText}>
+                                        {forecast.error === 'Model not trained yet. Call POST /train first.'
+                                            ? 'Not enough past events to forecast yet.'
+                                            : forecast.error}
+                                    </Text>
+                                </View>
+                            ) : forecast ? (
+                                <>
+                                    {/* Main stat */}
+                                    <View style={forecastCardStyles.statRow}>
+                                        <View style={forecastCardStyles.statBlock}>
+                                            <Text style={forecastCardStyles.bigNumber}>
+                                                {forecast.predicted_count ?? '—'}
+                                            </Text>
+                                            <Text style={forecastCardStyles.statLabel}>predicted attendees</Text>
+                                        </View>
+                                        <View style={forecastCardStyles.divider} />
+                                        <View style={forecastCardStyles.statBlock}>
+                                            <Text style={forecastCardStyles.bigNumber}>
+                                                {forecast.predicted_rate_percent != null
+                                                    ? `${forecast.predicted_rate_percent}%`
+                                                    : '—'}
+                                            </Text>
+                                            <Text style={forecastCardStyles.statLabel}>attendance rate</Text>
+                                        </View>
+                                    </View>
+
+                                    {/* Meta row */}
+                                    <View style={forecastCardStyles.metaRow}>
+                                        <View style={forecastCardStyles.metaPill}>
+                                            <Ionicons name="people-outline" size={11} color="#aaa" />
+                                            <Text style={forecastCardStyles.metaText}>
+                                                {forecast.audience_size} eligible · {forecast.scope}
+                                            </Text>
+                                        </View>
+                                        <View style={[
+                                            forecastCardStyles.confidenceBadge,
+                                            forecast.confidence === 'High'      && { backgroundColor: '#1a6b3a' },
+                                            forecast.confidence === 'Medium'    && { backgroundColor: '#7a5200' },
+                                            forecast.confidence === 'Low'       && { backgroundColor: '#6b2020' },
+                                            forecast.confidence === 'Very Low'  && { backgroundColor: '#3a3a3a' },
+                                        ]}>
+                                            <Text style={forecastCardStyles.confidenceText}>
+                                                {forecast.confidence} confidence
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    {forecast.org_event_count < 3 && (
+                                        <Text style={forecastCardStyles.disclaimer}>
+                                            ⚠ Low confidence — only {forecast.org_event_count} past event(s) used for training.
+                                        </Text>
+                                    )}
+                                </>
+                            ) : null}
+                        </View>
+                    )}
+
                     <View style={styles.organizerCard}>
                         <View style={styles.organizerLeft}>
                             <Image
@@ -417,6 +528,8 @@ const Events = () => {
                     <Text style={styles.organizerDesc}>
                         {eventData.organization_id?.org_description || eventData.organization_id?.description || "No description provided."}
                     </Text>
+
+                    <View style={{ height: 20 }} />
                 </ScrollView>
             </View>
             {eventActive && within30Min && (
@@ -509,5 +622,134 @@ const Events = () => {
         </SafeAreaView>
     );
 };
+
+const forecastCardStyles = StyleSheet.create({
+    container: {
+        marginHorizontal: 16,
+        marginVertical: 12,
+        backgroundColor: '#0A0F51',
+        borderRadius: 16,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 14,
+        gap: 6,
+    },
+    headerText: {
+        color: '#fff',
+        fontFamily: 'DMSans-Bold',
+        fontSize: 14,
+        flex: 1,
+        marginLeft: 4,
+    },
+    betaBadge: {
+        backgroundColor: '#fecb20',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+    },
+    betaText: {
+        color: '#0A0F51',
+        fontFamily: 'DMSans-Bold',
+        fontSize: 10,
+        letterSpacing: 0.5,
+    },
+    loadingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingVertical: 8,
+    },
+    loadingText: {
+        color: '#aaa',
+        fontFamily: 'DMSans-Regular',
+        fontSize: 13,
+    },
+    errorRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingVertical: 8,
+    },
+    errorText: {
+        color: '#ff6b6b',
+        fontFamily: 'DMSans-Regular',
+        fontSize: 13,
+        flex: 1,
+    },
+    statRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    statBlock: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    divider: {
+        width: 1,
+        height: 40,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        marginHorizontal: 8,
+    },
+    bigNumber: {
+        color: '#fecb20',
+        fontFamily: 'DMSans-Bold',
+        fontSize: 30,
+        lineHeight: 34,
+    },
+    statLabel: {
+        color: 'rgba(255,255,255,0.6)',
+        fontFamily: 'DMSans-Regular',
+        fontSize: 11,
+        marginTop: 2,
+        textAlign: 'center',
+    },
+    metaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 6,
+    },
+    metaPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        flex: 1,
+    },
+    metaText: {
+        color: '#aaa',
+        fontFamily: 'DMSans-Regular',
+        fontSize: 11,
+        flexShrink: 1,
+    },
+    confidenceBadge: {
+        borderRadius: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        backgroundColor: '#3a3a3a',
+    },
+    confidenceText: {
+        color: '#fff',
+        fontFamily: 'DMSans-SemiBold',
+        fontSize: 11,
+    },
+    disclaimer: {
+        color: '#ffd166',
+        fontFamily: 'DMSans-Regular',
+        fontSize: 11,
+        marginTop: 10,
+        lineHeight: 16,
+        opacity: 0.85,
+    },
+});
 
 export default Events;

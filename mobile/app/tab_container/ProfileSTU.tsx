@@ -56,7 +56,6 @@ const ProfilePage = () => {
   const params = useLocalSearchParams();
   const router = useRouter();
 
-  // Extract orgId - handle both string and array cases
   const rawOrgId = params.orgId;
   const orgId = Array.isArray(rawOrgId) ? rawOrgId[0] : rawOrgId;
   const refresh = params.refresh;
