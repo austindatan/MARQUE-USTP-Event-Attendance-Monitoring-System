@@ -5,8 +5,17 @@ dist/
 build/
 
 # Environment & Secrets
+.env
+.env.local
+.env.*
 backend/.env
 mobile/config.js
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+ml/venv/
 
 # OS files
 .DS_Store
