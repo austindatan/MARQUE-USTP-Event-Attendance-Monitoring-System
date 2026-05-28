@@ -1,9 +1,44 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+const httpServer = http.createServer(app);
+
+// ── Socket.IO ──────────────────────────────────────────────────────────────
+const io = new Server(httpServer, {
+  cors: { origin: "*", methods: ["GET", "POST"] },
+});
+
+// Store io instance so controllers can emit from anywhere
+const { setIO } = require("./socket");
+setIO(io);
+
+io.on("connection", (socket) => {
+  console.log(`[Socket] Client connected: ${socket.id}`);
+
+  // Client joins a room per event so broadcasts are scoped
+  socket.on("join:event", (eventId) => {
+    if (eventId) {
+      socket.join(`event:${eventId}`);
+      console.log(`[Socket] ${socket.id} joined room event:${eventId}`);
+    }
+  });
+
+  socket.on("leave:event", (eventId) => {
+    if (eventId) {
+      socket.leave(`event:${eventId}`);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`[Socket] Client disconnected: ${socket.id}`);
+  });
+});
+// ──────────────────────────────────────────────────────────────────────────
 
 app.use(cors());
 app.use(express.json());
@@ -95,7 +130,6 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch((err) => console.error("MongoDB connection error:", err));
 
 
-// Start server
+// Start server (use httpServer, NOT app.listen)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
+httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));

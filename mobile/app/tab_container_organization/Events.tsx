@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Modal, Platform, SafeAreaView, Linking, StyleSheet } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch } from "../../utils/apiFetch";
 import joinModalStyles from "../styles/components_joinmodal";
 import Skeleton_OrgEventDetails from "../components/Skeleton_OrgEventDetails";
+import { getSocket } from "../../utils/socket";
 
 const OFFICER_ROLES = ["Manager", "President"];
 
@@ -136,7 +137,7 @@ const Events = () => {
                 setShowCancelledOverlay(false);
             }
 
-            // Fetch event status and map within1Hour to within30Min
+            // Initial gate status via HTTP
             const statusRes = await fetch(`${BASE_URL}/events/event-status/${eventObj._id}`);
             const statusData = await statusRes.json();
             setEventActive(statusData.isActive);
@@ -149,6 +150,54 @@ const Events = () => {
             setLoading(false);
         }
     };
+
+    // ── Real-time gate status via Socket.IO ──────────────────────────────
+    useEffect(() => {
+        if (!eventId) return;
+        const socket = getSocket();
+
+        // Join this event's room
+        socket.emit('join:event', eventId);
+
+        const handleGateStatus = (payload) => {
+            if (payload.eventId?.toString() !== eventId?.toString()) return;
+            console.log('[Socket] gate:status received (committee):', payload);
+
+            const now = new Date();
+            const startTime = new Date(payload.startTime);
+            const endTime = new Date(payload.endTime);
+            const oneHourAfterStart = new Date(startTime.getTime() + 60 * 60 * 1000);
+
+            const isActive = now >= startTime && now <= endTime;
+            const within1Hour = now >= startTime && now <= oneHourAfterStart;
+
+            setEventActive(isActive);
+            setWithin30Min(within1Hour);
+
+            // Reflect status change on the overlay
+            if (payload.status === 'Cancelled') {
+                setShowCancelledOverlay(true);
+                setEventData(prev => prev ? { ...prev, status: 'Cancelled' } : prev);
+            } else if (payload.status === 'Upcoming') {
+                setShowCancelledOverlay(false);
+                setEventData(prev => prev ? { ...prev, status: 'Upcoming' } : prev);
+            } else if (payload.status === 'Ongoing') {
+                setShowCancelledOverlay(false);
+                setEventData(prev => prev ? { ...prev, status: 'Ongoing' } : prev);
+            } else if (payload.status === 'Concluded') {
+                setEventActive(false);
+                setWithin30Min(false);
+                setEventData(prev => prev ? { ...prev, status: 'Concluded' } : prev);
+            }
+        };
+
+        socket.on('gate:status', handleGateStatus);
+
+        return () => {
+            socket.off('gate:status', handleGateStatus);
+            socket.emit('leave:event', eventId);
+        };
+    }, [eventId]);
 
     const checkFollowStatus = async (orgId, currentStudentId) => {
         if (!currentStudentId) return;

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView, ImageBackground, ActivityIndicator, Alert, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,6 +12,7 @@ import FeedbackComments from "../components/FeedbackComments";
 import Skeleton_EventDetails from "../components/Skeleton_EventDetails";
 import { apiFetch } from "../../utils/apiFetch";
 import joinModalStyles from "../styles/components_joinmodal";
+import { getSocket } from "../../utils/socket";
 
 const fixCloudinaryUrl = (url, cloudName) => {
   if (!url || url.startsWith("http")) return url;
@@ -51,6 +52,62 @@ const EventDetails_Unified = () => {
   const [userId, setUserId] = useState(null);
   const [feedbackComments, setFeedbackComments] = useState([]);
   const [feedbackSubmittedModalVisible, setFeedbackSubmittedModalVisible] = useState(false);
+
+  // ⏱ Live countdown state: seconds until gate opens (positive) or closes (negative = time remaining)
+  const [countdownSeconds, setCountdownSeconds] = useState(null);
+  const [countdownTarget, setCountdownTarget] = useState(null); // 'open' | 'close'
+  const tickRef = useRef(null);
+
+  const startCountdown = useCallback((targetDate, targetType) => {
+    if (tickRef.current) clearInterval(tickRef.current);
+    setCountdownTarget(targetType);
+    tickRef.current = setInterval(() => {
+      const diff = Math.floor((new Date(targetDate) - new Date()) / 1000);
+      if (diff <= 0) {
+        clearInterval(tickRef.current);
+        setCountdownSeconds(0);
+      } else {
+        setCountdownSeconds(diff);
+      }
+    }, 1000);
+  }, []);
+
+  // Format seconds to HH:MM:SS
+  const formatCountdown = (secs) => {
+    if (secs === null || secs === undefined) return null;
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+    if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`;
+    return `${s}s`;
+  };
+
+  // Kick off the right countdown for the current event
+  const initCountdown = useCallback((event, status) => {
+    if (!event) return;
+    const now = new Date();
+    const startTime = new Date(event.start_time);
+    const oneHourAfterStart = new Date(startTime.getTime() + 60 * 60 * 1000);
+
+    if (status === 'upcoming') {
+      // Count down to gate opening
+      startCountdown(startTime, 'open');
+    } else if (status === 'ongoing') {
+      // Count down to gate closing (1 hour window)
+      if (now <= oneHourAfterStart) {
+        startCountdown(oneHourAfterStart, 'close');
+      } else {
+        setCountdownSeconds(0);
+        setCountdownTarget('close');
+      }
+    } else {
+      if (tickRef.current) clearInterval(tickRef.current);
+      setCountdownSeconds(null);
+      setCountdownTarget(null);
+    }
+  }, [startCountdown]);
+
   const fetchStudentId = async () => {
     try {
       const studentNumber = await AsyncStorage.getItem("student_number");
@@ -125,8 +182,10 @@ const EventDetails_Unified = () => {
       if (eventObj.event_name && eventObj.event_name.includes("NoAttendance")) eventObj.requiresManualAttendance = true;
       else eventObj.requiresManualAttendance = false;
 
+      const status = determineEventStatus(eventObj);
       setEventData(eventObj);
-      setEventStatus(determineEventStatus(eventObj));
+      setEventStatus(status);
+      initCountdown(eventObj, status);
     } catch (error) {
       console.error("Error fetching event details:", error);
       Alert.alert("Network Error", `Failed to load event details. Error: ${error.message}`);
@@ -322,7 +381,41 @@ const EventDetails_Unified = () => {
     } else {
       setLoading(false);
     }
+    // Clean up countdown timer when screen blurs
+    return () => {
+      if (tickRef.current) clearInterval(tickRef.current);
+    };
   }, [eventId, fetchPhotoProofStatus]));
+
+  // ── Real-time gate status via Socket.IO ─────────────────────────────
+  useEffect(() => {
+    if (!eventId) return;
+    const socket = getSocket();
+
+    socket.emit('join:event', eventId);
+
+    const handleGateStatus = (payload) => {
+      if (payload.eventId?.toString() !== eventId?.toString()) return;
+      console.log('[Socket] gate:status received (student):', payload);
+
+      // Rebuild a minimal event shape so determineEventStatus works
+      setEventData(prev => {
+        if (!prev) return prev;
+        const updated = { ...prev, status: payload.status };
+        const newStatus = determineEventStatus(updated);
+        setEventStatus(newStatus);
+        initCountdown(updated, newStatus);
+        return updated;
+      });
+    };
+
+    socket.on('gate:status', handleGateStatus);
+
+    return () => {
+      socket.off('gate:status', handleGateStatus);
+      socket.emit('leave:event', eventId);
+    };
+  }, [eventId, initCountdown]);
 
   useEffect(() => {
     if (eventStatus === 'concluded') {
@@ -445,6 +538,31 @@ const EventDetails_Unified = () => {
         {/* ================= ONGOING (combined NoAttendance + Ongoing) ================= */}
         {(eventStatus === "ongoing" || eventStatus === "no-attendance") && (
           <View style={styles.infoColumn}>
+
+            {/* ⏱ Live gate countdown */}
+            {countdownSeconds !== null && countdownTarget === 'close' && (
+              countdownSeconds > 0 ? (
+                <View style={{
+                  backgroundColor: '#0A0F51',
+                  borderRadius: 12, padding: 12,
+                  marginBottom: 10, alignItems: 'center',
+                }}>
+                  <Text style={{ color: '#fecb20', fontFamily: 'DMSans-Bold', fontSize: 12, marginBottom: 2 }}>
+                    ⏱ SCANNING GATE CLOSES IN
+                  </Text>
+                  <Text style={{ color: '#fff', fontFamily: 'DMSans-Bold', fontSize: 22 }}>
+                    {formatCountdown(countdownSeconds)}
+                  </Text>
+                </View>
+              ) : (
+                <View style={[styles.infoBox, { marginBottom: 10 }]}>
+                  <Text style={styles.infoText}>
+                    Event registration has <Text style={{ fontFamily: 'DMSans-Bold' }}>ended</Text>.
+                  </Text>
+                </View>
+              )
+            )}
+
             {/* Status Text */}
             <View style={[styles.infoBox, { marginBottom: 10 }]}>
               <Text style={styles.infoText}>

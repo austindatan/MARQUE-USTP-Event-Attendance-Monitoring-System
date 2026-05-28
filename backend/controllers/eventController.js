@@ -6,30 +6,75 @@ const Student = require("../models/Student");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
+const { getIO } = require("../socket");
 
-// Auto-update status of all events
+/**
+ * Broadcast gate/status change to all clients watching this event.
+ * Payload: { eventId, status, gateOpen, endTime }
+ */
+const emitGateStatus = (event) => {
+  const io = getIO();
+  if (!io || !event) return;
+  const now = new Date();
+  const startTime = new Date(event.start_time);
+  const endTime = new Date(event.end_time);
+  const oneHourAfterStart = new Date(startTime.getTime() + 60 * 60 * 1000);
+  const gateOpen =
+    event.status !== "Cancelled" &&
+    event.status !== "Concluded" &&
+    now >= startTime &&
+    now <= oneHourAfterStart;
+
+  io.to(`event:${event._id}`).emit("gate:status", {
+    eventId: event._id,
+    status: event.status,
+    gateOpen,
+    startTime: event.start_time,
+    endTime: event.end_time,
+  });
+};
+
+// Auto-update status of all events and emit socket updates for changed events
 const autoUpdateEventStatuses = async () => {
   const now = new Date();
 
   try {
-    // Upcoming → Ongoing
-    await Event.updateMany(
-      {
-        status: "Upcoming",
-        start_time: { $lte: now },
-        end_time: { $gt: now }
-      },
-      { $set: { status: "Ongoing" } }
-    );
+    // Find events that will transition Upcoming → Ongoing
+    const toOngoing = await Event.find({
+      status: "Upcoming",
+      start_time: { $lte: now },
+      end_time: { $gt: now }
+    });
 
-    // Ongoing → Concluded
-    await Event.updateMany(
-      {
-        status: "Ongoing",
-        end_time: { $lte: now }
-      },
-      { $set: { status: "Concluded" } }
-    );
+    if (toOngoing.length > 0) {
+      await Event.updateMany(
+        { _id: { $in: toOngoing.map(e => e._id) } },
+        { $set: { status: "Ongoing" } }
+      );
+      // Emit gate:status for each newly Ongoing event
+      toOngoing.forEach(ev => {
+        ev.status = "Ongoing";
+        emitGateStatus(ev);
+      });
+    }
+
+    // Find events that will transition Ongoing → Concluded
+    const toConcluded = await Event.find({
+      status: "Ongoing",
+      end_time: { $lte: now }
+    });
+
+    if (toConcluded.length > 0) {
+      await Event.updateMany(
+        { _id: { $in: toConcluded.map(e => e._id) } },
+        { $set: { status: "Concluded" } }
+      );
+      // Emit gate:status (gate closed) for each newly Concluded event
+      toConcluded.forEach(ev => {
+        ev.status = "Concluded";
+        emitGateStatus(ev);
+      });
+    }
 
   } catch (err) {
     console.error("Error auto-updating statuses:", err);
@@ -667,6 +712,9 @@ const updateEvent = async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
+    // Broadcast the newly updated event gate status/times to any connected clients
+    emitGateStatus(updatedEvent);
+
     res.status(200).json({
       message: "Event updated successfully",
       event: updatedEvent,
@@ -696,6 +744,9 @@ const cancelEvent = async (req, res) => {
     event.status = "Cancelled";
     await event.save();
 
+    // Broadcast gate closed to all clients watching this event
+    emitGateStatus(event);
+
     return res.json({
       message: "Event cancelled successfully",
       status: event.status
@@ -718,6 +769,9 @@ const resumeEvent = async (req, res) => {
 
     event.status = "Upcoming";
     await event.save();
+
+    // Broadcast updated gate status to all clients watching this event
+    emitGateStatus(event);
 
     return res.json({
       message: "Event resumed successfully",
