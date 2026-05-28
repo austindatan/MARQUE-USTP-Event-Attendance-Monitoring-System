@@ -110,6 +110,9 @@ const registerAttendance = async (req, res) => {
         title: "Attendance Confirmed",
         message: `You are marked Present for ${event.event_name}`,
         eventName: event.event_name,
+        eventId: event._id,
+        eventImage: event.event_image || (Array.isArray(event.event_images) && event.event_images.length > 0 ? event.event_images[0] : ""),
+        timeIn: newLog.time_in,
       });
     } catch (wsError) {
       console.error("Failed to send WebSocket notification:", wsError);

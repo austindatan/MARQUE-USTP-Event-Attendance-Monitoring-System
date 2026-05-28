@@ -1,10 +1,23 @@
 import React, { createContext, useState, useEffect, useRef, useCallback, useContext } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Modal, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { BASE_URL } from '../../config';
+import { BASE_URL, CLOUD_NAME } from '../../config';
+
+const getOptimizedImageUrl = (url: string | undefined | null) => {
+  if (!url) return '';
+  let processedUrl = url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    const path = url.replace(/ /g, '%20');
+    processedUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${path}`;
+  }
+  if (processedUrl.includes('res.cloudinary.com') && processedUrl.includes('/upload/')) {
+    return processedUrl.replace('/upload/', '/upload/c_fill,w_400,h_250,q_auto,f_auto/');
+  }
+  return processedUrl;
+};
 
 interface NotificationContextType {
   hasUnread: boolean;
@@ -26,7 +39,14 @@ export const useNotification = () => {
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
   const [hasUnread, setHasUnread] = useState(false);
-  const [bannerVisible, setBannerVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalData, setModalData] = useState<{
+    eventName: string;
+    eventId: string;
+    eventImage: string;
+    timeIn: string;
+    message: string;
+  } | null>(null);
 
   // Registry of component-level listeners that subscribe to raw WS messages
   const listenersRef = useRef<Set<(msg: any) => void>>(new Set());
@@ -36,9 +56,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Return unsubscribe function
     return () => listenersRef.current.delete(callback);
   };
-  const [bannerMessage, setBannerMessage] = useState('');
-  
-  const slideAnim = useRef(new Animated.Value(-150)).current;
+
   const socketRef = useRef<WebSocket | null>(null);
 
   const getWsUrl = () => {
@@ -46,30 +64,24 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return BASE_URL.replace(/^http/, 'ws');
   };
 
-  const showBanner = (message: string) => {
-    setBannerMessage(message);
-    setBannerVisible(true);
-    Animated.timing(slideAnim, {
-      toValue: 50, // Down below the status bar area
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-
-    // Auto-hide after 4.5 seconds
-    const timer = setTimeout(() => {
-      hideBanner();
-    }, 4500);
-
-    return timer;
+  const showModal = (data: any) => {
+    setModalData({
+      eventName: data.eventName || "",
+      eventId: data.eventId || "",
+      eventImage: data.eventImage || "",
+      timeIn: data.timeIn || "",
+      message: data.message || "",
+    });
+    setModalVisible(true);
   };
 
-  const hideBanner = () => {
-    Animated.timing(slideAnim, {
-      toValue: -150,
-      duration: 400,
-      useNativeDriver: true,
-    }).start(() => {
-      setBannerVisible(false);
+  const formatTime = (timeInString: any) => {
+    if (!timeInString) return "";
+    const date = new Date(timeInString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
     });
   };
 
@@ -94,7 +106,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const connectSocket = useCallback(async () => {
     const studentNumber = await AsyncStorage.getItem('student_number');
-    if (!studentNumber) {
+    const token = await AsyncStorage.getItem('token');
+    if (!studentNumber || !token) {
       if (socketRef.current) {
         socketRef.current.close();
         socketRef.current = null;
@@ -113,9 +126,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       socketRef.current.close();
     }
 
-    const wsUrl = `${getWsUrl()}/ws?studentNumber=${studentNumber}`;
+    const wsUrl = `${getWsUrl()}/ws?studentNumber=${studentNumber}&token=${token}`;
     console.log('[WebSocketClient] Connecting to:', wsUrl);
-    
+
     try {
       const ws = new WebSocket(wsUrl);
 
@@ -130,12 +143,34 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           // Fan-out to all registered component listeners first
           listenersRef.current.forEach(cb => cb(data));
 
+          if (data.type === 'TOKEN_EXPIRED') {
+            console.log('[WebSocketClient] Token expired, logging out...');
+            if (socketRef.current) {
+              socketRef.current.close();
+              socketRef.current = null;
+            }
+            AsyncStorage.clear().then(() => {
+              Alert.alert(
+                "Session Expired",
+                "Login expired, pls relogin",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => router.replace('/login')
+                  }
+                ],
+                { cancelable: false }
+              );
+            });
+            return;
+          }
+
           if (data.type === 'ATTENDANCE_CONFIRMED') {
             // Trigger Haptics
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-            // Show custom sliding banner
-            showBanner(data.message || `You have been marked Present for ${data.eventName}`);
+            // Show dynamic modal dialog
+            showModal(data);
 
             // Instantly update badge state
             setHasUnread(true);
@@ -188,36 +223,74 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <NotificationContext.Provider value={{ hasUnread, setHasUnread, triggerUnreadCheck, addSocketListener }}>
       {children}
-      {bannerVisible && (
-        <Animated.View
-          style={[
-            styles.bannerContainer,
-            { transform: [{ translateY: slideAnim }] }
-          ]}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={modalStyles.overlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
         >
-          <TouchableOpacity
-            style={styles.bannerContent}
-            activeOpacity={0.9}
-            onPress={() => {
-              hideBanner();
-              router.push('/tab_container/Notifications');
-            }}
-          >
-            <View style={styles.iconContainer}>
-              <Ionicons name="notifications" size={24} color="#FECB20" />
-            </View>
-            <View style={styles.textContainer}>
-              <Text style={styles.bannerTitle}>Attendance Confirmed 🔔</Text>
-              <Text style={styles.bannerMessage} numberOfLines={2}>
-                {bannerMessage}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={hideBanner} style={styles.closeButton}>
-              <Ionicons name="close" size={20} color="#FFF" />
+          <View style={modalStyles.modalBox} onStartShouldSetResponder={() => true}>
+            {/* Close Button X in the top right */}
+            <TouchableOpacity
+              style={modalStyles.closeIconButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="#666" />
             </TouchableOpacity>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
+
+            {/* Icon Container with Event Image */}
+            <View style={modalStyles.iconContainer}>
+              {modalData?.eventImage ? (
+                <Image
+                  source={{ uri: getOptimizedImageUrl(modalData.eventImage) }}
+                  style={modalStyles.iconImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Image
+                  source={require('../../assets/images/marque/MARQUE_singlelogo.png')}
+                  style={modalStyles.iconImage}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+
+            <Text style={modalStyles.title}>Attendance Confirmed!</Text>
+            <Text style={modalStyles.eventName}>{modalData?.eventName}</Text>
+
+            {modalData?.timeIn ? (
+              <View style={modalStyles.timeRow}>
+                <Ionicons name="time-outline" size={16} color="#0A0F51" style={{ marginRight: 4 }} />
+                <Text style={modalStyles.timeText}>
+                  Time In: {formatTime(modalData.timeIn)}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Action button to view details */}
+            <TouchableOpacity
+              style={modalStyles.detailsButton}
+              activeOpacity={0.7}
+              onPress={() => {
+                setModalVisible(false);
+                if (modalData?.eventId) {
+                  router.push({
+                    pathname: '/tab_container/EventDetails_Unified',
+                    params: { eventId: modalData.eventId }
+                  });
+                }
+              }}
+            >
+              <Text style={modalStyles.detailsButtonText}>View Event Details</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </NotificationContext.Provider>
   );
 };
@@ -270,5 +343,114 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 4,
+  },
+});
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBox: {
+    width: 320,
+    paddingTop: 25,
+    paddingBottom: 25,
+    paddingHorizontal: 20,
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    alignItems: "center",
+    position: "relative",
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  closeIconButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    padding: 4,
+  },
+  iconContainer: {
+    backgroundColor: "#14235b",
+    width: 280,
+    height: 160,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    overflow: "hidden",
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  iconImage: {
+    width: "100%",
+    height: "100%",
+  },
+  title: {
+    marginTop: 10,
+    fontSize: 20,
+    color: "#0A0F51",
+    textAlign: "center",
+    fontFamily: "DMSans-Bold",
+    marginBottom: 5,
+  },
+  eventName: {
+    fontSize: 16,
+    color: "#222",
+    textAlign: "center",
+    fontFamily: "DMSans-Bold",
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(10, 15, 81, 0.08)',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  timeText: {
+    fontSize: 14,
+    color: "#0A0F51",
+    fontFamily: "DMSans-Bold",
+  },
+  desc: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 20,
+    fontFamily: "DMSans-Regular",
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  detailsButton: {
+    backgroundColor: "#FECB20",
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  detailsButtonText: {
+    color: "#0A0F51",
+    fontSize: 16,
+    fontFamily: "DMSans-Bold",
   },
 });
